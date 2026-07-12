@@ -1,7 +1,7 @@
 import { supabase } from '../../../lib/supabase';
-import type { Trip, Day, Activity, Note, TravelPace, TripStatus, Interest, ActivityCategory } from '../../../types';
+import type { Trip, Day, Activity, CostConfidence, Note, TravelPace, TripStatus, Interest, ActivityCategory } from '../../../types';
 import type { Result } from '../../databaseErrors';
-import { ok, notFound, internal } from '../../databaseErrors';
+import { ok, notFound, internal, validationError } from '../../databaseErrors';
 import type { ITripRepository, CreateTripInput, UpdateTripInput } from '../tripRepository';
 
 // ─── DB row shapes (actual column names) ─────────────────────────────────────
@@ -51,6 +51,10 @@ interface DbActivity {
   is_locked: boolean;
   personal_note: string;
   sort_order: number;
+  latitude: number | null;
+  longitude: number | null;
+  cost_confidence: CostConfidence;
+  updated_at: string;
 }
 
 // ─── Mappers ──────────────────────────────────────────────────────────────────
@@ -81,6 +85,10 @@ function mapActivity(row: DbActivity): Activity {
     aiReason: row.ai_reason,
     locked: row.is_locked,
     notes: parseNotes(row.personal_note),
+    latitude: row.latitude,
+    longitude: row.longitude,
+    costConfidence: row.cost_confidence,
+    updatedAt: row.updated_at,
   };
 }
 
@@ -196,6 +204,11 @@ class SupabaseTripRepository implements ITripRepository {
   }
 
   async createTrip(input: CreateTripInput): Promise<Result<Trip>> {
+    // Trip length must be greater than 0 days — no upper bound.
+    if (input.endDate < input.startDate) {
+      return { ok: false, error: validationError('Trip length must be greater than 0 days.', 'trip') };
+    }
+
     const now = new Date().toISOString();
     const { data, error } = await supabase
       .from('trips')
@@ -337,6 +350,9 @@ class SupabaseTripRepository implements ITripRepository {
           is_locked: act.locked,
           personal_note: JSON.stringify(act.notes),
           sort_order: j,
+          latitude: act.latitude,
+          longitude: act.longitude,
+          cost_confidence: act.costConfidence,
         });
       }
     }

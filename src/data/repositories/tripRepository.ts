@@ -12,7 +12,7 @@
 
 import type { Day, Interest, Trip, TravelPace, TripStatus } from '../../types';
 import type { Result } from '../databaseErrors';
-import { ok, notFound } from '../databaseErrors';
+import { ok, notFound, validationError } from '../databaseErrors';
 import { store, generateId } from '../memoryStore';
 
 // ─── Input / output types ─────────────────────────────────────────────────────
@@ -124,6 +124,11 @@ class InMemoryTripRepository implements ITripRepository {
   }
 
   async createTrip(input: CreateTripInput): Promise<Result<Trip>> {
+    // Trip length must be greater than 0 days — no upper bound.
+    if (input.endDate < input.startDate) {
+      return { ok: false, error: validationError('Trip length must be greater than 0 days.', 'trip') };
+    }
+
     const id = generateId();
     const now = new Date().toISOString();
     const days = buildDays(id, input.startDate, input.endDate);

@@ -18,8 +18,8 @@ const statusStyles: Record<string, string> = {
 
 export default function TripCard({ trip, onOpen, onEdit, onDuplicate, onDelete }: TripCardProps) {
   return (
-    <div className="card overflow-hidden hover:shadow-pop hover:border-white/20 transition-all duration-200 flex flex-col">
-      <div className="h-1.5 bg-gradient-to-r from-brand-400 to-blue-500" />
+    <div className="card card-interactive overflow-hidden flex flex-col">
+      <div className="h-1.5 bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500" />
       <div className="p-5 flex flex-col flex-1">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">

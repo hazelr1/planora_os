@@ -1,41 +1,93 @@
-import { useState } from 'react';
-import { AlertTriangle, Bot, Loader2, Send, Zap } from 'lucide-react';
-import type { AIRevisionProposal, Trip } from '../types';
+import { useEffect, useRef, useState } from 'react';
+import { AlertTriangle, Bot, Loader2, Send, Sparkles, User, Zap } from 'lucide-react';
+import type { AIRevisionProposal, CopilotMessage, CopilotReply, Trip } from '../types';
 import { supabase } from '../lib/supabase';
 
 interface AIAssistantPanelProps {
   trip: Trip;
   onRevisionProposed: (proposal: AIRevisionProposal) => void;
+  /** Set by the proactive suggestion banner to trigger a copilot request from outside the panel. */
+  externalPrompt?: string | null;
+  onExternalPromptHandled?: () => void;
 }
 
 const SUGGESTION_CHIPS = [
   'Make this trip cheaper',
-  'Make tomorrow less busy',
-  'Add more local food experiences',
-  'Swap lunch for something vegetarian',
-  'Find a hidden gem nearby',
+  'Move beach day to Friday',
+  'Add hidden gems',
+  'What should I wear?',
+  'How much should I tip?',
 ];
 
 const DEMO_CHIPS = [
   'Make this trip cheaper',
   'Make Day 3 less busy',
-  'Replace outdoor activities',
+  'What scams should I avoid?',
 ];
 
 type PanelStatus = 'idle' | 'analyzing' | 'error';
 
-export default function AIAssistantPanel({ trip, onRevisionProposed }: AIAssistantPanelProps) {
-  const [instruction, setInstruction] = useState('');
+function historyKey(tripId: string): string {
+  return `planora-copilot-${tripId}`;
+}
+
+function loadHistory(tripId: string): CopilotMessage[] {
+  try {
+    const raw = sessionStorage.getItem(historyKey(tripId));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(tripId: string, messages: CopilotMessage[]): void {
+  try {
+    sessionStorage.setItem(historyKey(tripId), JSON.stringify(messages));
+  } catch {
+    // sessionStorage unavailable (e.g. private browsing quota) — chat still works, just not persisted
+  }
+}
+
+function generateId(): string {
+  return crypto.randomUUID();
+}
+
+export default function AIAssistantPanel({ trip, onRevisionProposed, externalPrompt, onExternalPromptHandled }: AIAssistantPanelProps) {
+  const [messages, setMessages] = useState<CopilotMessage[]>(() => loadHistory(trip.id));
+  const [input, setInput] = useState('');
   const [status, setStatus] = useState<PanelStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const canSubmit = instruction.trim().length > 0 && status !== 'analyzing';
+  // Reload history if the user navigates to a different trip's workspace
+  useEffect(() => {
+    setMessages(loadHistory(trip.id));
+  }, [trip.id]);
 
-  const submitInstruction = async (text: string) => {
+  useEffect(() => {
+    saveHistory(trip.id, messages);
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+  }, [messages, trip.id]);
+
+  const canSubmit = input.trim().length > 0 && status !== 'analyzing';
+
+  const submitMessage = async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed || status === 'analyzing') return;
 
-    setInstruction(trimmed);
+    const userMessage: CopilotMessage = { id: generateId(), role: 'user', text: trimmed, createdAt: new Date().toISOString() };
+    const conversationHistory = messages
+      .filter((m) => m.text || m.proposal)
+      .slice(-10)
+      .map((m) => ({
+        role: m.role,
+        content: m.text ?? (m.proposal ? `Proposed changes: ${m.proposal.summary}` : ''),
+      }));
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInput('');
     setStatus('analyzing');
     setErrorMessage(null);
 
@@ -56,22 +108,35 @@ export default function AIAssistantPanel({ trip, onRevisionProposed }: AIAssista
             'Authorization': `Bearer ${session.access_token}`,
             'Apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
           },
-          body: JSON.stringify({ trip_id: trip.id, instruction: trimmed }),
+          body: JSON.stringify({ trip_id: trip.id, instruction: trimmed, conversation_history: conversationHistory }),
           signal: AbortSignal.timeout(60_000),
         },
       );
 
-      const json = await response.json() as AIRevisionProposal & { error?: string };
+      const json = await response.json() as
+        | { error: string }
+        | (CopilotReply & Omit<AIRevisionProposal, 'instruction'>);
 
-      if (!response.ok || json.error) {
-        setErrorMessage(json.error ?? 'Could not generate a revision. Please try again.');
+      if (!response.ok || 'error' in json) {
+        setErrorMessage('error' in json ? json.error : 'Could not respond. Please try again.');
         setStatus('error');
         return;
       }
 
       setStatus('idle');
-      setInstruction('');
-      onRevisionProposed({ ...json, instruction: trimmed });
+
+      if (json.type === 'answer') {
+        setMessages((prev) => [...prev, {
+          id: generateId(), role: 'assistant', text: json.message, createdAt: new Date().toISOString(),
+        }]);
+      } else {
+        setMessages((prev) => [...prev, {
+          id: generateId(),
+          role: 'assistant',
+          proposal: { ...json, instruction: trimmed },
+          createdAt: new Date().toISOString(),
+        }]);
+      }
     } catch (err) {
       const isTimeout = err instanceof DOMException && err.name === 'TimeoutError';
       setErrorMessage(
@@ -83,56 +148,111 @@ export default function AIAssistantPanel({ trip, onRevisionProposed }: AIAssista
     }
   };
 
+  // Triggered by the proactive suggestion banner — submits on the user's
+  // behalf but still only ever produces a reviewable proposal, never an
+  // applied change.
+  useEffect(() => {
+    if (!externalPrompt) return;
+    void submitMessage(externalPrompt);
+    onExternalPromptHandled?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalPrompt]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    void submitInstruction(instruction);
+    void submitMessage(input);
   };
 
   const handleChipClick = (chip: string) => {
     if (trip.isDemo) {
-      // Demo chips submit immediately — no need to press Send
-      void submitInstruction(chip);
+      void submitMessage(chip);
     } else {
-      setInstruction(chip);
+      setInput(chip);
     }
   };
 
   const chips = trip.isDemo ? DEMO_CHIPS : SUGGESTION_CHIPS;
 
   return (
-    <div className="ai-surface p-5 sticky top-20">
+    <div className="ai-surface p-5 sticky top-20 flex flex-col max-h-[calc(100vh-6rem)]">
       {/* Header */}
-      <div className="flex items-center gap-2.5 mb-4">
+      <div className="flex items-center gap-2.5 mb-4 shrink-0">
         <div className="h-9 w-9 rounded-xl ai-gradient flex items-center justify-center shrink-0 shadow-soft">
           <Bot className="text-white" size={18} />
         </div>
         <div>
-          <h3 className="font-display text-base font-700 text-ink-900">AI Assistant</h3>
-          <p className="text-xs text-ink-600">Ask for itinerary changes</p>
+          <h3 className="font-display text-base font-700 text-ink-900">AI Copilot</h3>
+          <p className="text-xs text-ink-600">Ask questions or request itinerary changes</p>
         </div>
       </div>
 
+      {/* Conversation */}
+      {messages.length > 0 && (
+        <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-3 mb-3 pr-0.5 min-h-0">
+          {messages.map((m) => (
+            <div key={m.id} className={`flex gap-2 ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
+              <div className={`h-6 w-6 rounded-lg flex items-center justify-center shrink-0 ${
+                m.role === 'user' ? 'bg-white/10 text-ink-700' : 'ai-gradient text-white'
+              }`}>
+                {m.role === 'user' ? <User size={12} /> : <Sparkles size={12} />}
+              </div>
+
+              {m.text && (
+                <div className={`rounded-xl px-3 py-2 text-xs leading-relaxed max-w-[85%] ${
+                  m.role === 'user'
+                    ? 'bg-brand-500/15 text-ink-800 border border-brand-400/20'
+                    : 'bg-violet-500/10 text-violet-100 border border-violet-400/20'
+                }`}>
+                  {m.text}
+                </div>
+              )}
+
+              {m.proposal && (
+                <div className="rounded-xl px-3 py-2.5 text-xs bg-violet-500/10 border border-violet-400/20 max-w-[85%] space-y-2">
+                  <p className="text-violet-100 leading-relaxed">{m.proposal.summary}</p>
+                  <div className="flex items-center justify-between text-[10px] text-violet-200/80">
+                    <span>{m.proposal.changes.length} change{m.proposal.changes.length === 1 ? '' : 's'} proposed</span>
+                    <span className={m.proposal.budget_difference > 0 ? 'text-rose-300' : m.proposal.budget_difference < 0 ? 'text-emerald-300' : ''}>
+                      {m.proposal.budget_difference === 0
+                        ? 'No budget change'
+                        : `${m.proposal.budget_difference > 0 ? '+' : ''}${trip.currency} ${Math.round(m.proposal.budget_difference).toLocaleString()}`}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onRevisionProposed(m.proposal!)}
+                    className="btn-primary w-full text-xs py-1.5"
+                  >
+                    Review changes
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Analyzing state */}
       {status === 'analyzing' && (
-        <div className="rounded-xl bg-violet-500/10 border border-violet-400/20 px-3.5 py-3 flex items-center gap-2.5 mb-4">
-          <Loader2 size={14} className="text-violet-300 shrink-0 animate-spin" />
+        <div className="rounded-xl bg-violet-500/10 border border-violet-400/20 px-3.5 py-3 flex items-center gap-2.5 mb-4 shrink-0">
+          <span className="typing-dots"><span /><span /><span /></span>
           <p className="text-xs text-violet-200 leading-relaxed font-medium">
-            Analyzing itinerary and constraints…
+            Thinking…
           </p>
         </div>
       )}
 
       {/* Error state */}
       {status === 'error' && errorMessage && (
-        <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 px-3.5 py-3 flex items-start gap-2 mb-4">
+        <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 px-3.5 py-3 flex items-start gap-2 mb-4 shrink-0">
           <AlertTriangle size={14} className="text-rose-400 mt-0.5 shrink-0" />
-          <p className="text-xs text-rose-300 leading-relaxed">{errorMessage}</p>
+          <p className="text-xs text-rose-300 leading-relaxed whitespace-pre-line">{errorMessage}</p>
         </div>
       )}
 
       {/* Quick request chips */}
-      {status !== 'analyzing' && (
-        <div className="mb-3">
+      {status !== 'analyzing' && messages.length === 0 && (
+        <div className="mb-3 shrink-0">
           <p className="text-xs font-semibold text-ink-600 uppercase tracking-wide mb-2">
             {trip.isDemo
               ? <span className="flex items-center gap-1"><Zap size={11} className="text-amber-400" /> Quick requests</span>
@@ -156,23 +276,23 @@ export default function AIAssistantPanel({ trip, onRevisionProposed }: AIAssista
             ))}
           </div>
           {trip.isDemo && (
-            <p className="text-[10px] text-ink-600 mt-1.5">Tap a chip to instantly request a real AI revision.</p>
+            <p className="text-[10px] text-ink-600 mt-1.5">Tap a chip to instantly request a real AI response.</p>
           )}
         </div>
       )}
 
       {/* Input form */}
-      <form className="mt-3" onSubmit={handleSubmit}>
-        <label htmlFor="ai-input" className="sr-only">Ask the AI assistant</label>
+      <form className="mt-auto shrink-0" onSubmit={handleSubmit}>
+        <label htmlFor="ai-input" className="sr-only">Ask the AI Copilot</label>
         <textarea
           id="ai-input"
-          className="input min-h-[72px] resize-none"
-          placeholder="Describe what you'd like to change…"
-          value={instruction}
-          onChange={(e) => setInstruction(e.target.value)}
+          className="input min-h-[64px] resize-none"
+          placeholder="Ask a travel question or request a change…"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
           disabled={status === 'analyzing'}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) void submitInstruction(instruction);
+            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) void submitMessage(input);
           }}
         />
         <button
@@ -181,7 +301,7 @@ export default function AIAssistantPanel({ trip, onRevisionProposed }: AIAssista
           disabled={!canSubmit}
         >
           {status === 'analyzing'
-            ? <><Loader2 size={14} className="animate-spin" /> Analyzing…</>
+            ? <><Loader2 size={14} className="animate-spin" /> Thinking…</>
             : <><Send size={14} /> Send</>
           }
         </button>
@@ -189,7 +309,7 @@ export default function AIAssistantPanel({ trip, onRevisionProposed }: AIAssista
 
       {/* Demo note */}
       {trip.isDemo && status === 'idle' && (
-        <p className="mt-3 text-[10px] text-ink-600 text-center leading-relaxed">
+        <p className="mt-3 text-[10px] text-ink-600 text-center leading-relaxed shrink-0">
           This is a demo trip. Changes are saved to your isolated session.
         </p>
       )}

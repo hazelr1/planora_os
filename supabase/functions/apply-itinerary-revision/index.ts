@@ -26,12 +26,15 @@ interface DbActivity {
   location: string;
   duration_minutes: number;
   estimated_cost: number;
+  cost_confidence: string;
   currency: string;
   category: string;
   ai_reason: string;
   is_locked: boolean;
   personal_note: string;
   sort_order: number;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 interface DbRevision {
@@ -52,8 +55,11 @@ interface ActivitySnapshot {
   start_time: string;
   duration_minutes: number;
   estimated_cost: number;
+  cost_confidence?: "low" | "medium" | "high";
   category: string;
   ai_reason: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface ProposalChange {
@@ -90,6 +96,9 @@ function snapshotToInsert(
   currency: string,
   sortOrder: number,
 ): Record<string, unknown> {
+  const hasCoords = typeof snap.latitude === "number" && typeof snap.longitude === "number"
+    && Math.abs(snap.latitude) <= 90 && Math.abs(snap.longitude) <= 180 && (snap.latitude !== 0 || snap.longitude !== 0);
+
   return {
     trip_day_id: dayId,
     trip_id: tripId,
@@ -99,12 +108,15 @@ function snapshotToInsert(
     location: snap.location || "",
     duration_minutes: Math.max(1, snap.duration_minutes || 60),
     estimated_cost: Math.max(0, snap.estimated_cost ?? 0),
+    cost_confidence: snap.cost_confidence ?? "medium",
     currency,
     category: normaliseCategory(snap.category || "Other"),
     ai_reason: snap.ai_reason || "",
     is_locked: false,
     personal_note: "[]",
     sort_order: sortOrder,
+    latitude: hasCoords ? snap.latitude : null,
+    longitude: hasCoords ? snap.longitude : null,
   };
 }
 
@@ -304,7 +316,7 @@ Deno.serve(async (req: Request) => {
 
       const { error: moveErr } = await svcClient
         .from("activities")
-        .update({ trip_day_id: change.destination_day_id })
+        .update({ trip_day_id: change.destination_day_id, updated_at: new Date().toISOString() })
         .eq("id", change.activity_id)
         .eq("trip_id", revision.trip_id);
 
@@ -326,15 +338,21 @@ Deno.serve(async (req: Request) => {
       if (!current) continue;
 
       const snap = change.after;
-      const patch: Record<string, unknown> = {};
+      const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
       if (snap.title) patch.title = snap.title;
       if (snap.description !== undefined) patch.description = snap.description;
       if (snap.location !== undefined) patch.location = snap.location;
       if (snap.start_time !== undefined) patch.time = snap.start_time;
       if (snap.duration_minutes > 0) patch.duration_minutes = snap.duration_minutes;
       if (snap.estimated_cost >= 0) patch.estimated_cost = snap.estimated_cost;
+      if (snap.cost_confidence) patch.cost_confidence = snap.cost_confidence;
       if (snap.category) patch.category = normaliseCategory(snap.category);
       if (snap.ai_reason) patch.ai_reason = snap.ai_reason;
+      if (typeof snap.latitude === "number" && typeof snap.longitude === "number"
+        && (snap.latitude !== 0 || snap.longitude !== 0)) {
+        patch.latitude = snap.latitude;
+        patch.longitude = snap.longitude;
+      }
 
       const { error: updErr } = await svcClient
         .from("activities")

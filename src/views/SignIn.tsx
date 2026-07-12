@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Mail, Lock, User, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react';
 import type { Screen } from '../types';
 import { authRepository } from '../data';
@@ -6,6 +6,14 @@ import { authRepository } from '../data';
 interface SignInProps {
   onNavigate: (screen: Screen) => void;
   onAuthSuccess: () => void;
+  /**
+   * Called immediately before/after the sign-up request. Lets the parent
+   * suppress its "authenticated -> redirect" effect in case the sign-up
+   * response transiently establishes a session (e.g. email confirmation
+   * disabled) — sign-up must never auto-navigate the user anywhere.
+   */
+  onSignUpStart?: () => void;
+  onSignUpSettled?: () => void;
 }
 
 type Tab = 'signin' | 'signup';
@@ -35,9 +43,53 @@ function validateSignUp(form: SignUpForm): string | null {
   return null;
 }
 
+// ─── Shared form controls ─────────────────────────────────────────────────────
+//
+// Defined at module scope (not inside SignIn) so their component identity is
+// stable across renders. Previously these were declared inside the SignIn
+// function body, which meant every re-render (e.g. on each keystroke's setState)
+// created a brand-new component type. React then unmounted and remounted the
+// underlying <input> DOM nodes instead of just updating them, which is what
+// caused focus to drop after every typed character.
+
+function InputIcon({ icon }: { icon: React.ReactNode }) {
+  return (
+    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-500">
+      {icon}
+    </span>
+  );
+}
+
+function Field({
+  id, label, type = 'text', placeholder, value, onChange, autoComplete, disabled,
+}: {
+  id: string; label: string; type?: string; placeholder: string;
+  value: string; onChange: (v: string) => void;
+  autoComplete?: string; disabled: boolean;
+}) {
+  return (
+    <div>
+      <label htmlFor={id} className="label">{label}</label>
+      <div className="relative">
+        <InputIcon icon={
+          type === 'email' ? <Mail size={15} /> :
+          type === 'password' ? <Lock size={15} /> :
+          <User size={15} />
+        } />
+        <input
+          id={id} type={type} className="input pl-9"
+          placeholder={placeholder} value={value}
+          onChange={(e) => onChange(e.target.value)}
+          autoComplete={autoComplete} disabled={disabled}
+        />
+      </div>
+    </div>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function SignIn({ onNavigate, onAuthSuccess }: SignInProps) {
+export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSignUpSettled }: SignInProps) {
   const [tab, setTab] = useState<Tab>('signin');
 
   // Separate form state per tab so switching doesn't bleed data
@@ -47,6 +99,22 @@ export default function SignIn({ onNavigate, onAuthSuccess }: SignInProps) {
   const [loadingSignIn, setLoadingSignIn] = useState(false);
   const [loadingSignUp, setLoadingSignUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [signUpSuccess, setSignUpSuccess] = useState(false);
+  const signUpSuccessTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // After a successful sign-up, show a confirmation card for a couple of
+  // seconds, then switch back to the Sign In tab. The user is never
+  // auto-signed-in and never navigated away from this page.
+  useEffect(() => {
+    if (!signUpSuccess) return;
+    signUpSuccessTimeout.current = setTimeout(() => {
+      setSignUpSuccess(false);
+      setTab('signin');
+    }, 2500);
+    return () => {
+      if (signUpSuccessTimeout.current) clearTimeout(signUpSuccessTimeout.current);
+    };
+  }, [signUpSuccess]);
 
   const switchTab = (next: Tab) => {
     setTab(next);
@@ -85,6 +153,7 @@ export default function SignIn({ onNavigate, onAuthSuccess }: SignInProps) {
     if (err) { setError(err); return; }
 
     setLoadingSignUp(true);
+    onSignUpStart?.();
     try {
       const result = await authRepository.signUp({
         email: signUpForm.email.trim(),
@@ -92,45 +161,17 @@ export default function SignIn({ onNavigate, onAuthSuccess }: SignInProps) {
         name: signUpForm.displayName.trim(),
       });
       if (!result.ok) { setError(result.error.message); return; }
-      // Auto sign-in after successful sign-up
-      onAuthSuccess();
+      // Do NOT auto sign-in: the account may still need email verification,
+      // and even when it doesn't, sign-up should never double as sign-in.
+      // Show a confirmation card instead; the effect above switches back to
+      // the Sign In tab a couple of seconds later.
+      setSignUpForm(emptySignUp);
+      setSignUpSuccess(true);
     } finally {
       setLoadingSignUp(false);
+      onSignUpSettled?.();
     }
   };
-
-  // ── Shared UI helpers ────────────────────────────────────────────────────
-
-  const InputIcon = ({ icon }: { icon: React.ReactNode }) => (
-    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-500">
-      {icon}
-    </span>
-  );
-
-  const Field = ({
-    id, label, type = 'text', placeholder, value, onChange, autoComplete, disabled,
-  }: {
-    id: string; label: string; type?: string; placeholder: string;
-    value: string; onChange: (v: string) => void;
-    autoComplete?: string; disabled: boolean;
-  }) => (
-    <div>
-      <label htmlFor={id} className="label">{label}</label>
-      <div className="relative">
-        <InputIcon icon={
-          type === 'email' ? <Mail size={15} /> :
-          type === 'password' ? <Lock size={15} /> :
-          <User size={15} />
-        } />
-        <input
-          id={id} type={type} className="input pl-9"
-          placeholder={placeholder} value={value}
-          onChange={(e) => onChange(e.target.value)}
-          autoComplete={autoComplete} disabled={disabled}
-        />
-      </div>
-    </div>
-  );
 
   return (
     <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center px-4 py-12">
@@ -149,33 +190,48 @@ export default function SignIn({ onNavigate, onAuthSuccess }: SignInProps) {
         </div>
 
         <div className="card p-8">
-          {/* Tab switcher */}
-          <div className="flex rounded-xl bg-ink-200/60 p-1 mb-6">
-            {(['signin', 'signup'] as Tab[]).map((t) => (
-              <button
-                key={t} type="button"
-                onClick={() => switchTab(t)}
-                className={`flex-1 rounded-lg py-2 text-sm font-600 transition ${
-                  tab === t
-                    ? 'bg-ink-300/80 text-ink-900 shadow-soft'
-                    : 'text-ink-500 hover:text-ink-700'
-                }`}
-              >
-                {t === 'signin' ? 'Sign In' : 'Create Account'}
-              </button>
-            ))}
-          </div>
-
-          {/* Error banner */}
-          {error && (
-            <div className="mb-5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 flex items-start gap-2.5 animate-scale-in">
-              <AlertCircle size={15} className="text-rose-400 shrink-0 mt-0.5" />
-              <p className="text-sm text-rose-300">{error}</p>
+          {/* Sign-up success card — shown instead of the tabs/forms until the
+              auto-switch back to Sign In fires. The user is never signed in
+              or navigated away here; this is purely a confirmation message. */}
+          {signUpSuccess ? (
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-4 flex items-start gap-3 animate-scale-in" role="status">
+              <CheckCircle2 size={18} className="text-emerald-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-emerald-300">Account created successfully.</p>
+                <p className="text-sm text-emerald-300/80 mt-1 leading-relaxed">
+                  Please verify your email using the link sent to your inbox before signing in.
+                </p>
+              </div>
             </div>
-          )}
+          ) : (
+            <>
+              {/* Tab switcher */}
+              <div className="flex rounded-xl bg-ink-200/60 p-1 mb-6">
+                {(['signin', 'signup'] as Tab[]).map((t) => (
+                  <button
+                    key={t} type="button"
+                    onClick={() => switchTab(t)}
+                    className={`flex-1 rounded-lg py-2 text-sm font-600 transition ${
+                      tab === t
+                        ? 'bg-ink-300/80 text-ink-900 shadow-soft'
+                        : 'text-ink-500 hover:text-ink-700'
+                    }`}
+                  >
+                    {t === 'signin' ? 'Sign In' : 'Create Account'}
+                  </button>
+                ))}
+              </div>
 
-          {/* ── SIGN-IN FORM ── */}
-          {tab === 'signin' && (
+              {/* Error banner */}
+              {error && (
+                <div className="mb-5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 flex items-start gap-2.5 animate-scale-in">
+                  <AlertCircle size={15} className="text-rose-400 shrink-0 mt-0.5" />
+                  <p className="text-sm text-rose-300">{error}</p>
+                </div>
+              )}
+
+              {/* ── SIGN-IN FORM ── */}
+              {tab === 'signin' && (
             <form onSubmit={handleSignIn} className="space-y-4" noValidate>
               <Field
                 id="si-email" label="Email address" type="email"
@@ -269,6 +325,8 @@ export default function SignIn({ onNavigate, onAuthSuccess }: SignInProps) {
                 )}
               </button>
             </form>
+          )}
+            </>
           )}
 
           {/* Footer */}

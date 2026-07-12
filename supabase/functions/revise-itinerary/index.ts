@@ -26,10 +26,13 @@ interface DbActivity {
   location: string;
   duration_minutes: number;
   estimated_cost: number;
+  cost_confidence: string;
   category: string;
   ai_reason: string;
   is_locked: boolean;
   sort_order: number;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 interface DbTripDay {
@@ -56,6 +59,13 @@ interface DbTrip {
   special_requests: string;
 }
 
+// ─── Copilot conversation ─────────────────────────────────────────────────────
+
+interface ConversationTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
 // ─── Proposal types (match the contract with the frontend) ───────────────────
 
 interface ActivitySnapshot {
@@ -65,8 +75,11 @@ interface ActivitySnapshot {
   start_time: string;
   duration_minutes: number;
   estimated_cost: number;
+  cost_confidence: "low" | "medium" | "high";
   category: string;
   ai_reason: string;
+  latitude: number;
+  longitude: number;
 }
 
 interface ProposalChange {
@@ -96,6 +109,12 @@ interface Proposal {
   warnings: string[];
 }
 
+/** What the model returns for a single turn — either a plain answer or a full proposal. */
+interface CopilotModelReply extends Proposal {
+  reply_type: "answer" | "proposal";
+  answer_text: string;
+}
+
 // ─── OpenAI JSON schema ───────────────────────────────────────────────────────
 
 const activitySnapshotSchema = {
@@ -107,16 +126,28 @@ const activitySnapshotSchema = {
     start_time: { type: "string" },
     duration_minutes: { type: "integer" },
     estimated_cost: { type: "number" },
+    cost_confidence: { type: "string", enum: ["low", "medium", "high"] },
     category: { type: "string" },
     ai_reason: { type: "string" },
+    latitude: { type: "number" },
+    longitude: { type: "number" },
   },
-  required: ["title", "description", "location", "start_time", "duration_minutes", "estimated_cost", "category", "ai_reason"],
+  required: [
+    "title", "description", "location", "start_time", "duration_minutes",
+    "estimated_cost", "cost_confidence", "category", "ai_reason", "latitude", "longitude",
+  ],
   additionalProperties: false,
 };
 
-const proposalSchema = {
+const copilotReplySchema = {
   type: "object",
   properties: {
+    reply_type: { type: "string", enum: ["answer", "proposal"] },
+    // Used when reply_type = "answer". Empty string when reply_type = "proposal".
+    answer_text: { type: "string" },
+    // Everything below is used when reply_type = "proposal". Use the same
+    // empty/zero defaults as the "not applicable" convention below when
+    // reply_type = "answer".
     summary: { type: "string" },
     constraints: {
       type: "array",
@@ -154,7 +185,10 @@ const proposalSchema = {
     pace_effect: { type: "string" },
     warnings: { type: "array", items: { type: "string" } },
   },
-  required: ["summary", "constraints", "changes", "old_estimated_total", "new_estimated_total", "budget_difference", "pace_effect", "warnings"],
+  required: [
+    "reply_type", "answer_text", "summary", "constraints", "changes",
+    "old_estimated_total", "new_estimated_total", "budget_difference", "pace_effect", "warnings",
+  ],
   additionalProperties: false,
 };
 
@@ -190,6 +224,15 @@ CURRENT ITINERARY (use the exact IDs when referencing existing activities or day
 ${dayLines}
 
 RULES:
+- First decide reply_type. Use "answer" for general travel questions that do not require changing
+  the itinerary (e.g. tipping norms, tap water safety, SIM cards, what to wear, scams to avoid,
+  cash vs card). Use "proposal" whenever the user is asking to add, remove, move, replace, or
+  otherwise change activities, days, or budget.
+- If reply_type = "answer": put your response in answer_text. Set summary="", constraints=[],
+  changes=[], old_estimated_total=0, new_estimated_total=0, budget_difference=0, pace_effect="",
+  warnings=[].
+- If reply_type = "proposal": set answer_text="" and propose the smallest necessary changes to
+  fulfill the user's instruction, exactly as described below.
 - Activities marked [LOCKED] MUST NOT be edited, moved, removed, or replaced.
 - Maximum 6 activities per day.
 - Estimated cost must be >= 0.
@@ -199,7 +242,8 @@ RULES:
 - For "move": activity_id=<id>, source_day_id=<from day id>, destination_day_id=<to day id>, before/after = same activity details.
 - For "replace": activity_id=<existing id>, source_day_id=<day id>, destination_day_id="", before=existing activity, after=replacement.
 - For "update": activity_id=<id>, source_day_id=<day id>, destination_day_id="", before=current values of changed fields (other fields empty/""), after=new values.
-- In before/after for "add"/"remove" where data is not applicable, use: title="", description="", location="", start_time="", duration_minutes=0, estimated_cost=0, category="Other", ai_reason="".
+- In before/after for "add"/"remove" where data is not applicable, use: title="", description="", location="", start_time="", duration_minutes=0, estimated_cost=0, cost_confidence="medium", category="Other", ai_reason="", latitude=0, longitude=0.
+- For "add"/"replace", set after.latitude/after.longitude to your best-effort real-world coordinates for after.location, and after.cost_confidence to how confident you are in after.estimated_cost.
 `.trim();
 }
 
@@ -227,34 +271,47 @@ function validateLockedActivities(
   return { clean, violations };
 }
 
-// ─── Call OpenAI ──────────────────────────────────────────────────────────────
+// ─── Call OpenRouter ──────────────────────────────────────────────────────────
 
-async function callOpenAI(context: string, instruction: string, apiKey: string): Promise<Proposal> {
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+async function callOpenAI(
+  context: string,
+  history: ConversationTurn[],
+  instruction: string,
+  apiKey: string,
+): Promise<CopilotModelReply> {
+  const messages = [
+    {
+      role: "system",
+      content:
+        "You are Planora Copilot, a conversational AI travel assistant embedded in a trip-planning app. " +
+        "For every user message, first decide whether it is a general travel question (e.g. tipping, tap water, SIM cards, what to wear, scams, cash vs card, hidden gems advice) or a request to modify the trip's itinerary. " +
+        "Answer questions helpfully and concisely using the trip's destination and dates for context. " +
+        "For itinerary modification requests, propose the smallest necessary changes. Preserve locked activities exactly. " +
+        "Do not claim confirmed availability, live prices, or opening hours. All costs are estimates. Explain every proposed change clearly. " +
+        "If a constraint cannot be satisfied, state it clearly in the constraints list. Return only structured data matching the required schema.",
+    },
+    { role: "user", content: `ITINERARY CONTEXT:\n${context}` },
+    { role: "assistant", content: "Understood. I have the current itinerary. What would you like?" },
+    ...history.map((t) => ({ role: t.role, content: t.content })),
+    { role: "user", content: instruction },
+  ];
+
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
+      "X-Title": "Planora",
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are Planora, an expert travel itinerary revision assistant. Your task is to propose the smallest necessary changes to fulfill the user's instruction. Preserve locked activities exactly. Do not claim confirmed availability, live prices, or opening hours. All costs are estimates. Explain every proposed change clearly. If a constraint cannot be satisfied, state it clearly in the constraints list.",
-        },
-        {
-          role: "user",
-          content: `ITINERARY CONTEXT:\n${context}\n\nUSER INSTRUCTION: ${instruction}`,
-        },
-      ],
+      model: "openai/gpt-4o-mini",
+      messages,
       response_format: {
         type: "json_schema",
         json_schema: {
-          name: "itinerary_revision_proposal",
+          name: "copilot_reply",
           strict: true,
-          schema: proposalSchema,
+          schema: copilotReplySchema,
         },
       },
       temperature: 0.5,
@@ -264,20 +321,23 @@ async function callOpenAI(context: string, instruction: string, apiKey: string):
 
   if (response.status === 429) throw new Error("RATE_LIMITED");
   if (response.status === 401) throw new Error("INVALID_API_KEY");
-  if (!response.ok) throw new Error(`OPENAI_ERROR:${response.status}`);
+  if (response.status === 402) throw new Error("INSUFFICIENT_CREDITS");
+  if (!response.ok) throw new Error(`OPENROUTER_ERROR:${response.status}`);
 
   const data = await response.json();
   const content = data.choices?.[0]?.message?.content;
   if (!content) throw new Error("EMPTY_RESPONSE");
 
-  let parsed: Proposal;
+  let parsed: CopilotModelReply;
   try {
     parsed = JSON.parse(content);
   } catch {
     throw new Error("INVALID_JSON");
   }
 
-  if (!Array.isArray(parsed.changes)) throw new Error("INVALID_STRUCTURE");
+  if (parsed.reply_type === "proposal" && !Array.isArray(parsed.changes)) {
+    throw new Error("INVALID_STRUCTURE");
+  }
   return parsed;
 }
 
@@ -301,7 +361,7 @@ Deno.serve(async (req: Request) => {
     const { data: { user }, error: authErr } = await supabase.auth.getUser();
     if (authErr || !user) return jsonRes({ error: "Authentication required." }, 401);
 
-    let body: { trip_id?: string; instruction?: string };
+    let body: { trip_id?: string; instruction?: string; conversation_history?: ConversationTurn[] };
     try {
       body = await req.json();
     } catch {
@@ -312,6 +372,12 @@ Deno.serve(async (req: Request) => {
     if (!trip_id?.trim()) return jsonRes({ error: "trip_id is required." }, 400);
     if (!instruction?.trim()) return jsonRes({ error: "instruction is required." }, 400);
     if (instruction.length > 1000) return jsonRes({ error: "Instruction must be 1000 characters or fewer." }, 400);
+
+    // Cap history to the last 10 turns so the prompt doesn't grow unbounded
+    // over a long copilot session.
+    const history = Array.isArray(body.conversation_history)
+      ? body.conversation_history.slice(-10).filter((t) => t && (t.role === "user" || t.role === "assistant") && typeof t.content === "string")
+      : [];
 
     // Load trip (RLS verifies ownership, but we double-check explicitly)
     const { data: tripData, error: tripErr } = await supabase
@@ -370,24 +436,34 @@ Deno.serve(async (req: Request) => {
     // Build snapshot for before_json
     const beforeSnapshot = { days, activities };
 
-    // Call OpenAI
-    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    // Call OpenRouter
+    const apiKey = Deno.env.get("OPENROUTER_API_KEY");
     if (!apiKey) {
-      console.error("[revise-itinerary] OPENAI_API_KEY not set");
-      return jsonRes({ error: "Revision service is not configured." }, 503);
+      console.error("[revise-itinerary] OPENROUTER_API_KEY not set");
+      return jsonRes({
+        error: "AI itinerary revisions are currently unavailable.\nPlease configure your AI provider.",
+      }, 503);
     }
 
     const context = buildContext(trip, days, activities);
 
-    let proposal: Proposal;
+    let modelReply: CopilotModelReply;
     try {
-      proposal = await callOpenAI(context, instruction.trim(), apiKey);
+      modelReply = await callOpenAI(context, history, instruction.trim(), apiKey);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "UNKNOWN";
       console.error("[revise-itinerary] OpenAI error:", msg);
       if (msg === "RATE_LIMITED") return jsonRes({ error: "Too many requests. Please try again in a moment." }, 429);
-      return jsonRes({ error: "Could not generate revision proposal. Please try again." }, 502);
+      return jsonRes({ error: "Could not generate a response. Please try again." }, 502);
     }
+
+    // ── Plain travel-question reply — no itinerary changes, nothing saved ──
+    if (modelReply.reply_type === "answer") {
+      return jsonRes({ type: "answer", message: modelReply.answer_text || "I don't have an answer for that." });
+    }
+
+    // ── Itinerary modification proposal — same reviewable-diff flow as before ──
+    const proposal: Proposal = modelReply;
 
     // Validate locked activities
     const { clean: validChanges, violations } = validateLockedActivities(proposal.changes, lockedIds);
@@ -420,13 +496,13 @@ Deno.serve(async (req: Request) => {
     if (revErr || !revisionData) {
       console.error("[revise-itinerary] Revision save error:", revErr?.message);
       // Non-fatal — return the proposal without a revision ID
-      return jsonRes({ revisionId: null, ...proposal, warning: "Proposal could not be saved to history." });
+      return jsonRes({ type: "proposal", revisionId: null, ...proposal, warning: "Proposal could not be saved to history." });
     }
 
     const revisionId = (revisionData as { id: string }).id;
     console.log(`[revise-itinerary] Revision ${revisionId} saved for trip ${trip_id} by user ${user.id}`);
 
-    return jsonRes({ revisionId, ...proposal });
+    return jsonRes({ type: "proposal", revisionId, ...proposal });
   } catch (err) {
     console.error("[revise-itinerary] Unhandled error:", err);
     return jsonRes({ error: "An unexpected error occurred." }, 500);

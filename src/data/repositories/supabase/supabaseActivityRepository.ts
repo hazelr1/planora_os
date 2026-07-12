@@ -1,5 +1,5 @@
 import { supabase } from '../../../lib/supabase';
-import type { Activity, Note, ActivityCategory } from '../../../types';
+import type { Activity, CostConfidence, Note, ActivityCategory } from '../../../types';
 import type { Result } from '../../databaseErrors';
 import { ok, notFound, internal } from '../../databaseErrors';
 import type { IActivityRepository, ActivityInput, ReorderInput } from '../activityRepository';
@@ -22,6 +22,10 @@ interface DbActivity {
   is_locked: boolean;
   personal_note: string;
   sort_order: number;
+  latitude: number | null;
+  longitude: number | null;
+  cost_confidence: CostConfidence;
+  updated_at: string;
 }
 
 // ─── Mappers ──────────────────────────────────────────────────────────────────
@@ -52,6 +56,10 @@ function mapRow(row: DbActivity): Activity {
     aiReason: row.ai_reason,
     locked: row.is_locked,
     notes: parseNotes(row.personal_note),
+    latitude: row.latitude,
+    longitude: row.longitude,
+    costConfidence: row.cost_confidence,
+    updatedAt: row.updated_at,
   };
 }
 
@@ -145,6 +153,7 @@ class SupabaseActivityRepository implements IActivityRepository {
         currency: input.currency,
         category: input.category,
         ai_reason: input.aiReason,
+        updated_at: new Date().toISOString(),
       })
       .eq('id', activityId)
       .select()
@@ -170,13 +179,46 @@ class SupabaseActivityRepository implements IActivityRepository {
     const sortOrder = await nextSortOrder(targetDayId);
     const { data, error } = await supabase
       .from('activities')
-      .update({ trip_day_id: targetDayId, sort_order: sortOrder })
+      .update({ trip_day_id: targetDayId, sort_order: sortOrder, updated_at: new Date().toISOString() })
       .eq('id', activityId)
       .select()
       .maybeSingle();
     if (error) return { ok: false, error: internal(error.message) };
     if (!data) return { ok: false, error: notFound('activity', activityId) };
     return ok(mapRow(data as DbActivity));
+  }
+
+  /**
+   * Sets the exact sort order for every activity in a day in one batch —
+   * used by drag-and-drop, which can drop an activity at any position.
+   */
+  async reorderDay(dayId: string, orderedActivityIds: string[]): Promise<Result<void>> {
+    const now = new Date().toISOString();
+    const results = await Promise.all(
+      orderedActivityIds.map((id, index) =>
+        supabase
+          .from('activities')
+          .update({ sort_order: index, updated_at: now })
+          .eq('id', id)
+          .eq('trip_day_id', dayId),
+      ),
+    );
+    const failed = results.find((r) => r.error);
+    if (failed?.error) return { ok: false, error: internal(failed.error.message) };
+    return ok(undefined);
+  }
+
+  /** Used by drag-to-reschedule and automatic schedule recalculation. */
+  async setActivityTime(activityId: string, tripId: string, time: string): Promise<Result<void>> {
+    const owned = await verifyOwnership(activityId, tripId);
+    if (!owned) return { ok: false, error: notFound('activity', activityId) };
+
+    const { error } = await supabase
+      .from('activities')
+      .update({ time, updated_at: new Date().toISOString() })
+      .eq('id', activityId);
+    if (error) return { ok: false, error: internal(error.message) };
+    return ok(undefined);
   }
 
   async reorderActivity(activityId: string, tripId: string, input: ReorderInput): Promise<Result<void>> {
@@ -200,9 +242,10 @@ class SupabaseActivityRepository implements IActivityRepository {
     const current = siblings[idx] as { id: string; sort_order: number };
     const neighbor = siblings[swapIdx] as { id: string; sort_order: number };
 
+    const now = new Date().toISOString();
     await Promise.all([
-      supabase.from('activities').update({ sort_order: neighbor.sort_order }).eq('id', current.id),
-      supabase.from('activities').update({ sort_order: current.sort_order }).eq('id', neighbor.id),
+      supabase.from('activities').update({ sort_order: neighbor.sort_order, updated_at: now }).eq('id', current.id),
+      supabase.from('activities').update({ sort_order: current.sort_order, updated_at: now }).eq('id', neighbor.id),
     ]);
 
     return ok(undefined);
@@ -214,7 +257,7 @@ class SupabaseActivityRepository implements IActivityRepository {
 
     const { data, error } = await supabase
       .from('activities')
-      .update({ is_locked: !activity.locked })
+      .update({ is_locked: !activity.locked, updated_at: new Date().toISOString() })
       .eq('id', activityId)
       .select()
       .maybeSingle();
@@ -232,7 +275,7 @@ class SupabaseActivityRepository implements IActivityRepository {
 
     const { error } = await supabase
       .from('activities')
-      .update({ personal_note: JSON.stringify(updatedNotes) })
+      .update({ personal_note: JSON.stringify(updatedNotes), updated_at: new Date().toISOString() })
       .eq('id', activityId);
     if (error) return { ok: false, error: internal(error.message) };
     return ok(newNote);
@@ -250,7 +293,7 @@ class SupabaseActivityRepository implements IActivityRepository {
 
     const { error } = await supabase
       .from('activities')
-      .update({ personal_note: JSON.stringify(updatedNotes) })
+      .update({ personal_note: JSON.stringify(updatedNotes), updated_at: new Date().toISOString() })
       .eq('id', activityId);
     if (error) return { ok: false, error: internal(error.message) };
     return ok(updated);
@@ -263,7 +306,7 @@ class SupabaseActivityRepository implements IActivityRepository {
     const updatedNotes = activity.notes.filter((n) => n.id !== noteId);
     const { error } = await supabase
       .from('activities')
-      .update({ personal_note: JSON.stringify(updatedNotes) })
+      .update({ personal_note: JSON.stringify(updatedNotes), updated_at: new Date().toISOString() })
       .eq('id', activityId);
     if (error) return { ok: false, error: internal(error.message) };
     return ok(undefined);

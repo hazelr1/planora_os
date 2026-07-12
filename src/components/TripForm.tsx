@@ -31,6 +31,7 @@ export default function TripForm({ onSubmit, onCancel, submitLabel = 'Generate I
   const [interests, setInterests] = useState<Interest[]>([]);
   const [specialRequests, setSpecialRequests] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [dateError, setDateError] = useState<string | null>(null);
 
   const toggleInterest = (i: Interest) => {
     setInterests((prev) => (prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i]));
@@ -39,6 +40,14 @@ export default function TripForm({ onSubmit, onCancel, submitLabel = 'Generate I
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting || !destination.trim() || !startDate || !endDate) return;
+
+    // Trip length must be greater than 0 days — no upper bound.
+    if (endDate < startDate) {
+      setDateError('Trip length must be greater than 0 days.');
+      return;
+    }
+    setDateError(null);
+
     setSubmitting(true);
     onSubmit({
       destination: destination.trim(),
@@ -70,9 +79,13 @@ export default function TripForm({ onSubmit, onCancel, submitLabel = 'Generate I
         </div>
         <div>
           <label htmlFor="endDate" className="label">End date</label>
-          <input id="endDate" type="date" className={inputCls} value={endDate} min={startDate || today} onChange={(e) => setEndDate(e.target.value)} required />
+          <input id="endDate" type="date" className={inputCls} value={endDate} min={startDate || today} onChange={(e) => { setEndDate(e.target.value); setDateError(null); }} required />
         </div>
       </div>
+
+      {dateError && (
+        <p className="text-xs text-rose-400 -mt-4">{dateError}</p>
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         <div>

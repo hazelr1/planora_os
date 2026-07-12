@@ -42,7 +42,7 @@ function validateInput(body: Partial<GenerateRequest>): string | null {
   if (isNaN(start.getTime()) || isNaN(end.getTime())) return "Invalid date values.";
   if (end < start) return "End date must be on or after start date.";
   const days = Math.round((end.getTime() - start.getTime()) / 86_400_000) + 1;
-  if (days < 1 || days > 14) return "Trip length must be between 1 and 14 days.";
+  if (days < 1) return "Trip length must be greater than 0 days.";
 
   if (typeof body.budget !== "number" || body.budget <= 0) return "Budget must be greater than zero.";
   if (typeof body.travelers !== "number" || body.travelers < 1 || body.travelers > 20)
@@ -85,10 +85,16 @@ const responseSchema = {
                 start_time: { type: "string" },
                 duration_minutes: { type: "integer" },
                 estimated_cost: { type: "number" },
+                cost_confidence: { type: "string", enum: ["low", "medium", "high"] },
                 category: { type: "string" },
                 ai_reason: { type: "string" },
+                latitude: { type: "number" },
+                longitude: { type: "number" },
               },
-              required: ["title", "description", "location", "start_time", "duration_minutes", "estimated_cost", "category", "ai_reason"],
+              required: [
+                "title", "description", "location", "start_time", "duration_minutes",
+                "estimated_cost", "cost_confidence", "category", "ai_reason", "latitude", "longitude",
+              ],
               additionalProperties: false,
             },
           },
@@ -111,8 +117,11 @@ interface OpenAIActivity {
   start_time: string;
   duration_minutes: number;
   estimated_cost: number;
+  cost_confidence: "low" | "medium" | "high";
   category: string;
   ai_reason: string;
+  latitude: number;
+  longitude: number;
 }
 
 interface OpenAIDay {
@@ -140,19 +149,20 @@ Interests: ${req.interests.join(", ")}
 ${req.special_requests ? `Special requests: ${req.special_requests}` : ""}
 `.trim();
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
+      "X-Title": "Planora",
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
+      model: "openai/gpt-4o-mini",
       messages: [
         {
           role: "system",
           content:
-            "You are Planora, an expert travel itinerary planner. Create a realistic and editable itinerary based on the user's destination, dates, budget, traveler count, pace, interests, and special requests. Group activities geographically. Include reasonable travel and rest time. Avoid impossible schedules. Do not claim confirmed availability, live prices, reservations, or opening hours. All prices are estimates. Explain briefly why each activity fits the user. Return only structured data matching the required schema.",
+            "You are Planora, an expert travel itinerary planner. Create a realistic and editable itinerary based on the user's destination, dates, budget, traveler count, pace, interests, and special requests. Group activities geographically. Include reasonable travel and rest time. Avoid impossible schedules. Do not claim confirmed availability, live prices, reservations, or opening hours. All prices are estimates. Explain briefly why each activity fits the user. For every activity, set cost_confidence to 'high' when you are confident in the estimated_cost (e.g. well-known fixed-price attractions), 'medium' for typical estimates, and 'low' when the price is highly variable or uncertain. For every activity, also provide your best-effort real-world latitude and longitude for its location — use your knowledge of the destination's geography; if you are not reasonably confident of the coordinates, still provide your best estimate rather than a placeholder. Return only structured data matching the required schema.",
         },
         { role: "user", content: userPrompt },
       ],
@@ -171,7 +181,8 @@ ${req.special_requests ? `Special requests: ${req.special_requests}` : ""}
 
   if (response.status === 429) throw new Error("RATE_LIMITED");
   if (response.status === 401) throw new Error("INVALID_API_KEY");
-  if (!response.ok) throw new Error(`OPENAI_ERROR:${response.status}`);
+  if (response.status === 402) throw new Error("INSUFFICIENT_CREDITS");
+  if (!response.ok) throw new Error(`OPENROUTER_ERROR:${response.status}`);
 
   const data = await response.json();
   const content = data.choices?.[0]?.message?.content;
@@ -271,6 +282,12 @@ async function persistItinerary(
           ? act.duration_minutes
           : 60;
 
+        const confidence = ["low", "medium", "high"].includes(act.cost_confidence)
+          ? act.cost_confidence
+          : "medium";
+        const hasCoords = typeof act.latitude === "number" && typeof act.longitude === "number"
+          && Math.abs(act.latitude) <= 90 && Math.abs(act.longitude) <= 180;
+
         const { error: actErr } = await supabase.from("activities").insert({
           trip_day_id: dayId,
           trip_id: tripId,
@@ -280,12 +297,15 @@ async function persistItinerary(
           location: act.location ?? "",
           duration_minutes: duration,
           estimated_cost: cost,
+          cost_confidence: confidence,
           currency: req.currency,
           category: normaliseCategory(act.category),
           ai_reason: act.ai_reason ?? "",
           is_locked: false,
           personal_note: "[]",
           sort_order: j,
+          latitude: hasCoords ? act.latitude : null,
+          longitude: hasCoords ? act.longitude : null,
         });
 
         if (actErr) {
@@ -336,11 +356,13 @@ Deno.serve(async (req: Request) => {
 
     const input = body as GenerateRequest;
 
-    // Call OpenAI
-    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    // Call OpenRouter
+    const apiKey = Deno.env.get("OPENROUTER_API_KEY");
     if (!apiKey) {
-      console.error("[generate-itinerary] OPENAI_API_KEY is not set");
-      return jsonResponse({ error: "Generation service is not configured." }, 503);
+      console.error("[generate-itinerary] OPENROUTER_API_KEY is not set");
+      return jsonResponse({
+        error: "AI itinerary generation is currently unavailable.\nPlease configure your AI provider.",
+      }, 503);
     }
 
     let itinerary: OpenAIItinerary;
@@ -348,10 +370,11 @@ Deno.serve(async (req: Request) => {
       itinerary = await callOpenAI(input, apiKey);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "UNKNOWN";
-      console.error("[generate-itinerary] OpenAI error:", msg);
+      console.error("[generate-itinerary] OpenRouter error:", msg);
 
       if (msg === "RATE_LIMITED") return jsonResponse({ error: "Too many requests. Please try again in a moment." }, 429);
       if (msg === "INVALID_API_KEY") return jsonResponse({ error: "Generation service is misconfigured." }, 503);
+      if (msg === "INSUFFICIENT_CREDITS") return jsonResponse({ error: "Generation service is out of credits." }, 503);
       return jsonResponse({ error: "Could not generate itinerary. Please try again." }, 502);
     }
 

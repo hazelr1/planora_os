@@ -58,7 +58,9 @@ class SupabaseAuthRepository implements IAuthRepository {
       return { ok: false, error: internal('Sign-up succeeded but no user was returned.') };
     }
 
-    // Persist display name in the profiles table
+    // Persist display name in the profiles table. This still needs the
+    // freshly-created session (if any) to satisfy the profiles RLS policy,
+    // so it must happen before the sign-out below.
     const { error: profileErr } = await supabase.from('profiles').upsert({
       id: data.user.id,
       email: input.email,
@@ -66,6 +68,16 @@ class SupabaseAuthRepository implements IAuthRepository {
     });
     if (profileErr) {
       console.warn('Profile upsert failed:', profileErr.message);
+    }
+
+    // Sign-up must never double as sign-in: the account may still require
+    // email verification, and even when it doesn't, the user should land on
+    // a "check your inbox" message and explicitly sign in afterwards. If the
+    // Supabase project has email confirmations disabled, signUp() above will
+    // have already established a session — sign out of it immediately so the
+    // app never treats a fresh sign-up as an authenticated session.
+    if (data.session) {
+      await supabase.auth.signOut();
     }
 
     return ok(mapSupabaseUser(data.user));

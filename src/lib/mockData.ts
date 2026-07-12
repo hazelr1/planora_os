@@ -8,7 +8,7 @@ export const PACES: TravelPace[] = ['Relaxed', 'Balanced', 'Packed'];
 
 export const CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD'] as const;
 
-type ActivitySeed = Omit<Activity, 'id' | 'dayId' | 'tripId' | 'locked' | 'notes'>;
+type ActivitySeed = Omit<Activity, 'id' | 'dayId' | 'tripId' | 'locked' | 'notes' | 'latitude' | 'longitude' | 'costConfidence' | 'updatedAt'>;
 
 function makeDay(
   tripId: string,
@@ -33,6 +33,10 @@ function makeDay(
       tripId,
       locked: false,
       notes: [],
+      latitude: null,
+      longitude: null,
+      costConfidence: 'medium' as const,
+      updatedAt: '2026-04-01T10:30:00Z',
     })),
   };
 }

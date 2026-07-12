@@ -9,21 +9,33 @@
   body {
     @apply bg-ink-50 text-ink-800 font-sans;
     background-image:
-      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(34,211,238,0.06), transparent),
-      radial-gradient(ellipse 60% 40% at 100% 0%, rgba(59,130,246,0.05), transparent);
+      radial-gradient(ellipse 70% 45% at 15% -10%, rgba(34,211,238,0.09), transparent),
+      radial-gradient(ellipse 60% 50% at 100% 0%, rgba(59,130,246,0.08), transparent),
+      radial-gradient(ellipse 65% 55% at 90% 100%, rgba(139,92,246,0.08), transparent),
+      radial-gradient(ellipse 50% 40% at 0% 60%, rgba(124,58,237,0.05), transparent);
     background-attachment: fixed;
   }
 }
 
 @layer components {
   .card {
-    @apply rounded-2xl bg-ink-100/60 backdrop-blur-xl border border-white/10 shadow-card;
+    @apply rounded-2xl bg-ink-100/60 backdrop-blur-2xl border border-white/[0.08] shadow-card transition-all duration-300 ease-out;
+  }
+  .card-interactive {
+    @apply hover:-translate-y-0.5 hover:shadow-card-hover hover:border-white/[0.14];
   }
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors duration-150 disabled:opacity-50 disabled:pointer-events-none;
+    @apply relative inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 ease-out disabled:opacity-50 disabled:pointer-events-none;
   }
   .btn-primary {
-    @apply btn bg-brand-500/90 text-ink-950 hover:bg-brand-400 shadow-soft;
+    @apply btn text-white shadow-soft hover:-translate-y-0.5 hover:shadow-glow-lg active:translate-y-0;
+    background-image: linear-gradient(100deg, #22d3ee 0%, #3b82f6 55%, #8b5cf6 100%);
+    background-size: 160% 100%;
+    background-position: 0% 0%;
+    transition: background-position 0.5s ease-out, box-shadow 0.25s ease-out, transform 0.2s ease-out;
+  }
+  .btn-primary:hover {
+    background-position: 100% 0%;
   }
   .btn-ghost {
     @apply btn text-ink-600 hover:bg-white/5 hover:text-ink-800;
@@ -32,7 +44,7 @@
     @apply btn border border-white/15 bg-white/5 text-ink-700 hover:bg-white/10 hover:border-white/25;
   }
   .btn-danger {
-    @apply btn bg-rose-500/90 text-white hover:bg-rose-500 shadow-soft;
+    @apply btn bg-rose-500/90 text-white hover:bg-rose-500 shadow-soft hover:-translate-y-0.5;
   }
   .input {
     @apply w-full rounded-xl border border-white/10 bg-ink-200/60 px-3.5 py-2.5 text-sm text-ink-800 placeholder:text-ink-500/70 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/60 transition;
@@ -45,16 +57,57 @@
   }
 }
 
-/* AI-accented surfaces (violet, used sparingly) */
+/* AI-accented surfaces (violet, used sparingly) — visually distinct from
+   user-generated content so "the AI did this" always reads at a glance. */
 .ai-surface {
-  @apply rounded-2xl border border-violet-400/20 bg-violet-500/5 backdrop-blur-xl shadow-card;
+  @apply rounded-2xl border border-violet-400/25 bg-violet-500/[0.06] backdrop-blur-2xl shadow-card;
+  animation: glow-pulse 3.2s ease-in-out infinite;
 }
 .ai-accent {
   @apply text-violet-300;
 }
 .ai-gradient {
-  background-image: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+  background-image: linear-gradient(135deg, #22d3ee 0%, #7c3aed 60%, #4f46e5 100%);
 }
+
+/* Subtle shimmer sweep for AI-authored text (reasoning callouts, copilot replies) */
+.ai-shimmer {
+  background-image: linear-gradient(
+    100deg,
+    rgba(196,181,253,0.65) 0%,
+    rgba(233,213,255,1) 35%,
+    rgba(196,181,253,0.65) 60%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 3s linear infinite;
+}
+
+/* Skeleton loading blocks — replaces plain spinners across the app */
+.skeleton {
+  @apply relative overflow-hidden rounded-lg bg-white/[0.06];
+}
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.08) 45%, rgba(255,255,255,0.14) 50%, rgba(255,255,255,0.08) 55%, transparent 80%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+/* Three-dot typing indicator for the AI copilot */
+.typing-dots {
+  @apply inline-flex items-center gap-1;
+}
+.typing-dots span {
+  @apply h-1.5 w-1.5 rounded-full bg-violet-300;
+  animation: dot-bounce 1.2s ease-in-out infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.3s; }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 10px; height: 10px; }

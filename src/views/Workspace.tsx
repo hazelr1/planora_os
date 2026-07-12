@@ -1,8 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
-import { AlertTriangle, Calendar, CheckCircle2, FlaskConical, Gauge, Loader2, MapPin, Pencil, RefreshCw, Save, Users } from 'lucide-react';
-import type { AIRevisionProposal, Screen, Trip } from '../types';
+import {
+  DndContext, DragOverlay, PointerSensor, useSensor, useSensors, useDroppable,
+  type DragEndEvent, type DragStartEvent,
+} from '@dnd-kit/core';
+import { arrayMove } from '@dnd-kit/sortable';
+import {
+  AlertTriangle, Calendar, CheckCircle2, Clock, FlaskConical, Gauge, List as ListIcon,
+  Loader2, Map as MapIcon, MapPin, Pencil, RefreshCw, Save, CalendarDays, Users,
+} from 'lucide-react';
+import type { AIRevisionProposal, Activity, Screen, Trip } from '../types';
 import DaySection from '../components/DaySection';
-import BudgetSummary from '../components/BudgetSummary';
+import CalendarView from '../components/CalendarView';
+import ListView from '../components/ListView';
+import MapView from '../components/MapView';
+import TripIntelligencePanel from '../components/TripIntelligencePanel';
+import ProactiveSuggestionBanner from '../components/ProactiveSuggestionBanner';
 import AIAssistantPanel from '../components/AIAssistantPanel';
 import AIChangeReview from '../components/AIChangeReview';
 import ActivityModal, { type ActivityModalData } from '../components/ActivityModal';
@@ -15,6 +27,7 @@ import { tripRepository } from '../data';
 import { supabase } from '../lib/supabase';
 import { isOverBudget } from '../utils/budget';
 import { formatDateRange } from '../utils/dates';
+import { timeToMinutes } from '../utils/schedule';
 
 interface WorkspaceProps {
   tripId: string;
@@ -23,6 +36,11 @@ interface WorkspaceProps {
 }
 
 type LoadStatus = 'loading' | 'ready' | 'error' | 'not_found';
+type ViewMode = 'timeline' | 'calendar' | 'map' | 'list';
+
+function sortByTime(activities: Activity[]): Activity[] {
+  return [...activities].sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
+}
 
 function SaveBar({ status, errorMessage, retry }: { status: string; errorMessage: string | null; retry: (() => void) | null }) {
   if (status === 'idle') return null;
@@ -49,10 +67,46 @@ function SaveBar({ status, errorMessage, retry }: { status: string; errorMessage
   );
 }
 
+// Module-scope so drop-target identity is stable across renders — an inline
+// component defined inside Workspace's body would remount on every render
+// (the same bug pattern that caused focus loss in SignIn's form fields).
+function DayTabButton({
+  day, isActive, onClick,
+}: {
+  day: Trip['days'][number]; isActive: boolean; onClick: () => void;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: `daytab-${day.id}` });
+  return (
+    <button
+      ref={setNodeRef}
+      onClick={onClick}
+      className={`shrink-0 rounded-xl px-4 py-2 text-sm font-600 transition ${
+        isActive
+          ? 'bg-brand-500 text-ink-950 shadow-soft'
+          : isOver
+          ? 'bg-brand-500/20 border border-brand-400/40 text-brand-200'
+          : 'bg-ink-200/60 border border-white/10 text-ink-600 hover:bg-ink-300/60'
+      }`}
+    >
+      {day.label}
+      {isOver && <span className="ml-1.5 text-[10px] opacity-70">drop here</span>}
+    </button>
+  );
+}
+
+const VIEW_TABS: { id: ViewMode; label: string; Icon: typeof Clock }[] = [
+  { id: 'timeline', label: 'Timeline', Icon: Clock },
+  { id: 'calendar', label: 'Calendar', Icon: CalendarDays },
+  { id: 'map', label: 'Map', Icon: MapIcon },
+  { id: 'list', label: 'List', Icon: ListIcon },
+];
+
 export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: WorkspaceProps) {
   const [trip, setTrip] = useState<Trip | null>(null);
   const [loadStatus, setLoadStatus] = useState<LoadStatus>('loading');
   const [activeDay, setActiveDay] = useState(0);
+  const [viewMode, setViewMode] = useState<ViewMode>('timeline');
+  const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
   const [modal, setModal] = useState<ActivityModalData | null>(null);
   const [moveActivityId, setMoveActivityId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -62,11 +116,15 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
   const [resetConfirm, setResetConfirm] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [copilotPrompt, setCopilotPrompt] = useState<string | null>(null);
 
   const { status: saveStatus, errorMessage, track, retry } = useSaveStatus();
 
   const setTripSafe = useCallback((t: Trip) => setTrip(t), []);
   const editor = useActivityEditor(trip ?? ({} as Trip), setTripSafe, track);
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
   const load = useCallback(async () => {
     setLoadStatus('loading');
@@ -122,12 +180,63 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
     }
   }, [onNavigate]);
 
+  // ── Drag and drop: reorder within a day, or drop on a day tab to move ──────
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveDragId(String(event.active.id));
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveDragId(null);
+    const { active, over } = event;
+    if (!trip || !over) return;
+
+    const activityId = String(active.id);
+    const overId = String(over.id);
+    if (activityId === overId) return;
+
+    if (overId.startsWith('daytab-')) {
+      const targetDayId = overId.slice('daytab-'.length);
+      const sourceDay = trip.days.find((d) => d.activities.some((a) => a.id === activityId));
+      if (!sourceDay || sourceDay.id === targetDayId) return;
+      editor.moveToDay(activityId, targetDayId);
+      const idx = trip.days.findIndex((d) => d.id === targetDayId);
+      if (idx >= 0) setActiveDay(idx);
+      return;
+    }
+
+    const day = trip.days[activeDay];
+    if (!day) return;
+    const ordered = sortByTime(day.activities);
+    const oldIndex = ordered.findIndex((a) => a.id === activityId);
+    const newIndex = ordered.findIndex((a) => a.id === overId);
+    if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return;
+
+    const reordered = arrayMove(ordered, oldIndex, newIndex);
+    editor.reorderDay(day.id, reordered.map((a) => a.id));
+  };
+
   // ── Loading ────────────────────────────────────────────────────────────────
   if (loadStatus === 'loading') {
     return (
-      <div className="flex flex-col items-center justify-center py-24 gap-4">
-        <div className="h-9 w-9 rounded-full border-2 border-brand-500/20 border-t-brand-400 animate-spin" />
-        <p className="text-sm text-ink-600">Loading itinerary…</p>
+      <div className="space-y-5">
+        <div>
+          <div className="skeleton h-7 w-64 mb-2.5" />
+          <div className="skeleton h-4 w-96 max-w-full" />
+        </div>
+        <div className="flex gap-2">
+          {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-8 w-20" />)}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div className="lg:col-span-2 card p-4 space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="skeleton h-28" style={{ animationDelay: `${i * 80}ms` }} />
+            ))}
+          </div>
+          <div className="space-y-5">
+            <div className="skeleton h-40" />
+            <div className="skeleton h-64" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -159,6 +268,9 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
 
   const dateRange = formatDateRange(trip.startDate, trip.endDate);
   const over = isOverBudget(trip);
+  const draggedActivity = activeDragId
+    ? trip.days.flatMap((d) => d.activities).find((a) => a.id === activeDragId)
+    : null;
 
   const openAdd = (dayId: string) => setModal({ mode: 'add', activity: null, dayId });
 
@@ -251,7 +363,10 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
         </div>
       )}
 
-      {/* Over-budget warning */}
+      {/* Proactive AI suggestions (budget, schedule density) — reviewable only, never auto-applied */}
+      <ProactiveSuggestionBanner trip={trip} onAskCopilot={setCopilotPrompt} />
+
+      {/* Over-budget warning (kept alongside the actionable suggestion above) */}
       {over && (
         <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 flex items-center gap-2.5">
           <AlertTriangle size={16} className="text-rose-400 shrink-0" />
@@ -261,24 +376,20 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
         </div>
       )}
 
-      {/* Day tabs */}
-      {trip.days.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto pb-1 -mb-1">
-          {trip.days.map((d, i) => (
-            <button
-              key={d.id}
-              onClick={() => setActiveDay(i)}
-              className={`shrink-0 rounded-xl px-4 py-2 text-sm font-600 transition ${
-                activeDay === i
-                  ? 'bg-brand-500 text-ink-950 shadow-soft'
-                  : 'bg-ink-200/60 border border-white/10 text-ink-600 hover:bg-ink-300/60'
-              }`}
-            >
-              {d.label}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* View switcher */}
+      <div className="flex gap-1.5 rounded-xl bg-ink-200/60 p-1 w-full sm:w-fit overflow-x-auto">
+        {VIEW_TABS.map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            onClick={() => setViewMode(id)}
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-600 transition shrink-0 ${
+              viewMode === id ? 'bg-ink-300/80 text-ink-900 shadow-soft' : 'text-ink-500 hover:text-ink-700'
+            }`}
+          >
+            <Icon size={13} /> {label}
+          </button>
+        ))}
+      </div>
 
       {/* Main grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -291,24 +402,71 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
                 description="This trip has no itinerary days. Try creating a new trip with a valid date range."
               />
             </div>
-          ) : (
-            <DaySection
-              day={trip.days[activeDay]}
-              onAddActivity={openAdd}
+          ) : viewMode === 'timeline' ? (
+            <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+              <div className="flex gap-2 overflow-x-auto pb-1 -mb-1 mb-3">
+                {trip.days.map((d, i) => (
+                  <DayTabButton key={d.id} day={d} isActive={activeDay === i} onClick={() => setActiveDay(i)} />
+                ))}
+              </div>
+              <DaySection
+                day={trip.days[activeDay]}
+                onAddActivity={openAdd}
+                onEditActivity={openEdit}
+                onDeleteActivity={(id) => setConfirmDeleteId(id)}
+                onMoveToDayActivity={setMoveActivityId}
+                onMoveUpActivity={editor.moveUp}
+                onMoveDownActivity={editor.moveDown}
+                onToggleLock={editor.toggleLock}
+                selectedActivityId={selectedActivityId}
+                onSelectActivity={setSelectedActivityId}
+              />
+              <DragOverlay>
+                {draggedActivity ? (
+                  <div className="rounded-xl border border-brand-400/40 bg-ink-200 px-4 py-3 shadow-pop text-sm font-600 text-ink-900">
+                    {draggedActivity.title}
+                  </div>
+                ) : null}
+              </DragOverlay>
+            </DndContext>
+          ) : viewMode === 'calendar' ? (
+            <CalendarView
+              days={trip.days}
               onEditActivity={openEdit}
               onDeleteActivity={(id) => setConfirmDeleteId(id)}
               onMoveToDayActivity={setMoveActivityId}
               onMoveUpActivity={editor.moveUp}
               onMoveDownActivity={editor.moveDown}
               onToggleLock={editor.toggleLock}
+              selectedActivityId={selectedActivityId}
+              onSelectActivity={setSelectedActivityId}
+            />
+          ) : viewMode === 'map' ? (
+            <MapView
+              days={trip.days}
+              currency={trip.currency}
+              selectedActivityId={selectedActivityId}
+              onSelectActivity={setSelectedActivityId}
+            />
+          ) : (
+            <ListView
+              days={trip.days}
+              currency={trip.currency}
+              onEditActivity={openEdit}
+              onDeleteActivity={(id) => setConfirmDeleteId(id)}
+              onToggleLock={editor.toggleLock}
+              selectedActivityId={selectedActivityId}
+              onSelectActivity={setSelectedActivityId}
             />
           )}
         </div>
         <div className="space-y-5">
-          <BudgetSummary trip={trip} />
+          <TripIntelligencePanel trip={trip} />
           <AIAssistantPanel
             trip={trip}
             onRevisionProposed={setReviewProposal}
+            externalPrompt={copilotPrompt}
+            onExternalPromptHandled={() => setCopilotPrompt(null)}
           />
         </div>
       </div>

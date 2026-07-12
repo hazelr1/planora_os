@@ -15,6 +15,8 @@ export interface Note {
   createdAt: string;
 }
 
+export type CostConfidence = 'low' | 'medium' | 'high';
+
 export interface Activity {
   id: string;
   dayId: string;
@@ -31,6 +33,13 @@ export interface Activity {
   aiReason: string;
   locked: boolean;
   notes: Note[];
+  /** Best-effort coordinates for the map view. Null when not (yet) placed. */
+  latitude: number | null;
+  longitude: number | null;
+  /** How confident the AI is in `cost` as an estimate. */
+  costConfidence: CostConfidence;
+  /** Last-edited timestamp, shown on the activity card. */
+  updatedAt: string;
 }
 
 export interface Day {
@@ -82,6 +91,9 @@ export interface ActivitySnapshot {
   estimated_cost: number;
   category: string;
   ai_reason: string;
+  cost_confidence?: CostConfidence;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface RevisionConstraint {
@@ -124,3 +136,38 @@ export type Screen =
   | { name: 'trips' }
   | { name: 'create' }
   | { name: 'workspace'; tripId: string };
+
+// ─── AI Copilot (conversational assistant) ───────────────────────────────────
+
+export type CopilotRole = 'user' | 'assistant';
+
+export interface CopilotMessage {
+  id: string;
+  role: CopilotRole;
+  /** Present for plain Q&A replies and for the user's own messages. */
+  text?: string;
+  /** Present when the assistant's reply is an itinerary-modification proposal. */
+  proposal?: AIRevisionProposal;
+  createdAt: string;
+}
+
+/** What the copilot backend returns for a single turn. */
+export type CopilotReply =
+  | { type: 'answer'; message: string }
+  | ({ type: 'proposal' } & AIRevisionProposal);
+
+// ─── Trip Intelligence (AI-estimated trip-planning context) ──────────────────
+
+export interface PackingItem {
+  label: string;
+  category: string;
+}
+
+export interface TripIntelligence {
+  packingChecklist: PackingItem[];
+  hotelSuggestions: string[];
+  restaurantSuggestions: string[];
+  /** AI-estimated round-trip flight price; not a live quote. */
+  estimatedFlightPrice: number | null;
+  generatedAt: string;
+}

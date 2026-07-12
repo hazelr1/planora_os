@@ -13,9 +13,10 @@ type GenerateStatus = 'idle' | 'generating' | 'error';
 
 const PROGRESS_MESSAGES = [
   'Studying your destination…',
-  'Mapping out the perfect days…',
-  'Selecting activities that match your style…',
-  'Calculating estimated costs…',
+  'Finding hidden gems…',
+  'Optimizing your travel route…',
+  'Balancing your budget…',
+  'Checking local recommendations…',
   'Putting the finishing touches on your itinerary…',
 ];
 
@@ -122,14 +123,16 @@ export default function CreateTrip({ onNavigate, onCreate }: CreateTripProps) {
 
       {/* Generating overlay */}
       {status === 'generating' && (
-        <div className="card p-8 mb-6 flex flex-col items-center text-center gap-5">
-          <div className="relative flex items-center justify-center">
-            <div className="h-16 w-16 rounded-full border-2 border-brand-500/20 border-t-brand-400 animate-spin" />
-            <Sparkles size={20} className="absolute text-brand-400" />
+        <div className="ai-surface p-8 mb-6 flex flex-col items-center text-center gap-5 animate-scale-in">
+          <div className="relative flex items-center justify-center h-16 w-16">
+            <div className="absolute inset-0 rounded-full border-2 border-violet-400/20 border-t-violet-400 animate-spin" />
+            <div className="absolute inset-0 rounded-full animate-float">
+              <Sparkles size={20} className="absolute inset-0 m-auto text-violet-300" />
+            </div>
           </div>
           <div>
             <p className="font-display font-700 text-ink-900 text-base">Generating your itinerary</p>
-            <p className="text-sm text-ink-600 mt-1 min-h-[1.25rem] transition-all">
+            <p key={progressMessage} className="text-sm ai-shimmer font-medium mt-1.5 min-h-[1.25rem] animate-fade-in">
               {progressMessage}
             </p>
           </div>
@@ -142,7 +145,7 @@ export default function CreateTrip({ onNavigate, onCreate }: CreateTripProps) {
         <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 mb-5 flex items-start gap-2.5">
           <AlertTriangle size={16} className="text-rose-400 mt-0.5 shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-rose-300 font-medium">{errorMessage}</p>
+            <p className="text-sm text-rose-300 font-medium whitespace-pre-line">{errorMessage}</p>
             <button
               onClick={handleRetry}
               className="text-sm text-rose-300 underline underline-offset-2 hover:no-underline mt-1"

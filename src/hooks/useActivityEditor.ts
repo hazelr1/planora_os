@@ -1,7 +1,8 @@
 import { useCallback } from 'react';
-import type { Trip } from '../types';
+import type { Activity, Trip } from '../types';
 import { activityRepository, tripRepository } from '../data';
 import type { ActivityInput } from '../data';
+import { recalculateDaySchedule } from '../utils/schedule';
 
 export type { ActivityInput };
 
@@ -90,6 +91,44 @@ export function useActivityEditor(
       pessimistic(() => activityRepository.moveActivity(activityId, trip.id, targetDayId));
     },
     [trip.id, pessimistic],
+  );
+
+  /**
+   * Drag-and-drop reorder within a single day. Applies the new order
+   * immediately, then automatically recalculates start times for every
+   * unlocked activity in the day so the schedule chains sensibly from the
+   * day's earliest time — locked activities act as fixed anchors.
+   */
+  const reorderDay = useCallback(
+    (dayId: string, orderedActivityIds: string[]) => {
+      const day = trip.days.find((d) => d.id === dayId);
+      if (!day) return;
+
+      const byId = new Map(day.activities.map((a) => [a.id, a]));
+      const ordered = orderedActivityIds.map((id) => byId.get(id)).filter((a): a is Activity => !!a);
+      if (ordered.length !== day.activities.length) return;
+
+      const timeUpdates = recalculateDaySchedule(ordered);
+      const timeById = new Map(timeUpdates.map((u) => [u.id, u.time]));
+      const rescheduled = ordered.map((a) => (timeById.has(a.id) ? { ...a, time: timeById.get(a.id)! } : a));
+
+      optimistic(
+        (t) => ({
+          ...t,
+          days: t.days.map((d) => (d.id === dayId ? { ...d, activities: rescheduled } : d)),
+        }),
+        async () => {
+          const reorderResult = await activityRepository.reorderDay(dayId, orderedActivityIds);
+          if (!reorderResult.ok) return reorderResult;
+          for (const update of timeUpdates) {
+            const timeResult = await activityRepository.setActivityTime(update.id, trip.id, update.time);
+            if (!timeResult.ok) return timeResult;
+          }
+          return { ok: true as const };
+        },
+      );
+    },
+    [trip.id, trip.days, optimistic],
   );
 
   /** Optimistic — swap positions immediately; rollback on failure. */
@@ -195,6 +234,7 @@ export function useActivityEditor(
     editActivity,
     deleteActivity,
     moveToDay,
+    reorderDay,
     moveUp,
     moveDown,
     toggleLock,

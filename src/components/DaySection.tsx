@@ -1,3 +1,4 @@
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Plus, CalendarDays } from 'lucide-react';
 import type { Activity, Day } from '../types';
 import ActivityCard from './ActivityCard';
@@ -22,6 +23,9 @@ interface DaySectionProps {
   onMoveUpActivity: (activityId: string) => void;
   onMoveDownActivity: (activityId: string) => void;
   onToggleLock: (activityId: string) => void;
+  /** Currently map-highlighted activity, if the Map view is open alongside. */
+  selectedActivityId?: string | null;
+  onSelectActivity?: (activityId: string) => void;
 }
 
 export default function DaySection({
@@ -33,7 +37,11 @@ export default function DaySection({
   onMoveUpActivity,
   onMoveDownActivity,
   onToggleLock,
+  selectedActivityId,
+  onSelectActivity,
 }: DaySectionProps) {
+  const sorted = sortActivities(day.activities);
+
   return (
     <section className="card overflow-hidden">
       {/* Day header */}
@@ -68,9 +76,9 @@ export default function DaySection({
         </div>
       </div>
 
-      {/* Activities list */}
-      <div className="p-4 space-y-3">
-        {day.activities.length === 0 ? (
+      {/* Vertical timeline of activities */}
+      <div className="p-4">
+        {sorted.length === 0 ? (
           <EmptyState
             icon={<CalendarDays size={22} />}
             title="No activities yet"
@@ -82,20 +90,39 @@ export default function DaySection({
             }
           />
         ) : (
-          sortActivities(day.activities).map((a, idx, arr) => (
-            <ActivityCard
-              key={a.id}
-              activity={a}
-              isFirst={idx === 0}
-              isLast={idx === arr.length - 1}
-              onEdit={() => onEditActivity(a.id)}
-              onDelete={() => onDeleteActivity(a.id)}
-              onMoveToDay={() => onMoveToDayActivity(a.id)}
-              onMoveUp={() => onMoveUpActivity(a.id)}
-              onMoveDown={() => onMoveDownActivity(a.id)}
-              onToggleLock={() => onToggleLock(a.id)}
-            />
-          ))
+          <SortableContext items={sorted.map((a) => a.id)} strategy={verticalListSortingStrategy}>
+            <div className="relative space-y-3">
+              {/* Connecting timeline line */}
+              <div className="absolute left-[1.65rem] top-2 bottom-2 w-px bg-white/10" aria-hidden="true" />
+              {sorted.map((a, idx, arr) => (
+                <div
+                  key={a.id}
+                  className="relative pl-2 animate-slide-up"
+                  style={{ animationDelay: `${Math.min(idx, 8) * 60}ms`, animationFillMode: 'backwards' }}
+                >
+                  <span
+                    className="absolute left-5 top-6 h-2.5 w-2.5 rounded-full bg-brand-400 border-2 border-ink-100 z-10"
+                    aria-hidden="true"
+                  />
+                  <div className="pl-6">
+                    <ActivityCard
+                      activity={a}
+                      isFirst={idx === 0}
+                      isLast={idx === arr.length - 1}
+                      onEdit={() => onEditActivity(a.id)}
+                      onDelete={() => onDeleteActivity(a.id)}
+                      onMoveToDay={() => onMoveToDayActivity(a.id)}
+                      onMoveUp={() => onMoveUpActivity(a.id)}
+                      onMoveDown={() => onMoveDownActivity(a.id)}
+                      onToggleLock={() => onToggleLock(a.id)}
+                      highlighted={selectedActivityId === a.id}
+                      onSelect={onSelectActivity ? () => onSelectActivity(a.id) : undefined}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SortableContext>
         )}
       </div>
     </section>

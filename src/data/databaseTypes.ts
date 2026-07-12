@@ -65,20 +65,25 @@ export interface DbTripDay {
 
 export interface DbActivity {
   id: string;               // uuid primary key
-  day_id: string;           // fk → trip_days.id
+  trip_day_id: string;      // fk → trip_days.id
   trip_id: string;          // fk → trips.id  (denormalized for convenience)
   title: string;
   description: string;
   time: string;             // HH:MM (24h)
   location: string;
-  duration: number;         // minutes
-  cost: number;
+  duration_minutes: number; // minutes
+  estimated_cost: number;
   currency: string;
   category: string;
   ai_reason: string;
-  locked: boolean;
+  is_locked: boolean;
+  personal_note: string;    // JSON-encoded Note[]
   sort_order: number;       // position within the day; lower = earlier
   created_at: string;
+  latitude: number | null;
+  longitude: number | null;
+  cost_confidence: 'low' | 'medium' | 'high';
+  updated_at: string;
 }
 
 // ─── public.activity_notes ───────────────────────────────────────────────────

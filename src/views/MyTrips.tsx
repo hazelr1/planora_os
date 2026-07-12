@@ -19,13 +19,18 @@ interface MyTripsProps {
 
 function TripCardSkeleton() {
   return (
-    <div className="card animate-pulse">
-      <div className="h-36 bg-ink-200/60 rounded-t-2xl -mx-5 -mt-5 mb-4" />
-      <div className="h-5 w-3/4 bg-ink-200/60 rounded mb-2" />
-      <div className="h-4 w-1/2 bg-ink-200/60 rounded mb-4" />
-      <div className="flex gap-2">
-        <div className="h-7 w-20 bg-ink-200/60 rounded-lg" />
-        <div className="h-7 w-16 bg-ink-200/60 rounded-lg" />
+    <div className="card overflow-hidden">
+      <div className="skeleton h-1.5 -mx-0 -mt-0 rounded-none" />
+      <div className="p-5">
+        <div className="skeleton h-5 w-3/4 mb-2.5" />
+        <div className="skeleton h-3.5 w-1/2 mb-5" />
+        <div className="skeleton h-3.5 w-2/3 mb-2" />
+        <div className="skeleton h-3.5 w-1/3 mb-5" />
+        <div className="flex gap-2">
+          <div className="skeleton h-8 flex-1" />
+          <div className="skeleton h-8 w-9" />
+          <div className="skeleton h-8 w-9" />
+        </div>
       </div>
     </div>
   );

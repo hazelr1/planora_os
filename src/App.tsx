@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import AppShell from './components/AppShell';
 import Landing from './views/Landing';
 import SignIn from './views/SignIn';
@@ -20,6 +20,13 @@ export default function App() {
   const { user, status, signOut } = useAuth();
   const { trips, isLoading, loadError, retryLoad, updateTripFields, duplicateTrip, deleteTrip } = useTrips(user);
 
+  // Sign-up must never auto-navigate the user anywhere. If the Supabase
+  // project happens to establish a session as a side effect of sign-up (e.g.
+  // email confirmation disabled), this flag tells the route-protection effect
+  // below to ignore that transient "authenticated" transition while the
+  // SignIn view is in the middle of handling its own sign-up flow.
+  const suppressAuthRedirectRef = useRef(false);
+
   // ── Route protection ──────────────────────────────────────────────────────
   useEffect(() => {
     if (status === 'loading') return;
@@ -39,6 +46,10 @@ export default function App() {
     }
 
     if (status === 'authenticated' && screen.name === 'signin') {
+      if (suppressAuthRedirectRef.current) {
+        suppressAuthRedirectRef.current = false;
+        return;
+      }
       setScreen({ name: 'trips' });
     }
   }, [status, screen.name, pendingScreen]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -56,6 +67,14 @@ export default function App() {
   // ── Auth callbacks ────────────────────────────────────────────────────────
   const handleAuthSuccess = useCallback(() => {
     // onAuthStateChange in useAuth handles the redirect via the effect above
+  }, []);
+
+  const handleSignUpStart = useCallback(() => {
+    suppressAuthRedirectRef.current = true;
+  }, []);
+
+  const handleSignUpSettled = useCallback(() => {
+    suppressAuthRedirectRef.current = false;
   }, []);
 
   const handleSignOut = useCallback(async () => {
@@ -119,7 +138,12 @@ export default function App() {
       )}
 
       {screen.name === 'signin' && (
-        <SignIn onNavigate={navigate} onAuthSuccess={handleAuthSuccess} />
+        <SignIn
+          onNavigate={navigate}
+          onAuthSuccess={handleAuthSuccess}
+          onSignUpStart={handleSignUpStart}
+          onSignUpSettled={handleSignUpSettled}
+        />
       )}
 
       {screen.name === 'trips' && (

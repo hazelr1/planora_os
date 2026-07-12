@@ -1,6 +1,12 @@
-import { MapPin, Timer, DollarSign, Sparkles, Pencil, Trash2, Lock, Unlock, MoveRight, StickyNote, ExternalLink, ChevronUp, ChevronDown } from 'lucide-react';
-import type { Activity, ActivityCategory } from '../types';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
+  MapPin, Timer, DollarSign, Sparkles, Pencil, Trash2, Lock, Unlock, MoveRight,
+  StickyNote, ExternalLink, ChevronUp, ChevronDown, GripVertical, CloudOff, History,
+} from 'lucide-react';
+import type { Activity, ActivityCategory, CostConfidence } from '../types';
 import { formatDuration } from '../utils/budget';
+import { formatLastUpdated } from '../utils/dates';
 
 interface ActivityCardProps {
   activity: Activity;
@@ -12,6 +18,10 @@ interface ActivityCardProps {
   onMoveUp: () => void;
   onMoveDown: () => void;
   onToggleLock: () => void;
+  /** Highlights the card (e.g. when its map marker is clicked). */
+  highlighted?: boolean;
+  /** Selects the card, typically to highlight its map marker in return. */
+  onSelect?: () => void;
 }
 
 const categoryColors: Record<ActivityCategory, string> = {
@@ -27,6 +37,12 @@ const categoryColors: Record<ActivityCategory, string> = {
   Other: 'bg-white/5 text-ink-600 border border-white/10',
 };
 
+const confidenceColors: Record<CostConfidence, string> = {
+  high: 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/20',
+  medium: 'bg-amber-500/15 text-amber-300 border border-amber-500/20',
+  low: 'bg-rose-500/15 text-rose-300 border border-rose-500/20',
+};
+
 export default function ActivityCard({
   activity,
   isFirst,
@@ -37,14 +53,40 @@ export default function ActivityCard({
   onMoveUp,
   onMoveDown,
   onToggleLock,
+  highlighted = false,
+  onSelect,
 }: ActivityCardProps) {
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activity.location + ', ' + activity.title)}`;
 
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: activity.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
   return (
-    <div className={`rounded-xl border bg-ink-200/40 backdrop-blur-sm transition-shadow hover:shadow-soft ${activity.locked ? 'border-brand-400/30 bg-brand-500/5' : 'border-white/10'}`}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      onClick={onSelect}
+      className={`rounded-xl border bg-ink-200/40 backdrop-blur-sm transition-shadow hover:shadow-soft ${
+        activity.locked ? 'border-brand-400/30 bg-brand-500/5' : 'border-white/10'
+      } ${highlighted ? 'ring-2 ring-brand-400/60' : ''}`}
+    >
       <div className="p-4">
         {/* Header row */}
         <div className="flex items-start justify-between gap-3">
+          <button
+            type="button"
+            {...attributes}
+            {...listeners}
+            className="mt-0.5 shrink-0 rounded-lg p-1 text-ink-500 hover:text-ink-700 hover:bg-white/5 transition cursor-grab active:cursor-grabbing touch-none"
+            aria-label="Drag to reorder or move to another day"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GripVertical size={15} />
+          </button>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-700 text-ink-600 tabular-nums">{activity.time}</span>
@@ -63,7 +105,7 @@ export default function ActivityCard({
             )}
           </div>
 
-          {/* Up / Down reorder */}
+          {/* Up / Down reorder (kept alongside drag for keyboard/no-JS-drag accessibility) */}
           <div className="flex flex-col gap-0.5 shrink-0">
             <button
               onClick={onMoveUp}
@@ -99,6 +141,25 @@ export default function ActivityCard({
           <span className="flex items-center gap-1.5">
             <DollarSign size={13} className="text-ink-500 shrink-0" />
             {activity.cost === 0 ? 'Free' : `${activity.currency} ${activity.cost.toLocaleString()}`}
+          </span>
+        </div>
+
+        {/* Intelligence row: cost confidence, weather, last updated */}
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span
+            className={`chip ${confidenceColors[activity.costConfidence]}`}
+            title={`AI cost estimate confidence: ${activity.costConfidence}`}
+          >
+            {activity.costConfidence} confidence
+          </span>
+          <span
+            className="chip bg-white/5 text-ink-500 border border-white/10"
+            title="Weather forecasts require a weather provider to be connected"
+          >
+            <CloudOff size={11} /> Weather unavailable
+          </span>
+          <span className="flex items-center gap-1 text-xs text-ink-500 ml-auto" title={activity.updatedAt}>
+            <History size={11} /> Updated {formatLastUpdated(activity.updatedAt)}
           </span>
         </div>
 
@@ -140,6 +201,7 @@ export default function ActivityCard({
               target="_blank"
               rel="noopener noreferrer"
               className="btn-ghost px-2.5 py-1.5 text-xs"
+              onClick={(e) => e.stopPropagation()}
             >
               <ExternalLink size={12} /> Maps
             </a>

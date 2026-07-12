@@ -54,6 +54,16 @@ export interface IActivityRepository {
   /** Shifts an activity one position up or down within its day. */
   reorderActivity(activityId: string, tripId: string, input: ReorderInput): Promise<Result<void>>;
 
+  /**
+   * Sets the exact sort order for a day's activities in one batch — used by
+   * drag-and-drop, which can drop an activity at any position, not just one
+   * step up or down.
+   */
+  reorderDay(dayId: string, orderedActivityIds: string[]): Promise<Result<void>>;
+
+  /** Sets an activity's start time directly (used by drag-to-reschedule and automatic schedule recalculation). */
+  setActivityTime(activityId: string, tripId: string, time: string): Promise<Result<void>>;
+
   /** Toggles the locked flag without changing any other field. */
   toggleActivityLock(activityId: string, tripId: string): Promise<Result<Activity>>;
 
@@ -131,6 +141,10 @@ class InMemoryActivityRepository implements IActivityRepository {
       aiReason: input.aiReason || 'Added manually.',
       locked: false,
       notes,
+      latitude: null,
+      longitude: null,
+      costConfidence: 'medium',
+      updatedAt: new Date().toISOString(),
     };
 
     store.trips[tripIdx].days[dayIdx].activities.push(activity);
@@ -159,6 +173,7 @@ class InMemoryActivityRepository implements IActivityRepository {
             currency: input.currency,
             category: input.category,
             aiReason: input.aiReason || a.aiReason,
+            updatedAt: new Date().toISOString(),
           };
           return updated;
         }),
@@ -212,6 +227,37 @@ class InMemoryActivityRepository implements IActivityRepository {
         }
         return { ...d, activities: acts };
       }),
+    );
+    return ok(undefined);
+  }
+
+  async reorderDay(dayId: string, orderedActivityIds: string[]): Promise<Result<void>> {
+    const trip = store.trips.find((t) => t.days.some((d) => d.id === dayId));
+    if (!trip) return { ok: false, error: notFound('day', dayId) };
+    const orderIndex = new Map(orderedActivityIds.map((id, i) => [id, i]));
+    const now = new Date().toISOString();
+    this.mutateTrip(trip.id, (days) =>
+      days.map((d) => {
+        if (d.id !== dayId) return d;
+        const acts = [...d.activities].sort(
+          (a, b) => (orderIndex.get(a.id) ?? 0) - (orderIndex.get(b.id) ?? 0),
+        );
+        return { ...d, activities: acts.map((a) => ({ ...a, updatedAt: now })) };
+      }),
+    );
+    return ok(undefined);
+  }
+
+  async setActivityTime(activityId: string, tripId: string, time: string): Promise<Result<void>> {
+    const found = this.findActivity(tripId, activityId);
+    if (!found) return { ok: false, error: notFound('activity', activityId) };
+    this.mutateTrip(tripId, (days) =>
+      days.map((d) => ({
+        ...d,
+        activities: d.activities.map((a) =>
+          a.id === activityId ? { ...a, time, updatedAt: new Date().toISOString() } : a,
+        ),
+      })),
     );
     return ok(undefined);
   }
