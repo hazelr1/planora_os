@@ -153,7 +153,7 @@ function buildDayInserts(tripId: string, startDate: string, endDate: string): Om
   const rows: Omit<DbTripDay, 'id'>[] = [];
   const start = new Date(startDate + 'T00:00:00');
   const end = new Date(endDate + 'T00:00:00');
-  let cursor = new Date(start);
+  const cursor = new Date(start);
   let n = 1;
   while (cursor <= end) {
     rows.push({

@@ -30,6 +30,7 @@ export default function TripForm({ onSubmit, onCancel, submitLabel = 'Generate I
   const [pace, setPace] = useState<TravelPace>('Balanced');
   const [interests, setInterests] = useState<Interest[]>([]);
   const [specialRequests, setSpecialRequests] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const toggleInterest = (i: Interest) => {
     setInterests((prev) => (prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i]));
@@ -37,7 +38,8 @@ export default function TripForm({ onSubmit, onCancel, submitLabel = 'Generate I
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!destination.trim() || !startDate || !endDate) return;
+    if (submitting || !destination.trim() || !startDate || !endDate) return;
+    setSubmitting(true);
     onSubmit({
       destination: destination.trim(),
       startDate,
@@ -140,7 +142,7 @@ export default function TripForm({ onSubmit, onCancel, submitLabel = 'Generate I
 
       <div className="flex items-center justify-end gap-2 pt-2">
         <button type="button" className="btn-ghost" onClick={onCancel}>Cancel</button>
-        <button type="submit" className="btn-primary">{submitLabel}</button>
+        <button type="submit" className="btn-primary" disabled={submitting}>{submitLabel}</button>
       </div>
     </form>
   );
@@ -150,7 +152,7 @@ export function formValuesToTrip(values: TripFormValues, id: string): Trip {
   const start = new Date(values.startDate + 'T00:00:00');
   const end = new Date(values.endDate + 'T00:00:00');
   const days: Trip['days'] = [];
-  let cursor = new Date(start);
+  const cursor = new Date(start);
   let dayNum = 1;
   while (cursor <= end) {
     const dayId = `${id}-day-${dayNum}`;

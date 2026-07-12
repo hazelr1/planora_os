@@ -261,7 +261,7 @@ Deno.serve(async (req: Request) => {
         }
       }
     }
-    for (const [dayId, count] of projectedPerDay) {
+    for (const [, count] of projectedPerDay) {
       if (count > 6) {
         return jsonRes({ error: `Applying these changes would put more than 6 activities in a single day. Please request a revised proposal.` }, 422);
       }

@@ -52,6 +52,7 @@ export const sampleTrips: Trip[] = [
     specialRequests: 'Vegetarian-friendly restaurants. Avoid early mornings.',
     status: 'Planning',
     lastUpdated: '2026-04-01T10:30:00Z',
+    isDemo: false,
     days: [
       makeDay('tokyo-5d', 'Day 1', '2026-04-08', 'Arrival & Shinjuku', "Settle in and get your first taste of Tokyo's electric energy.", [
         {
@@ -211,6 +212,7 @@ export const sampleTrips: Trip[] = [
     specialRequests: 'Prefer walkable neighborhoods. Wine tastings welcome.',
     status: 'Confirmed',
     lastUpdated: '2026-04-15T08:00:00Z',
+    isDemo: false,
     days: [],
   },
   {
@@ -227,6 +229,7 @@ export const sampleTrips: Trip[] = [
     specialRequests: 'Surfing lessons. Off-the-beaten-path temples.',
     status: 'Planning',
     lastUpdated: '2026-06-28T14:20:00Z',
+    isDemo: false,
     days: [],
   },
 ];

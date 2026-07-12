@@ -25,20 +25,16 @@ export default function CreateTrip({ onNavigate, onCreate }: CreateTripProps) {
   const [warnings, setWarnings] = useState<string[]>([]);
   const [savedValues, setSavedValues] = useState<TripFormValues | null>(null);
   const [progressIndex, setProgressIndex] = useState(0);
-  const [intervalId, setIntervalId] = useState<ReturnType<typeof setInterval> | null>(null);
 
   const startProgress = () => {
     setProgressIndex(0);
-    const id = setInterval(() => {
+    return setInterval(() => {
       setProgressIndex((i) => i + 1);
     }, 3000);
-    setIntervalId(id);
-    return id;
   };
 
-  const stopProgress = (id: ReturnType<typeof setInterval> | null) => {
-    if (id) clearInterval(id);
-    setIntervalId(null);
+  const stopProgress = (id: ReturnType<typeof setInterval>) => {
+    clearInterval(id);
   };
 
   const handleSubmit = async (values: TripFormValues) => {

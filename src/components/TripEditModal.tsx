@@ -14,6 +14,7 @@ export default function TripEditModal({ trip, onSave, onClose }: TripEditModalPr
   const [budget, setBudget] = useState(String(trip.budget));
   const [currency, setCurrency] = useState(trip.currency);
   const [titleError, setTitleError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -24,10 +25,11 @@ export default function TripEditModal({ trip, onSave, onClose }: TripEditModalPr
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) {
-      setTitleError('Trip name is required.');
+    if (saving || !title.trim()) {
+      if (!title.trim()) setTitleError('Trip name is required.');
       return;
     }
+    setSaving(true);
     onSave(title.trim(), Number(budget) || 0, currency);
     onClose();
   };
@@ -35,9 +37,9 @@ export default function TripEditModal({ trip, onSave, onClose }: TripEditModalPr
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-ink-950/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-sm card overflow-hidden animate-scale-in">
+      <div className="relative w-full max-w-sm card overflow-hidden animate-scale-in" role="dialog" aria-modal="true" aria-labelledby="edit-trip-title">
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-white/10">
-          <h2 className="font-display text-lg font-700 text-ink-900">Edit trip</h2>
+          <h2 id="edit-trip-title" className="font-display text-lg font-700 text-ink-900">Edit trip</h2>
           <button onClick={onClose} className="rounded-lg p-1.5 text-ink-500 hover:text-ink-800 hover:bg-white/5 transition">
             <X size={20} />
           </button>
@@ -83,7 +85,7 @@ export default function TripEditModal({ trip, onSave, onClose }: TripEditModalPr
           </div>
           <div className="flex items-center justify-end gap-2 pt-1">
             <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn-primary">Save changes</button>
+            <button type="submit" className="btn-primary" disabled={saving}>Save changes</button>
           </div>
         </form>
       </div>

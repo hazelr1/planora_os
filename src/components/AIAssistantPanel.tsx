@@ -145,7 +145,6 @@ export default function AIAssistantPanel({ trip, onRevisionProposed }: AIAssista
                 key={chip}
                 type="button"
                 onClick={() => handleChipClick(chip)}
-                disabled={false}
                 className={`chip transition-colors border ${
                   trip.isDemo
                     ? 'bg-amber-500/10 text-amber-300 border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/30'

@@ -121,7 +121,9 @@ export default function MyTrips({
         <TripEditModal
           trip={editingTrip}
           onSave={(title, budget, currency) => {
-            void onUpdateTripFields(editingTrip.id, { title, budget, currency });
+            void onUpdateTripFields(editingTrip.id, { title, budget, currency }).catch(() => {
+              alert('Could not save trip changes. Please try again.');
+            });
             setEditingTrip(null);
           }}
           onClose={() => setEditingTrip(null)}

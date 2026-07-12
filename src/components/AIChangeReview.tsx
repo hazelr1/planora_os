@@ -4,6 +4,7 @@ import {
   Lock, Loader2, Minus, Plus, RefreshCw, Send, Sparkles, X, XCircle,
 } from 'lucide-react';
 import type { AIRevisionProposal, Day, RevisionChange, RevisionOperation } from '../types';
+import { revisionRepository } from '../data';
 import { supabase } from '../lib/supabase';
 
 interface AIChangeReviewProps {
@@ -195,10 +196,7 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
   // ── Cancel (reject + close) ─────────────────────────────────────────────────
   const handleCancel = async () => {
     if (p.revisionId) {
-      await supabase
-        .from('ai_revisions')
-        .update({ status: 'rejected', decided_at: new Date().toISOString() })
-        .eq('id', p.revisionId);
+      await revisionRepository.rejectRevision(p.revisionId);
     }
     onClose();
   };
@@ -254,10 +252,7 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
 
     // Reject the current revision before making a new one
     if (p.revisionId) {
-      await supabase
-        .from('ai_revisions')
-        .update({ status: 'rejected', decided_at: new Date().toISOString() })
-        .eq('id', p.revisionId);
+      await revisionRepository.rejectRevision(p.revisionId);
     }
 
     try {

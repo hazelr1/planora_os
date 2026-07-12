@@ -313,7 +313,7 @@ Deno.serve(async (req: Request) => {
     if (!instruction?.trim()) return jsonRes({ error: "instruction is required." }, 400);
     if (instruction.length > 1000) return jsonRes({ error: "Instruction must be 1000 characters or fewer." }, 400);
 
-    // Load trip (RLS verifies ownership)
+    // Load trip (RLS verifies ownership, but we double-check explicitly)
     const { data: tripData, error: tripErr } = await supabase
       .from("trips")
       .select("*")
@@ -327,6 +327,11 @@ Deno.serve(async (req: Request) => {
     if (!tripData) return jsonRes({ error: "Trip not found." }, 404);
 
     const trip = tripData as DbTrip;
+
+    // Explicit ownership check — defense in depth alongside RLS
+    if (trip.user_id !== user.id) {
+      return jsonRes({ error: "Trip not found." }, 404);
+    }
 
     // Load days
     const { data: daysData, error: daysErr } = await supabase

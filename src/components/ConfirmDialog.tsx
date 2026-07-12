@@ -37,7 +37,7 @@ export default function ConfirmDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-ink-950/60 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative w-full max-w-sm card p-6 animate-scale-in">
+      <div className="relative w-full max-w-sm card p-6 animate-scale-in" role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
         <button
           onClick={onCancel}
           className="absolute right-4 top-4 rounded-lg p-1 text-ink-500 hover:text-ink-800 hover:bg-white/5 transition"
@@ -49,7 +49,7 @@ export default function ConfirmDialog({
             <AlertTriangle size={18} />
           </div>
           <div className="min-w-0">
-            <h3 className="font-display text-base font-700 text-ink-900">{title}</h3>
+            <h3 id="confirm-dialog-title" className="font-display text-base font-700 text-ink-900">{title}</h3>
             <p className="text-sm text-ink-600 mt-1 leading-relaxed">{message}</p>
           </div>
         </div>

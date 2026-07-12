@@ -1,8 +1,17 @@
 import { Plus, CalendarDays } from 'lucide-react';
-import type { Day } from '../types';
+import type { Activity, Day } from '../types';
 import ActivityCard from './ActivityCard';
 import EmptyState from './EmptyState';
 import { formatDate } from '../utils/dates';
+
+function timeToMinutes(time: string): number {
+  const [h, m] = time.split(':').map(Number);
+  return (h || 0) * 60 + (m || 0);
+}
+
+function sortActivities(activities: Activity[]): Activity[] {
+  return [...activities].sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
+}
 
 interface DaySectionProps {
   day: Day;
@@ -73,12 +82,12 @@ export default function DaySection({
             }
           />
         ) : (
-          day.activities.map((a, idx) => (
+          sortActivities(day.activities).map((a, idx, arr) => (
             <ActivityCard
               key={a.id}
               activity={a}
               isFirst={idx === 0}
-              isLast={idx === day.activities.length - 1}
+              isLast={idx === arr.length - 1}
               onEdit={() => onEditActivity(a.id)}
               onDelete={() => onDeleteActivity(a.id)}
               onMoveToDay={() => onMoveToDayActivity(a.id)}

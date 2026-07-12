@@ -47,12 +47,10 @@ export default function SignIn({ onNavigate, onAuthSuccess }: SignInProps) {
   const [loadingSignIn, setLoadingSignIn] = useState(false);
   const [loadingSignUp, setLoadingSignUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [signUpSuccess, setSignUpSuccess] = useState(false);
 
   const switchTab = (next: Tab) => {
     setTab(next);
     setError(null);
-    setSignUpSuccess(false);
   };
 
   // ── Sign-in handler ──────────────────────────────────────────────────────
@@ -173,16 +171,6 @@ export default function SignIn({ onNavigate, onAuthSuccess }: SignInProps) {
             <div className="mb-5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 flex items-start gap-2.5 animate-scale-in">
               <AlertCircle size={15} className="text-rose-400 shrink-0 mt-0.5" />
               <p className="text-sm text-rose-300">{error}</p>
-            </div>
-          )}
-
-          {/* Sign-up success (email confirmation prompt if enabled) */}
-          {signUpSuccess && (
-            <div className="mb-5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 flex items-start gap-2.5 animate-scale-in">
-              <CheckCircle2 size={15} className="text-emerald-400 shrink-0 mt-0.5" />
-              <p className="text-sm text-emerald-300">
-                Account created! Check your inbox to confirm your email, then sign in.
-              </p>
             </div>
           )}
 

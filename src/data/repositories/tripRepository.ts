@@ -91,7 +91,7 @@ function buildDays(tripId: string, startDate: string, endDate: string): Day[] {
   const days: Day[] = [];
   const start = new Date(startDate + 'T00:00:00');
   const end = new Date(endDate + 'T00:00:00');
-  let cursor = new Date(start);
+  const cursor = new Date(start);
   let n = 1;
   while (cursor <= end) {
     days.push({
@@ -141,6 +141,7 @@ class InMemoryTripRepository implements ITripRepository {
       specialRequests: input.specialRequests,
       status: 'Planning',
       lastUpdated: now,
+      isDemo: false,
       days,
     };
     store.trips = [trip, ...store.trips];

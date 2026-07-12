@@ -59,11 +59,14 @@ class SupabaseAuthRepository implements IAuthRepository {
     }
 
     // Persist display name in the profiles table
-    await supabase.from('profiles').upsert({
+    const { error: profileErr } = await supabase.from('profiles').upsert({
       id: data.user.id,
       email: input.email,
       full_name: input.name,
     });
+    if (profileErr) {
+      console.warn('Profile upsert failed:', profileErr.message);
+    }
 
     return ok(mapSupabaseUser(data.user));
   }

@@ -293,7 +293,7 @@ async function persistItinerary(
         }
       }
     }
-  } catch (saveErr) {
+  } catch {
     // Clean up the trip if days/activities failed catastrophically
     await supabase.from("trips").delete().eq("id", tripId);
     throw new Error("DB_SAVE_FAILED");

@@ -24,7 +24,7 @@ function mapRow(row: DbRevision): Revision {
     summary: row.summary,
     status: row.status as RevisionStatus,
     createdAt: row.created_at,
-    appliedAt: row.decided_at ?? undefined,
+    appliedAt: row.decided_at ?? null,
   };
 }
 

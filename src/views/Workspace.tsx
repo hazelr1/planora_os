@@ -61,6 +61,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
   const [showAppliedBanner, setShowAppliedBanner] = useState(false);
   const [resetConfirm, setResetConfirm] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
 
   const { status: saveStatus, errorMessage, track, retry } = useSaveStatus();
 
@@ -92,6 +93,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
 
   const handleResetDemo = useCallback(async () => {
     setResetLoading(true);
+    setResetError(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
@@ -113,7 +115,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
         onNavigate({ name: 'workspace', tripId: json.trip_id });
       }
     } catch {
-      // ignore — the user can try again
+      setResetError('Could not reset demo trip. Please try again.');
     } finally {
       setResetLoading(false);
       setResetConfirm(false);
@@ -340,19 +342,19 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
       <ConfirmDialog
         isOpen={resetConfirm}
         title="Reset demo trip?"
-        message="This will delete all your current demo edits and restore the original Tokyo itinerary. This cannot be undone."
+        message={resetError ?? "This will delete all your current demo edits and restore the original Tokyo itinerary. This cannot be undone."}
         confirmLabel="Reset"
         destructive
         onConfirm={handleResetDemo}
-        onCancel={() => setResetConfirm(false)}
+        onCancel={() => { setResetConfirm(false); setResetError(null); }}
       />
 
       {/* Move to day picker */}
       {moveActivityId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-ink-950/60 backdrop-blur-sm" onClick={() => setMoveActivityId(null)} />
-          <div className="relative w-full max-w-sm card p-5 animate-scale-in">
-            <h3 className="font-display text-base font-700 text-ink-900 mb-3">Move activity to</h3>
+          <div className="relative w-full max-w-sm card p-5 animate-scale-in" role="dialog" aria-modal="true" aria-labelledby="move-dialog-title">
+            <h3 id="move-dialog-title" className="font-display text-base font-700 text-ink-900 mb-3">Move activity to</h3>
             <div className="space-y-2">
               {trip.days.map((d) => (
                 <button

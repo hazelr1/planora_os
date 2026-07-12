@@ -139,11 +139,11 @@ export default function ActivityModal({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-ink-950/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-xl card max-h-[94vh] overflow-hidden flex flex-col rounded-t-2xl sm:rounded-2xl">
+      <div className="relative w-full max-w-xl card max-h-[94vh] overflow-hidden flex flex-col rounded-t-2xl sm:rounded-2xl" role="dialog" aria-modal="true" aria-labelledby="activity-modal-title">
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-white/10 shrink-0">
-          <h2 className="font-display text-lg font-700 text-ink-900">{titleText}</h2>
+          <h2 id="activity-modal-title" className="font-display text-lg font-700 text-ink-900">{titleText}</h2>
           <button onClick={onClose} className="rounded-lg p-1.5 text-ink-500 hover:text-ink-800 hover:bg-white/5 transition">
             <X size={20} />
           </button>
