@@ -1,0 +1,8 @@
+# Declares deploy-time settings for this project's edge functions so they
+# aren't lost the next time a function is redeployed.
+#
+# launch-demo must be callable by a brand-new, not-yet-authenticated visitor
+# (it creates their session), so it can't require a JWT up front like every
+# other function here does by default.
+[functions.launch-demo]
+verify_jwt = false

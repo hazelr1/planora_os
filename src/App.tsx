@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import AppShell from './components/AppShell';
 import Landing from './views/Landing';
 import SignIn from './views/SignIn';
+import ResetPassword from './views/ResetPassword';
 import MyTrips from './views/MyTrips';
 import CreateTrip from './views/CreateTrip';
 import Workspace from './views/Workspace';
@@ -9,6 +10,7 @@ import { useTrips } from './hooks/useTrips';
 import { useAuth } from './hooks/useAuth';
 import type { Screen } from './types';
 import { supabase } from './lib/supabase';
+import { authRepository } from './data';
 
 // Screens that require an authenticated session
 const PROTECTED: Screen['name'][] = ['trips', 'create', 'workspace'];
@@ -53,6 +55,17 @@ export default function App() {
       setScreen({ name: 'trips' });
     }
   }, [status, screen.name, pendingScreen]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Password recovery ─────────────────────────────────────────────────────
+  // Fires when the user arrives via a "reset your password" email link —
+  // Supabase establishes a temporary session from the link and emits this
+  // event regardless of what screen the app happened to load on.
+  useEffect(() => {
+    return authRepository.onPasswordRecovery(() => {
+      setPendingScreen(null);
+      setScreen({ name: 'reset-password' });
+    });
+  }, []);
 
   // ── Navigation ────────────────────────────────────────────────────────────
   const navigate = useCallback((s: Screen) => {
@@ -144,6 +157,10 @@ export default function App() {
           onSignUpStart={handleSignUpStart}
           onSignUpSettled={handleSignUpSettled}
         />
+      )}
+
+      {screen.name === 'reset-password' && (
+        <ResetPassword onDone={() => setScreen({ name: 'trips' })} />
       )}
 
       {screen.name === 'trips' && (

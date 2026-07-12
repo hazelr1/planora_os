@@ -105,6 +105,23 @@ class SupabaseAuthRepository implements IAuthRepository {
     return ok(undefined);
   }
 
+  async requestPasswordReset(email: string): Promise<Result<void>> {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}${window.location.pathname}`,
+    });
+    // Supabase intentionally does not reveal whether the email is registered
+    // (avoids account enumeration), so most failures here are transient
+    // (network, rate limiting) rather than "no such user".
+    if (error) return { ok: false, error: internal(friendlyAuthError(error.message)) };
+    return ok(undefined);
+  }
+
+  async updatePassword(newPassword: string): Promise<Result<void>> {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) return { ok: false, error: internal(friendlyAuthError(error.message)) };
+    return ok(undefined);
+  }
+
   onAuthStateChange(callback: AuthStateChangeCallback): () => void {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       (async () => {
@@ -114,6 +131,13 @@ class SupabaseAuthRepository implements IAuthRepository {
         }
         callback(mapSupabaseUser(session.user));
       })();
+    });
+    return () => subscription.unsubscribe();
+  }
+
+  onPasswordRecovery(callback: () => void): () => void {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') callback();
     });
     return () => subscription.unsubscribe();
   }

@@ -40,9 +40,21 @@ export interface IAuthRepository {
   /** Signs out the current user. */
   signOut(): Promise<Result<void>>;
 
+  /** Sends a password-reset email with a link back into the app. */
+  requestPasswordReset(email: string): Promise<Result<void>>;
+
+  /** Sets a new password for the user completing a password-reset flow. */
+  updatePassword(newPassword: string): Promise<Result<void>>;
+
   /**
    * Registers a listener that fires whenever auth state changes.
    * Returns an unsubscribe function.
    */
   onAuthStateChange(callback: AuthStateChangeCallback): () => void;
+
+  /**
+   * Registers a listener that fires when the user arrives via a
+   * password-reset email link. Returns an unsubscribe function.
+   */
+  onPasswordRecovery(callback: () => void): () => void;
 }

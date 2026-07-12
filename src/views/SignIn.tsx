@@ -102,6 +102,13 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
   const [signUpSuccess, setSignUpSuccess] = useState(false);
   const signUpSuccessTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // ── Forgot password ──────────────────────────────────────────────────────
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
+  const [forgotError, setForgotError] = useState<string | null>(null);
+
   // After a successful sign-up, show a confirmation card for a couple of
   // seconds, then switch back to the Sign In tab. The user is never
   // auto-signed-in and never navigated away from this page.
@@ -173,6 +180,36 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
     }
   };
 
+  // ── Forgot password handlers ─────────────────────────────────────────────
+
+  const openForgotPassword = () => {
+    setForgotEmail(signInForm.email.trim());
+    setForgotError(null);
+    setForgotSent(false);
+    setForgotMode(true);
+  };
+
+  const closeForgotPassword = () => {
+    setForgotMode(false);
+    setForgotSent(false);
+    setForgotError(null);
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail.trim()) { setForgotError('Email is required.'); return; }
+
+    setForgotError(null);
+    setForgotLoading(true);
+    try {
+      const result = await authRepository.requestPasswordReset(forgotEmail.trim());
+      if (!result.ok) { setForgotError(result.error.message); return; }
+      setForgotSent(true);
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
@@ -190,10 +227,65 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
         </div>
 
         <div className="card p-8">
-          {/* Sign-up success card — shown instead of the tabs/forms until the
-              auto-switch back to Sign In fires. The user is never signed in
-              or navigated away here; this is purely a confirmation message. */}
-          {signUpSuccess ? (
+          {/* Forgot password — a focused email-only form that replaces the
+              tabs/forms until the user goes back or a reset link is sent. */}
+          {forgotMode ? (
+            <div>
+              <h2 className="font-display text-lg font-700 text-ink-900 mb-1">Reset your password</h2>
+              <p className="text-sm text-ink-600 mb-5">
+                Enter your account email and we'll send you a link to set a new password.
+              </p>
+
+              {forgotSent ? (
+                <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-4 flex items-start gap-3 animate-scale-in" role="status">
+                  <CheckCircle2 size={18} className="text-emerald-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-emerald-300">Check your inbox.</p>
+                    <p className="text-sm text-emerald-300/80 mt-1 leading-relaxed">
+                      If an account exists for {forgotEmail.trim()}, we've sent a link to reset your password.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPassword} className="space-y-4" noValidate>
+                  {forgotError && (
+                    <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 flex items-start gap-2.5 animate-scale-in">
+                      <AlertCircle size={15} className="text-rose-400 shrink-0 mt-0.5" />
+                      <p className="text-sm text-rose-300">{forgotError}</p>
+                    </div>
+                  )}
+                  <Field
+                    id="forgot-email" label="Email address" type="email"
+                    placeholder="you@example.com" value={forgotEmail}
+                    onChange={setForgotEmail}
+                    autoComplete="email" disabled={forgotLoading}
+                  />
+                  <button
+                    type="submit"
+                    className="btn-primary w-full justify-center mt-2"
+                    disabled={forgotLoading}
+                  >
+                    {forgotLoading ? (
+                      <span className="flex items-center gap-2">
+                        <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                        Sending…
+                      </span>
+                    ) : (
+                      <><span>Send reset link</span><ArrowRight size={15} /></>
+                    )}
+                  </button>
+                </form>
+              )}
+
+              <button
+                type="button"
+                onClick={closeForgotPassword}
+                className="btn-ghost w-full mt-3 justify-center text-sm"
+              >
+                Back to sign in
+              </button>
+            </div>
+          ) : signUpSuccess ? (
             <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-4 flex items-start gap-3 animate-scale-in" role="status">
               <CheckCircle2 size={18} className="text-emerald-400 shrink-0 mt-0.5" />
               <div>
@@ -245,6 +337,15 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
                 onChange={(v) => setSignInForm((f) => ({ ...f, password: v }))}
                 autoComplete="current-password" disabled={loadingSignIn}
               />
+              <div className="flex justify-end -mt-2">
+                <button
+                  type="button"
+                  onClick={openForgotPassword}
+                  className="text-xs text-ink-500 hover:text-brand-300 transition"
+                >
+                  Forgot password?
+                </button>
+              </div>
               <button
                 type="submit"
                 className="btn-primary w-full justify-center mt-2"

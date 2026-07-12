@@ -133,6 +133,7 @@ export interface AIRevisionProposal {
 export type Screen =
   | { name: 'landing' }
   | { name: 'signin' }
+  | { name: 'reset-password' }
   | { name: 'trips' }
   | { name: 'create' }
   | { name: 'workspace'; tripId: string };
