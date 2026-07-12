@@ -121,35 +121,35 @@ export default function CreateTrip({ onNavigate, onCreate }: CreateTripProps) {
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
         <h1 className="font-display text-2xl font-800 text-ink-900">Create a trip</h1>
-        <p className="text-ink-500 mt-1">Fill in the details and AI will build your day-by-day itinerary.</p>
+        <p className="text-ink-600 mt-1">Fill in the details and AI will build your day-by-day itinerary.</p>
       </div>
 
       {/* Generating overlay */}
       {status === 'generating' && (
         <div className="card p-8 mb-6 flex flex-col items-center text-center gap-5">
           <div className="relative flex items-center justify-center">
-            <div className="h-16 w-16 rounded-full border-2 border-brand-100 border-t-brand-600 animate-spin" />
-            <Sparkles size={20} className="absolute text-brand-600" />
+            <div className="h-16 w-16 rounded-full border-2 border-brand-500/20 border-t-brand-400 animate-spin" />
+            <Sparkles size={20} className="absolute text-brand-400" />
           </div>
           <div>
             <p className="font-display font-700 text-ink-900 text-base">Generating your itinerary</p>
-            <p className="text-sm text-ink-500 mt-1 min-h-[1.25rem] transition-all">
+            <p className="text-sm text-ink-600 mt-1 min-h-[1.25rem] transition-all">
               {progressMessage}
             </p>
           </div>
-          <p className="text-xs text-ink-400">This usually takes 15–30 seconds.</p>
+          <p className="text-xs text-ink-600">This usually takes 15–30 seconds.</p>
         </div>
       )}
 
       {/* Error state */}
       {status === 'error' && errorMessage && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 mb-5 flex items-start gap-2.5">
-          <AlertTriangle size={16} className="text-rose-600 mt-0.5 shrink-0" />
+        <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 mb-5 flex items-start gap-2.5">
+          <AlertTriangle size={16} className="text-rose-400 mt-0.5 shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-rose-700 font-medium">{errorMessage}</p>
+            <p className="text-sm text-rose-300 font-medium">{errorMessage}</p>
             <button
               onClick={handleRetry}
-              className="text-sm text-rose-700 underline underline-offset-2 hover:no-underline mt-1"
+              className="text-sm text-rose-300 underline underline-offset-2 hover:no-underline mt-1"
             >
               Try again
             </button>
@@ -159,9 +159,9 @@ export default function CreateTrip({ onNavigate, onCreate }: CreateTripProps) {
 
       {/* Partial-save warnings (non-blocking) */}
       {warnings.length > 0 && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 mb-5">
-          <p className="text-sm text-amber-800 font-medium mb-1">Some items could not be saved:</p>
-          <ul className="text-sm text-amber-700 space-y-0.5 list-disc list-inside">
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 mb-5">
+          <p className="text-sm text-amber-300 font-medium mb-1">Some items could not be saved:</p>
+          <ul className="text-sm text-amber-300/80 space-y-0.5 list-disc list-inside">
             {warnings.map((w, i) => <li key={i}>{w}</li>)}
           </ul>
         </div>

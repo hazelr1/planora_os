@@ -20,12 +20,12 @@ interface MyTripsProps {
 function TripCardSkeleton() {
   return (
     <div className="card animate-pulse">
-      <div className="h-36 bg-ink-100 rounded-t-2xl -mx-5 -mt-5 mb-4" />
-      <div className="h-5 w-3/4 bg-ink-100 rounded mb-2" />
-      <div className="h-4 w-1/2 bg-ink-100 rounded mb-4" />
+      <div className="h-36 bg-ink-200/60 rounded-t-2xl -mx-5 -mt-5 mb-4" />
+      <div className="h-5 w-3/4 bg-ink-200/60 rounded mb-2" />
+      <div className="h-4 w-1/2 bg-ink-200/60 rounded mb-4" />
       <div className="flex gap-2">
-        <div className="h-7 w-20 bg-ink-100 rounded-lg" />
-        <div className="h-7 w-16 bg-ink-100 rounded-lg" />
+        <div className="h-7 w-20 bg-ink-200/60 rounded-lg" />
+        <div className="h-7 w-16 bg-ink-200/60 rounded-lg" />
       </div>
     </div>
   );
@@ -45,7 +45,7 @@ export default function MyTrips({
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="font-display text-2xl font-800 text-ink-900">My Trips</h1>
-          <p className="text-ink-500 mt-1 text-sm">
+          <p className="text-ink-600 mt-1 text-sm">
             {isLoading ? 'Loading…' : trips.length === 0 ? 'No trips yet' : `${trips.length} ${trips.length === 1 ? 'trip' : 'trips'}`}
           </p>
         </div>
@@ -66,7 +66,7 @@ export default function MyTrips({
       {/* Load error */}
       {!isLoading && loadError && (
         <div className="card p-8 text-center">
-          <p className="text-sm font-medium text-rose-700 mb-1">{loadError}</p>
+          <p className="text-sm font-medium text-rose-300 mb-1">{loadError}</p>
           <button onClick={onRetryLoad} className="btn-primary mt-4">Retry</button>
         </div>
       )}

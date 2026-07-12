@@ -104,7 +104,7 @@ export default function SignIn({ onNavigate, onAuthSuccess }: SignInProps) {
   // ── Shared UI helpers ────────────────────────────────────────────────────
 
   const InputIcon = ({ icon }: { icon: React.ReactNode }) => (
-    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-400">
+    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-500">
       {icon}
     </span>
   );
@@ -143,7 +143,7 @@ export default function SignIn({ onNavigate, onAuthSuccess }: SignInProps) {
           <h1 className="font-display text-3xl font-800 text-ink-900">
             {tab === 'signin' ? 'Welcome back' : 'Create your account'}
           </h1>
-          <p className="text-sm text-ink-500 mt-2">
+          <p className="text-sm text-ink-600 mt-2">
             {tab === 'signin'
               ? 'Sign in to access your trips and itineraries.'
               : 'Start planning your perfect trip today.'}
@@ -152,14 +152,14 @@ export default function SignIn({ onNavigate, onAuthSuccess }: SignInProps) {
 
         <div className="card p-8">
           {/* Tab switcher */}
-          <div className="flex rounded-xl bg-ink-100 p-1 mb-6">
+          <div className="flex rounded-xl bg-ink-200/60 p-1 mb-6">
             {(['signin', 'signup'] as Tab[]).map((t) => (
               <button
                 key={t} type="button"
                 onClick={() => switchTab(t)}
                 className={`flex-1 rounded-lg py-2 text-sm font-600 transition ${
                   tab === t
-                    ? 'bg-white text-ink-900 shadow-soft'
+                    ? 'bg-ink-300/80 text-ink-900 shadow-soft'
                     : 'text-ink-500 hover:text-ink-700'
                 }`}
               >
@@ -170,17 +170,17 @@ export default function SignIn({ onNavigate, onAuthSuccess }: SignInProps) {
 
           {/* Error banner */}
           {error && (
-            <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 flex items-start gap-2.5 animate-scale-in">
-              <AlertCircle size={15} className="text-rose-600 shrink-0 mt-0.5" />
-              <p className="text-sm text-rose-700">{error}</p>
+            <div className="mb-5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 flex items-start gap-2.5 animate-scale-in">
+              <AlertCircle size={15} className="text-rose-400 shrink-0 mt-0.5" />
+              <p className="text-sm text-rose-300">{error}</p>
             </div>
           )}
 
           {/* Sign-up success (email confirmation prompt if enabled) */}
           {signUpSuccess && (
-            <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 flex items-start gap-2.5 animate-scale-in">
-              <CheckCircle2 size={15} className="text-emerald-600 shrink-0 mt-0.5" />
-              <p className="text-sm text-emerald-700">
+            <div className="mb-5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 flex items-start gap-2.5 animate-scale-in">
+              <CheckCircle2 size={15} className="text-emerald-400 shrink-0 mt-0.5" />
+              <p className="text-sm text-emerald-300">
                 Account created! Check your inbox to confirm your email, then sign in.
               </p>
             </div>
@@ -208,7 +208,7 @@ export default function SignIn({ onNavigate, onAuthSuccess }: SignInProps) {
               >
                 {loadingSignIn ? (
                   <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                    <span className="h-4 w-4 rounded-full border-2 border-ink-950/30 border-t-ink-950 animate-spin" />
                     Signing in…
                   </span>
                 ) : (
@@ -242,14 +242,14 @@ export default function SignIn({ onNavigate, onAuthSuccess }: SignInProps) {
               <div>
                 <label htmlFor="su-confirm" className="label">Confirm password</label>
                 <div className="relative">
-                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-400">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-500">
                     <Lock size={15} />
                   </span>
                   <input
                     id="su-confirm" type="password"
                     className={`input pl-9 ${
                       signUpForm.confirmPassword && signUpForm.confirmPassword !== signUpForm.password
-                        ? 'border-rose-300 focus:ring-rose-500'
+                        ? 'border-rose-500/40 focus:ring-rose-500/30'
                         : ''
                     }`}
                     placeholder="Repeat your password"
@@ -259,11 +259,11 @@ export default function SignIn({ onNavigate, onAuthSuccess }: SignInProps) {
                     disabled={loadingSignUp}
                   />
                   {signUpForm.confirmPassword && signUpForm.confirmPassword === signUpForm.password && (
-                    <CheckCircle2 size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500" />
+                    <CheckCircle2 size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-400" />
                   )}
                 </div>
                 {signUpForm.confirmPassword && signUpForm.confirmPassword !== signUpForm.password && (
-                  <p className="mt-1 text-xs text-rose-600">Passwords do not match.</p>
+                  <p className="mt-1 text-xs text-rose-400">Passwords do not match.</p>
                 )}
               </div>
               <button
@@ -273,7 +273,7 @@ export default function SignIn({ onNavigate, onAuthSuccess }: SignInProps) {
               >
                 {loadingSignUp ? (
                   <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                    <span className="h-4 w-4 rounded-full border-2 border-ink-950/30 border-t-ink-950 animate-spin" />
                     Creating account…
                   </span>
                 ) : (
@@ -284,11 +284,11 @@ export default function SignIn({ onNavigate, onAuthSuccess }: SignInProps) {
           )}
 
           {/* Footer */}
-          <div className="mt-6 pt-5 border-t border-ink-100 text-center">
+          <div className="mt-6 pt-5 border-t border-white/10 text-center">
             <button
               type="button"
               onClick={() => onNavigate({ name: 'landing' })}
-              className="text-xs text-ink-400 hover:text-ink-600 transition"
+              className="text-xs text-ink-500 hover:text-ink-700 transition"
             >
               Back to home
             </button>

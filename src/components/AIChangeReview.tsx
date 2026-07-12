@@ -18,11 +18,11 @@ interface AIChangeReviewProps {
 // ─── Operation display config ─────────────────────────────────────────────────
 
 const opCfg: Record<RevisionOperation, { label: string; bg: string; text: string; border: string; Icon: React.ElementType }> = {
-  add:     { label: 'Add',     bg: 'bg-emerald-50', text: 'text-emerald-800', border: 'border-emerald-200', Icon: Plus },
-  remove:  { label: 'Remove',  bg: 'bg-rose-50',    text: 'text-rose-800',    border: 'border-rose-200',    Icon: Minus },
-  replace: { label: 'Replace', bg: 'bg-amber-50',   text: 'text-amber-800',   border: 'border-amber-200',   Icon: RefreshCw },
-  move:    { label: 'Move',    bg: 'bg-sky-50',     text: 'text-sky-800',     border: 'border-sky-200',     Icon: ArrowRight },
-  update:  { label: 'Update',  bg: 'bg-violet-50',  text: 'text-violet-800',  border: 'border-violet-200',  Icon: RefreshCw },
+  add:     { label: 'Add',     bg: 'bg-emerald-500/10', text: 'text-emerald-300', border: 'border-emerald-500/20', Icon: Plus },
+  remove:  { label: 'Remove',  bg: 'bg-rose-500/10',    text: 'text-rose-300',    border: 'border-rose-500/20',    Icon: Minus },
+  replace: { label: 'Replace', bg: 'bg-amber-500/10',   text: 'text-amber-300',   border: 'border-amber-500/20',   Icon: RefreshCw },
+  move:    { label: 'Move',    bg: 'bg-sky-500/10',     text: 'text-sky-300',     border: 'border-sky-500/20',     Icon: ArrowRight },
+  update:  { label: 'Update',  bg: 'bg-violet-500/10',  text: 'text-violet-300',  border: 'border-violet-500/20',  Icon: RefreshCw },
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -68,7 +68,7 @@ function ChangeCard({ change, days, currency }: { change: RevisionChange; days: 
             <span className={`text-xs font-700 uppercase tracking-wide ${cfg.text}`}>{cfg.label}</span>
             {actName && <span className="text-sm font-600 text-ink-900 truncate max-w-[200px]">{actName}</span>}
             {change.operation === 'move' && srcLabel && dstLabel && (
-              <span className="flex items-center gap-1 text-xs text-ink-500">
+              <span className="flex items-center gap-1 text-xs text-ink-600">
                 {srcLabel} <ArrowRight size={10} /> {dstLabel}
               </span>
             )}
@@ -94,18 +94,18 @@ function ChangeCard({ change, days, currency }: { change: RevisionChange; days: 
           {change.operation === 'replace' && change.before.title && (
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
-                <p className="font-600 text-ink-400 mb-1">Before</p>
+                <p className="font-600 text-ink-600 mb-1">Before</p>
                 <p className="text-ink-700 line-through opacity-60">{change.before.title}</p>
                 {change.before.estimated_cost > 0 && (
-                  <p className="text-ink-500 opacity-60">{fmt(change.before.estimated_cost, currency)}</p>
+                  <p className="text-ink-600 opacity-60">{fmt(change.before.estimated_cost, currency)}</p>
                 )}
               </div>
               <div>
-                <p className="font-600 text-ink-400 mb-1">After</p>
+                <p className="font-600 text-ink-600 mb-1">After</p>
                 <p className="text-ink-700">{change.after.title}</p>
-                {change.after.location && <p className="text-ink-500">{change.after.location}</p>}
+                {change.after.location && <p className="text-ink-600">{change.after.location}</p>}
                 {change.after.estimated_cost >= 0 && (
-                  <p className="text-ink-500">{fmt(change.after.estimated_cost, currency)}</p>
+                  <p className="text-ink-600">{fmt(change.after.estimated_cost, currency)}</p>
                 )}
               </div>
             </div>
@@ -116,25 +116,25 @@ function ChangeCard({ change, days, currency }: { change: RevisionChange; days: 
             <div className="text-xs space-y-1.5">
               {change.before.title && change.after.title && change.before.title !== change.after.title && (
                 <div className="flex items-center gap-2">
-                  <span className="text-ink-400 shrink-0 w-12">Title</span>
-                  <span className="line-through text-ink-400">{change.before.title}</span>
-                  <ArrowRight size={10} className="text-ink-400 shrink-0" />
+                  <span className="text-ink-600 shrink-0 w-12">Title</span>
+                  <span className="line-through text-ink-600">{change.before.title}</span>
+                  <ArrowRight size={10} className="text-ink-600 shrink-0" />
                   <span className="text-ink-700">{change.after.title}</span>
                 </div>
               )}
               {change.before.estimated_cost !== change.after.estimated_cost && change.after.estimated_cost >= 0 && (
                 <div className="flex items-center gap-2">
-                  <span className="text-ink-400 shrink-0 w-12">Cost</span>
-                  <span className="line-through text-ink-400">{fmt(change.before.estimated_cost, currency)}</span>
-                  <ArrowRight size={10} className="text-ink-400 shrink-0" />
+                  <span className="text-ink-600 shrink-0 w-12">Cost</span>
+                  <span className="line-through text-ink-600">{fmt(change.before.estimated_cost, currency)}</span>
+                  <ArrowRight size={10} className="text-ink-600 shrink-0" />
                   <span className="text-ink-700">{fmt(change.after.estimated_cost, currency)}</span>
                 </div>
               )}
               {change.before.duration_minutes !== change.after.duration_minutes && change.after.duration_minutes > 0 && (
                 <div className="flex items-center gap-2">
-                  <span className="text-ink-400 shrink-0 w-12">Time</span>
-                  <span className="line-through text-ink-400">{change.before.duration_minutes}min</span>
-                  <ArrowRight size={10} className="text-ink-400 shrink-0" />
+                  <span className="text-ink-600 shrink-0 w-12">Time</span>
+                  <span className="line-through text-ink-600">{change.before.duration_minutes}min</span>
+                  <ArrowRight size={10} className="text-ink-600 shrink-0" />
                   <span className="text-ink-700">{change.after.duration_minutes}min</span>
                 </div>
               )}
@@ -148,7 +148,7 @@ function ChangeCard({ change, days, currency }: { change: RevisionChange; days: 
               {change.after.duration_minutes > 0 && (
                 <p>{change.after.duration_minutes}min · {fmt(change.after.estimated_cost, currency)}</p>
               )}
-              {change.after.description && <p className="text-ink-500 leading-relaxed">{change.after.description}</p>}
+              {change.after.description && <p className="text-ink-600 leading-relaxed">{change.after.description}</p>}
             </div>
           )}
         </div>
@@ -189,7 +189,7 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
   const p = currentProposal;
   const lockedCount = days.reduce((n, d) => n + d.activities.filter((a) => a.locked).length, 0);
   const budgetDiff = p.budget_difference;
-  const budgetColor = budgetDiff < 0 ? 'text-emerald-700' : budgetDiff > 0 ? 'text-rose-600' : 'text-ink-600';
+  const budgetColor = budgetDiff < 0 ? 'text-emerald-300' : budgetDiff > 0 ? 'text-rose-400' : 'text-ink-600';
   const budgetSign = budgetDiff > 0 ? '+' : budgetDiff < 0 ? '' : '';
 
   // ── Cancel (reject + close) ─────────────────────────────────────────────────
@@ -303,23 +303,23 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
       aria-modal="true"
       aria-labelledby="review-title"
     >
-      <div className="absolute inset-0 bg-ink-950/50 backdrop-blur-sm" onClick={handleCancel} aria-hidden="true" />
+      <div className="absolute inset-0 bg-ink-950/60 backdrop-blur-sm" onClick={handleCancel} aria-hidden="true" />
 
-      <div className="relative w-full sm:max-w-xl max-h-[92dvh] flex flex-col rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl animate-scale-in overflow-hidden">
+      <div className="relative w-full sm:max-w-xl max-h-[92dvh] flex flex-col rounded-t-2xl sm:rounded-2xl ai-surface shadow-pop animate-scale-in overflow-hidden">
 
         {/* ── Header ── */}
-        <div className="flex items-start gap-3 px-5 py-4 border-b border-ink-100 shrink-0">
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shrink-0 mt-0.5">
+        <div className="flex items-start gap-3 px-5 py-4 border-b border-violet-400/15 shrink-0">
+          <div className="h-9 w-9 rounded-xl ai-gradient flex items-center justify-center shrink-0 mt-0.5 shadow-soft">
             <Sparkles className="text-white" size={17} />
           </div>
           <div className="flex-1 min-w-0">
             <h2 id="review-title" className="font-display text-base font-700 text-ink-900">AI Change Review</h2>
-            <p className="text-xs text-ink-400 mt-0.5">Nothing is applied until you click Apply Changes</p>
+            <p className="text-xs text-ink-600 mt-0.5">Nothing is applied until you click Apply Changes</p>
           </div>
           <button
             ref={closeRef}
             onClick={handleCancel}
-            className="rounded-lg p-1.5 text-ink-400 hover:text-ink-700 hover:bg-ink-100 transition shrink-0"
+            className="rounded-lg p-1.5 text-ink-500 hover:text-ink-800 hover:bg-white/5 transition shrink-0"
             aria-label="Close review"
           >
             <X size={17} />
@@ -331,31 +331,31 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
 
           {/* User request */}
           <div>
-            <p className="text-xs font-700 uppercase tracking-wide text-ink-400 mb-1.5">Your request</p>
-            <p className="text-sm text-ink-700 bg-ink-50 rounded-xl px-3.5 py-2.5 border border-ink-100 leading-relaxed italic">
+            <p className="text-xs font-700 uppercase tracking-wide text-ink-600 mb-1.5">Your request</p>
+            <p className="text-sm text-ink-700 bg-ink-200/40 rounded-xl px-3.5 py-2.5 border border-white/10 leading-relaxed italic">
               "{p.instruction}"
             </p>
           </div>
 
           {/* Summary */}
-          <div className="rounded-xl bg-brand-50 border border-brand-100 px-4 py-3">
-            <p className="text-sm text-brand-900 leading-relaxed">{p.summary}</p>
+          <div className="rounded-xl bg-violet-500/10 border border-violet-400/20 px-4 py-3">
+            <p className="text-sm text-violet-100 leading-relaxed">{p.summary}</p>
           </div>
 
           {/* Constraints */}
           {p.constraints.length > 0 && (
             <div>
-              <p className="text-xs font-700 uppercase tracking-wide text-ink-400 mb-2">Constraints</p>
+              <p className="text-xs font-700 uppercase tracking-wide text-ink-600 mb-2">Constraints</p>
               <div className="space-y-2" role="list">
                 {p.constraints.map((c, i) => (
                   <div key={i} className="flex items-start gap-2.5" role="listitem">
                     {c.satisfied
-                      ? <CheckCircle2 size={15} className="text-emerald-600 mt-0.5 shrink-0" aria-label="Satisfied" />
-                      : <XCircle size={15} className="text-rose-500 mt-0.5 shrink-0" aria-label="Not satisfied" />
+                      ? <CheckCircle2 size={15} className="text-emerald-400 mt-0.5 shrink-0" aria-label="Satisfied" />
+                      : <XCircle size={15} className="text-rose-400 mt-0.5 shrink-0" aria-label="Not satisfied" />
                     }
                     <div className="min-w-0">
                       <p className="text-sm font-600 text-ink-800">{c.constraint}</p>
-                      <p className="text-xs text-ink-500 mt-0.5 leading-relaxed">{c.explanation}</p>
+                      <p className="text-xs text-ink-600 mt-0.5 leading-relaxed">{c.explanation}</p>
                     </div>
                   </div>
                 ))}
@@ -365,18 +365,18 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
 
           {/* Budget impact */}
           <div>
-            <p className="text-xs font-700 uppercase tracking-wide text-ink-400 mb-2">Budget impact</p>
-            <div className="rounded-xl border border-ink-100 bg-ink-50 grid grid-cols-3 divide-x divide-ink-100 text-center text-sm">
+            <p className="text-xs font-700 uppercase tracking-wide text-ink-600 mb-2">Budget impact</p>
+            <div className="rounded-xl border border-white/10 bg-ink-200/40 grid grid-cols-3 divide-x divide-white/10 text-center text-sm">
               <div className="px-3 py-3">
-                <p className="text-xs text-ink-400 mb-0.5">Current</p>
+                <p className="text-xs text-ink-600 mb-0.5">Current</p>
                 <p className="font-700 text-ink-800">{fmt(p.old_estimated_total, currency)}</p>
               </div>
               <div className="px-3 py-3">
-                <p className="text-xs text-ink-400 mb-0.5">Proposed</p>
+                <p className="text-xs text-ink-600 mb-0.5">Proposed</p>
                 <p className="font-700 text-ink-800">{fmt(p.new_estimated_total, currency)}</p>
               </div>
               <div className="px-3 py-3">
-                <p className="text-xs text-ink-400 mb-0.5">Difference</p>
+                <p className="text-xs text-ink-600 mb-0.5">Difference</p>
                 <p className={`font-700 ${budgetColor}`}>
                   {budgetDiff === 0 ? 'None' : `${budgetSign}${fmt(budgetDiff, currency)}`}
                 </p>
@@ -386,12 +386,12 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
 
           {/* Pace effect */}
           {p.pace_effect && (
-            <p className="text-xs text-ink-500 italic leading-relaxed">{p.pace_effect}</p>
+            <p className="text-xs text-ink-600 italic leading-relaxed">{p.pace_effect}</p>
           )}
 
           {/* Proposed changes */}
           <div>
-            <p className="text-xs font-700 uppercase tracking-wide text-ink-400 mb-2">
+            <p className="text-xs font-700 uppercase tracking-wide text-ink-600 mb-2">
               Proposed changes{p.changes.length > 0 ? ` (${p.changes.length})` : ''}
             </p>
             {p.changes.length > 0 ? (
@@ -403,16 +403,16 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl border border-ink-100 bg-ink-50 px-4 py-6 text-center">
-                <p className="text-sm text-ink-500">No changes proposed for this instruction.</p>
+              <div className="rounded-xl border border-white/10 bg-ink-200/40 px-4 py-6 text-center">
+                <p className="text-sm text-ink-600">No changes proposed for this instruction.</p>
               </div>
             )}
           </div>
 
           {/* Locked activities preserved */}
-          <div className="flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-            <Lock size={14} className="text-emerald-700 shrink-0" />
-            <p className="text-xs text-emerald-800 font-medium">
+          <div className="flex items-center gap-2.5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
+            <Lock size={14} className="text-emerald-400 shrink-0" />
+            <p className="text-xs text-emerald-300 font-medium">
               {lockedCount > 0
                 ? `${lockedCount} locked ${lockedCount === 1 ? 'activity' : 'activities'} preserved — they were not edited, moved, or removed.`
                 : 'No locked activities in this trip. Lock important activities to protect them from future AI changes.'}
@@ -421,11 +421,11 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
 
           {/* Warnings */}
           {p.warnings.length > 0 && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-2.5" role="alert">
-              <AlertTriangle size={15} className="text-amber-600 mt-0.5 shrink-0" />
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 flex items-start gap-2.5" role="alert">
+              <AlertTriangle size={15} className="text-amber-400 mt-0.5 shrink-0" />
               <ul className="space-y-1">
                 {p.warnings.map((w, i) => (
-                  <li key={i} className="text-xs text-amber-800 leading-relaxed">{w}</li>
+                  <li key={i} className="text-xs text-amber-300 leading-relaxed">{w}</li>
                 ))}
               </ul>
             </div>
@@ -433,20 +433,20 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
 
           {/* Apply error */}
           {applyStatus === 'error' && applyError && (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 flex items-start gap-2.5" role="alert">
-              <AlertTriangle size={15} className="text-rose-600 mt-0.5 shrink-0" />
-              <p className="text-xs text-rose-800 leading-relaxed">{applyError}</p>
+            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 flex items-start gap-2.5" role="alert">
+              <AlertTriangle size={15} className="text-rose-400 mt-0.5 shrink-0" />
+              <p className="text-xs text-rose-300 leading-relaxed">{applyError}</p>
             </div>
           )}
 
           {/* Try another inline panel */}
           {tryMode && (
-            <div className="rounded-xl border border-brand-200 bg-brand-50/40 p-4">
+            <div className="rounded-xl border border-violet-400/20 bg-violet-500/5 p-4">
               <p className="text-sm font-600 text-ink-800 mb-3">Describe what you'd like instead</p>
               {tryStatus === 'error' && tryError && (
-                <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 mb-3 flex items-start gap-2" role="alert">
-                  <AlertTriangle size={13} className="text-rose-600 mt-0.5 shrink-0" />
-                  <p className="text-xs text-rose-700">{tryError}</p>
+                <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 mb-3 flex items-start gap-2" role="alert">
+                  <AlertTriangle size={13} className="text-rose-400 mt-0.5 shrink-0" />
+                  <p className="text-xs text-rose-300">{tryError}</p>
                 </div>
               )}
               <form onSubmit={handleTryAnother} className="space-y-3">
@@ -485,7 +485,7 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
 
         {/* ── Footer ── */}
         {!tryMode && (
-          <div className="shrink-0 px-5 py-4 border-t border-ink-100 bg-white">
+          <div className="shrink-0 px-5 py-4 border-t border-violet-400/15 bg-ink-100/40">
             <div className="flex flex-col sm:flex-row gap-2">
               <button
                 onClick={handleCancel}

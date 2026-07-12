@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle, Bot, Loader2, Send, Sparkles, Zap } from 'lucide-react';
+import { AlertTriangle, Bot, Loader2, Send, Zap } from 'lucide-react';
 import type { AIRevisionProposal, Trip } from '../types';
 import { supabase } from '../lib/supabase';
 
@@ -100,23 +100,23 @@ export default function AIAssistantPanel({ trip, onRevisionProposed }: AIAssista
   const chips = trip.isDemo ? DEMO_CHIPS : SUGGESTION_CHIPS;
 
   return (
-    <div className="card p-5 sticky top-20">
+    <div className="ai-surface p-5 sticky top-20">
       {/* Header */}
       <div className="flex items-center gap-2.5 mb-4">
-        <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shrink-0">
+        <div className="h-9 w-9 rounded-xl ai-gradient flex items-center justify-center shrink-0 shadow-soft">
           <Bot className="text-white" size={18} />
         </div>
         <div>
           <h3 className="font-display text-base font-700 text-ink-900">AI Assistant</h3>
-          <p className="text-xs text-ink-400">Ask for itinerary changes</p>
+          <p className="text-xs text-ink-600">Ask for itinerary changes</p>
         </div>
       </div>
 
       {/* Analyzing state */}
       {status === 'analyzing' && (
-        <div className="rounded-xl bg-brand-50 border border-brand-100 px-3.5 py-3 flex items-center gap-2.5 mb-4">
-          <Loader2 size={14} className="text-brand-600 shrink-0 animate-spin" />
-          <p className="text-xs text-brand-800 leading-relaxed font-medium">
+        <div className="rounded-xl bg-violet-500/10 border border-violet-400/20 px-3.5 py-3 flex items-center gap-2.5 mb-4">
+          <Loader2 size={14} className="text-violet-300 shrink-0 animate-spin" />
+          <p className="text-xs text-violet-200 leading-relaxed font-medium">
             Analyzing itinerary and constraints…
           </p>
         </div>
@@ -124,18 +124,18 @@ export default function AIAssistantPanel({ trip, onRevisionProposed }: AIAssista
 
       {/* Error state */}
       {status === 'error' && errorMessage && (
-        <div className="rounded-xl bg-rose-50 border border-rose-200 px-3.5 py-3 flex items-start gap-2 mb-4">
-          <AlertTriangle size={14} className="text-rose-600 mt-0.5 shrink-0" />
-          <p className="text-xs text-rose-800 leading-relaxed">{errorMessage}</p>
+        <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 px-3.5 py-3 flex items-start gap-2 mb-4">
+          <AlertTriangle size={14} className="text-rose-400 mt-0.5 shrink-0" />
+          <p className="text-xs text-rose-300 leading-relaxed">{errorMessage}</p>
         </div>
       )}
 
       {/* Quick request chips */}
       {status !== 'analyzing' && (
         <div className="mb-3">
-          <p className="text-xs font-semibold text-ink-400 uppercase tracking-wide mb-2">
+          <p className="text-xs font-semibold text-ink-600 uppercase tracking-wide mb-2">
             {trip.isDemo
-              ? <span className="flex items-center gap-1"><Zap size={11} className="text-amber-500" /> Quick requests</span>
+              ? <span className="flex items-center gap-1"><Zap size={11} className="text-amber-400" /> Quick requests</span>
               : 'Try asking'
             }
           </p>
@@ -145,11 +145,11 @@ export default function AIAssistantPanel({ trip, onRevisionProposed }: AIAssista
                 key={chip}
                 type="button"
                 onClick={() => handleChipClick(chip)}
-                disabled={status === 'analyzing'}
+                disabled={false}
                 className={`chip transition-colors border ${
                   trip.isDemo
-                    ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100 hover:border-amber-300'
-                    : 'bg-ink-100 text-ink-600 border-transparent hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200'
+                    ? 'bg-amber-500/10 text-amber-300 border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/30'
+                    : 'bg-ink-200/40 text-ink-600 border-white/10 hover:bg-violet-500/10 hover:text-violet-200 hover:border-violet-400/20'
                 }`}
               >
                 {chip}
@@ -157,7 +157,7 @@ export default function AIAssistantPanel({ trip, onRevisionProposed }: AIAssista
             ))}
           </div>
           {trip.isDemo && (
-            <p className="text-[10px] text-ink-400 mt-1.5">Tap a chip to instantly request a real AI revision.</p>
+            <p className="text-[10px] text-ink-600 mt-1.5">Tap a chip to instantly request a real AI revision.</p>
           )}
         </div>
       )}
@@ -190,7 +190,7 @@ export default function AIAssistantPanel({ trip, onRevisionProposed }: AIAssista
 
       {/* Demo note */}
       {trip.isDemo && status === 'idle' && (
-        <p className="mt-3 text-[10px] text-ink-400 text-center leading-relaxed">
+        <p className="mt-3 text-[10px] text-ink-600 text-center leading-relaxed">
           This is a demo trip. Changes are saved to your isolated session.
         </p>
       )}

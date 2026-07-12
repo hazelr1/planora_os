@@ -28,9 +28,9 @@ function SaveBar({ status, errorMessage, retry }: { status: string; errorMessage
   if (status === 'idle') return null;
   return (
     <div className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-      status === 'saving' ? 'bg-brand-50 text-brand-700' :
-      status === 'saved' ? 'bg-emerald-50 text-emerald-700' :
-      'bg-rose-50 text-rose-700'
+      status === 'saving' ? 'bg-brand-500/10 text-brand-300' :
+      status === 'saved' ? 'bg-emerald-500/10 text-emerald-300' :
+      'bg-rose-500/10 text-rose-300'
     }`}>
       {status === 'saving' && <Loader2 size={12} className="animate-spin" />}
       {status === 'saved' && <Save size={12} />}
@@ -124,8 +124,8 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
   if (loadStatus === 'loading') {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4">
-        <div className="h-9 w-9 rounded-full border-2 border-brand-200 border-t-brand-600 animate-spin" />
-        <p className="text-sm text-ink-400">Loading itinerary…</p>
+        <div className="h-9 w-9 rounded-full border-2 border-brand-500/20 border-t-brand-400 animate-spin" />
+        <p className="text-sm text-ink-600">Loading itinerary…</p>
       </div>
     );
   }
@@ -133,8 +133,8 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
   if (loadStatus === 'not_found') {
     return (
       <div className="card p-12 text-center">
-        <p className="text-base font-600 text-ink-700 mb-1">Trip not found</p>
-        <p className="text-sm text-ink-500 mb-6">This trip may have been deleted.</p>
+        <p className="text-base font-600 text-ink-800 mb-1">Trip not found</p>
+        <p className="text-sm text-ink-600 mb-6">This trip may have been deleted.</p>
         <button onClick={() => onNavigate({ name: 'trips' })} className="btn-primary">
           Back to My Trips
         </button>
@@ -145,9 +145,9 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
   if (loadStatus === 'error') {
     return (
       <div className="card p-12 text-center">
-        <AlertTriangle size={24} className="text-rose-500 mx-auto mb-3" />
-        <p className="text-base font-600 text-ink-700 mb-1">Could not load this trip</p>
-        <p className="text-sm text-ink-500 mb-6">Please check your connection and try again.</p>
+        <AlertTriangle size={24} className="text-rose-400 mx-auto mb-3" />
+        <p className="text-base font-600 text-ink-800 mb-1">Could not load this trip</p>
+        <p className="text-sm text-ink-600 mb-6">Please check your connection and try again.</p>
         <button onClick={load} className="btn-primary">Retry</button>
       </div>
     );
@@ -202,13 +202,13 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="font-display text-2xl font-800 text-ink-900">{trip.title}</h1>
               {trip.isDemo && (
-                <span className="inline-flex items-center gap-1 rounded-lg bg-amber-100 text-amber-700 border border-amber-200 px-2 py-0.5 text-xs font-700">
+                <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/20 px-2 py-0.5 text-xs font-700">
                   <FlaskConical size={11} /> Demo Data
                 </span>
               )}
               <button
                 onClick={() => setEditingTrip(true)}
-                className="rounded-lg p-1.5 text-ink-400 hover:text-ink-700 hover:bg-ink-100 transition"
+                className="rounded-lg p-1.5 text-ink-500 hover:text-ink-800 hover:bg-white/5 transition"
                 aria-label="Edit trip"
               >
                 <Pencil size={16} />
@@ -217,7 +217,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
                 <button
                   onClick={() => setResetConfirm(true)}
                   disabled={resetLoading}
-                  className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-600 text-ink-500 hover:text-ink-700 hover:bg-ink-100 border border-ink-200 transition"
+                  className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-600 text-ink-500 hover:text-ink-800 hover:bg-white/5 border border-white/10 transition"
                   title="Reset demo trip to original state"
                 >
                   {resetLoading
@@ -228,7 +228,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
                 </button>
               )}
             </div>
-            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-ink-500">
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-ink-600">
               <span className="flex items-center gap-1.5"><MapPin size={13} /> {trip.destination}</span>
               <span className="flex items-center gap-1.5"><Calendar size={13} /> {dateRange}</span>
               <span className="flex items-center gap-1.5"><Users size={13} /> {trip.travelers} {trip.travelers === 1 ? 'traveler' : 'travelers'}</span>
@@ -243,17 +243,17 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
 
       {/* Changes applied banner */}
       {showAppliedBanner && (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 flex items-center gap-2.5" role="status">
-          <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-          <p className="text-sm text-emerald-800 font-medium">Changes applied. Your itinerary has been updated.</p>
+        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 flex items-center gap-2.5" role="status">
+          <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
+          <p className="text-sm text-emerald-300 font-medium">Changes applied. Your itinerary has been updated.</p>
         </div>
       )}
 
       {/* Over-budget warning */}
       {over && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 flex items-center gap-2.5">
-          <AlertTriangle size={16} className="text-rose-600 shrink-0" />
-          <p className="text-sm text-rose-700 font-medium">
+        <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 flex items-center gap-2.5">
+          <AlertTriangle size={16} className="text-rose-400 shrink-0" />
+          <p className="text-sm text-rose-300 font-medium">
             Your itinerary currently exceeds the trip budget. Consider locking must-dos and asking the AI to trim costs.
           </p>
         </div>
@@ -268,8 +268,8 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
               onClick={() => setActiveDay(i)}
               className={`shrink-0 rounded-xl px-4 py-2 text-sm font-600 transition ${
                 activeDay === i
-                  ? 'bg-brand-600 text-white shadow-soft'
-                  : 'bg-white border border-ink-200 text-ink-600 hover:bg-ink-50'
+                  ? 'bg-brand-500 text-ink-950 shadow-soft'
+                  : 'bg-ink-200/60 border border-white/10 text-ink-600 hover:bg-ink-300/60'
               }`}
             >
               {d.label}
@@ -350,7 +350,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
       {/* Move to day picker */}
       {moveActivityId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-ink-950/40 backdrop-blur-sm" onClick={() => setMoveActivityId(null)} />
+          <div className="absolute inset-0 bg-ink-950/60 backdrop-blur-sm" onClick={() => setMoveActivityId(null)} />
           <div className="relative w-full max-w-sm card p-5 animate-scale-in">
             <h3 className="font-display text-base font-700 text-ink-900 mb-3">Move activity to</h3>
             <div className="space-y-2">
@@ -358,11 +358,11 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
                 <button
                   key={d.id}
                   onClick={() => executeMoveToDay(d.id)}
-                  className="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-left text-sm font-600 text-ink-700 hover:bg-ink-50 hover:border-ink-300 transition"
+                  className="w-full rounded-xl border border-white/10 bg-ink-200/40 px-4 py-2.5 text-left text-sm font-600 text-ink-700 hover:bg-ink-300/60 hover:border-white/20 transition"
                 >
                   {d.label}
                   {d.theme ? ` — ${d.theme}` : ''}
-                  <span className="float-right text-ink-400 font-normal">
+                  <span className="float-right text-ink-500 font-normal">
                     {new Date(d.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
                 </button>

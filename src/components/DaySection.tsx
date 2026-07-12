@@ -28,25 +28,25 @@ export default function DaySection({
   return (
     <section className="card overflow-hidden">
       {/* Day header */}
-      <div className="px-5 py-4 border-b border-ink-100 bg-ink-50/40">
+      <div className="px-5 py-4 border-b border-white/10 bg-ink-200/30">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
-            <div className="h-9 w-9 rounded-xl bg-brand-600 text-white flex items-center justify-center font-display font-700 text-sm shrink-0 mt-0.5">
+            <div className="h-9 w-9 rounded-xl bg-brand-500 text-ink-950 flex items-center justify-center font-display font-700 text-sm shrink-0 mt-0.5">
               {day.label.replace('Day ', '')}
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-display text-base font-700 text-ink-900">{day.label}</h3>
                 {day.theme && (
-                  <span className="text-sm text-ink-500 font-medium">— {day.theme}</span>
+                  <span className="text-sm text-ink-600 font-medium">— {day.theme}</span>
                 )}
               </div>
-              <p className="text-xs text-ink-500 flex items-center gap-1 mt-0.5">
+              <p className="text-xs text-ink-600 flex items-center gap-1 mt-0.5">
                 <CalendarDays size={11} />
                 {formatDate(day.date)}
               </p>
               {day.summary && (
-                <p className="text-sm text-ink-500 mt-1.5 leading-relaxed max-w-prose">{day.summary}</p>
+                <p className="text-sm text-ink-600 mt-1.5 leading-relaxed max-w-prose">{day.summary}</p>
               )}
             </div>
           </div>

@@ -27,14 +27,14 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
       {/* Hero */}
       <section className="flex-1 flex items-center justify-center">
         <div className="max-w-3xl mx-auto text-center px-4 py-20">
-          <div className="inline-flex items-center gap-2 chip bg-brand-50 text-brand-700 border border-brand-200 mb-8">
+          <div className="inline-flex items-center gap-2 chip bg-brand-500/10 text-brand-300 border border-brand-400/20 mb-8">
             <Sparkles size={13} /> AI-powered travel planner
           </div>
           <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-800 text-ink-900 leading-[1.1] tracking-tight">
             Your trip plan should<br />
-            <span className="text-brand-600">change when you do.</span>
+            <span className="text-brand-400">change when you do.</span>
           </h1>
-          <p className="mt-6 text-lg sm:text-xl text-ink-500 leading-relaxed max-w-2xl mx-auto">
+          <p className="mt-6 text-lg sm:text-xl text-ink-600 leading-relaxed max-w-2xl mx-auto">
             Generate a personalized itinerary, edit every detail, and let AI adapt it around your budget, time, and travel style.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -56,12 +56,12 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
             </button>
           </div>
           {demoError && (
-            <p className="mt-4 text-sm text-rose-600">{demoError}</p>
+            <p className="mt-4 text-sm text-rose-400">{demoError}</p>
           )}
-          <div className="mt-8 flex items-center justify-center gap-6 text-xs text-ink-400">
+          <div className="mt-8 flex items-center justify-center gap-6 text-xs text-ink-500">
             {['No account required', 'Free to explore', 'Edit every detail'].map((text) => (
               <span key={text} className="flex items-center gap-1.5">
-                <Check size={12} className="text-brand-500" /> {text}
+                <Check size={12} className="text-brand-400" /> {text}
               </span>
             ))}
           </div>
@@ -73,7 +73,7 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
         <div className="max-w-5xl mx-auto px-4">
           <div className="text-center mb-10">
             <h2 className="font-display text-2xl font-700 text-ink-900">Everything your trip needs</h2>
-            <p className="text-ink-500 mt-2">All in one place, built to flex with your plans.</p>
+            <p className="text-ink-600 mt-2">All in one place, built to flex with your plans.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Feature icon={<MapPin size={20} />} title="Smart destinations" desc="Organize trips by city, region, or multi-stop route." />
@@ -82,16 +82,16 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
             <Feature icon={<Bot size={20} />} title="AI replanning" desc="Ask the assistant to reshape your trip in seconds." />
           </div>
 
-          <div className="mt-12 rounded-2xl bg-gradient-to-r from-brand-600 to-sky-500 p-8 text-center text-white">
-            <p className="font-display text-xl sm:text-2xl font-700 leading-snug">
+          <div className="mt-12 rounded-2xl bg-gradient-to-r from-brand-500/20 to-blue-500/20 border border-brand-400/20 p-8 text-center backdrop-blur-xl">
+            <p className="font-display text-xl sm:text-2xl font-700 leading-snug text-ink-900">
               "The AI travel planner that adapts with you."
             </p>
-            <p className="mt-3 text-brand-100 text-sm">
+            <p className="mt-3 text-brand-300/80 text-sm">
               Build your perfect itinerary, then ask AI to make it better.
             </p>
             <button
               onClick={() => onNavigate({ name: 'create' })}
-              className="mt-6 inline-flex items-center gap-2 bg-white text-brand-700 font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-brand-50 transition"
+              className="mt-6 inline-flex items-center gap-2 bg-brand-500 text-ink-950 font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-brand-400 transition shadow-soft"
             >
               Plan your next trip <ArrowRight size={15} />
             </button>
@@ -105,11 +105,11 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
 function Feature({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
   return (
     <div className="card p-5">
-      <div className="h-11 w-11 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center mb-4">
+      <div className="h-11 w-11 rounded-xl bg-brand-500/10 text-brand-300 flex items-center justify-center mb-4">
         {icon}
       </div>
       <h3 className="font-display text-sm font-700 text-ink-900">{title}</h3>
-      <p className="text-xs text-ink-500 mt-1.5 leading-relaxed">{desc}</p>
+      <p className="text-xs text-ink-600 mt-1.5 leading-relaxed">{desc}</p>
     </div>
   );
 }

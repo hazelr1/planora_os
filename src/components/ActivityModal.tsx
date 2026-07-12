@@ -138,13 +138,13 @@ export default function ActivityModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="absolute inset-0 bg-ink-950/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-ink-950/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-xl card max-h-[94vh] overflow-hidden flex flex-col rounded-t-2xl sm:rounded-2xl">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-ink-100 shrink-0">
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-white/10 shrink-0">
           <h2 className="font-display text-lg font-700 text-ink-900">{titleText}</h2>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-ink-400 hover:text-ink-700 hover:bg-ink-100 transition">
+          <button onClick={onClose} className="rounded-lg p-1.5 text-ink-500 hover:text-ink-800 hover:bg-white/5 transition">
             <X size={20} />
           </button>
         </div>
@@ -157,14 +157,14 @@ export default function ActivityModal({
               <label htmlFor="act-title" className="label">Title *</label>
               <input
                 id="act-title"
-                className={`input ${errors.title ? 'border-rose-400 focus:border-rose-500' : ''}`}
+                className={`input ${errors.title ? 'border-rose-500/40 focus:border-rose-500/60' : ''}`}
                 value={title}
                 onChange={(e) => { setTitle(e.target.value); setErrors((p) => ({ ...p, title: undefined })); }}
                 placeholder="Activity title"
                 autoFocus={!focusNotes}
                 required
               />
-              {errors.title && <p className="text-xs text-rose-600 mt-1">{errors.title}</p>}
+              {errors.title && <p className="text-xs text-rose-400 mt-1">{errors.title}</p>}
             </div>
 
             {/* Description */}
@@ -233,9 +233,9 @@ export default function ActivityModal({
             </div>
 
             {/* Notes section */}
-            <div ref={notesRef} className="border-t border-ink-100 pt-4">
+            <div ref={notesRef} className="border-t border-white/10 pt-4">
               <div className="flex items-center gap-2 mb-3">
-                <StickyNote size={14} className="text-ink-400" />
+                <StickyNote size={14} className="text-ink-500" />
                 <span className="label mb-0">Personal notes</span>
               </div>
 
@@ -243,10 +243,10 @@ export default function ActivityModal({
               {mode === 'edit' && (
                 <>
                   {localNotes.length === 0 && (
-                    <p className="text-xs text-ink-400 mb-3">No notes yet. Add one below.</p>
+                    <p className="text-xs text-ink-500 mb-3">No notes yet. Add one below.</p>
                   )}
                   {localNotes.map((note) => (
-                    <div key={note.id} className="mb-2 rounded-xl border border-ink-100 bg-ink-50/60 px-3 py-2">
+                    <div key={note.id} className="mb-2 rounded-xl border border-white/10 bg-ink-200/40 px-3 py-2">
                       {editingNoteId === note.id ? (
                         <div className="space-y-2">
                           <textarea
@@ -276,10 +276,10 @@ export default function ActivityModal({
                         <div className="flex items-start gap-2">
                           <p className="text-xs text-ink-700 leading-relaxed flex-1">{note.text}</p>
                           <div className="flex gap-1 shrink-0">
-                            <button type="button" onClick={() => startEditNote(note)} className="rounded p-1 text-ink-400 hover:text-ink-700 hover:bg-ink-200 transition" aria-label="Edit note">
+                            <button type="button" onClick={() => startEditNote(note)} className="rounded p-1 text-ink-500 hover:text-ink-800 hover:bg-white/5 transition" aria-label="Edit note">
                               <Pencil size={11} />
                             </button>
-                            <button type="button" onClick={() => handleDeleteNote(note.id)} className="rounded p-1 text-ink-400 hover:text-rose-600 hover:bg-rose-50 transition" aria-label="Delete note">
+                            <button type="button" onClick={() => handleDeleteNote(note.id)} className="rounded p-1 text-ink-500 hover:text-rose-400 hover:bg-rose-500/10 transition" aria-label="Delete note">
                               <Trash2 size={11} />
                             </button>
                           </div>
@@ -322,7 +322,7 @@ export default function ActivityModal({
           </div>
 
           {/* Footer */}
-          <div className="px-6 pb-5 pt-2 flex items-center justify-end gap-2 border-t border-ink-100 shrink-0 bg-white">
+          <div className="px-6 pb-5 pt-2 flex items-center justify-end gap-2 border-t border-white/10 shrink-0 bg-ink-100/40">
             <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>
             <button type="submit" disabled={submitting} className="btn-primary">
               {mode === 'add' ? 'Add activity' : 'Save changes'}

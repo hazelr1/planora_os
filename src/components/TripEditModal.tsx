@@ -34,11 +34,11 @@ export default function TripEditModal({ trip, onSave, onClose }: TripEditModalPr
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-ink-950/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-ink-950/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-sm card overflow-hidden animate-scale-in">
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-ink-100">
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-white/10">
           <h2 className="font-display text-lg font-700 text-ink-900">Edit trip</h2>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-ink-400 hover:text-ink-700 hover:bg-ink-100 transition">
+          <button onClick={onClose} className="rounded-lg p-1.5 text-ink-500 hover:text-ink-800 hover:bg-white/5 transition">
             <X size={20} />
           </button>
         </div>
@@ -47,14 +47,14 @@ export default function TripEditModal({ trip, onSave, onClose }: TripEditModalPr
             <label htmlFor="trip-title" className="label">Trip name</label>
             <input
               id="trip-title"
-              className={`input ${titleError ? 'border-rose-400 focus:border-rose-500' : ''}`}
+              className={`input ${titleError ? 'border-rose-500/40 focus:border-rose-500/60' : ''}`}
               value={title}
               onChange={(e) => { setTitle(e.target.value); setTitleError(''); }}
               placeholder="e.g. Tokyo in Five"
               autoFocus
               required
             />
-            {titleError && <p className="text-xs text-rose-600 mt-1">{titleError}</p>}
+            {titleError && <p className="text-xs text-rose-400 mt-1">{titleError}</p>}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>

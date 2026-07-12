@@ -105,8 +105,8 @@ export default function App() {
     return (
       <div className="min-h-screen bg-ink-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-10 w-10 rounded-full border-2 border-brand-200 border-t-brand-600 animate-spin" />
-          <p className="text-sm text-ink-400">Checking session…</p>
+          <div className="h-10 w-10 rounded-full border-2 border-brand-500/20 border-t-brand-400 animate-spin" />
+          <p className="text-sm text-ink-600">Checking session…</p>
         </div>
       </div>
     );

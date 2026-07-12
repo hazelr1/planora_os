@@ -18,7 +18,7 @@ function UserAvatar({ name }: { name: string }) {
     .slice(0, 2)
     .toUpperCase() || '?';
   return (
-    <div className="h-8 w-8 rounded-full bg-brand-600 text-white flex items-center justify-center text-xs font-700 shrink-0">
+    <div className="h-8 w-8 rounded-full bg-brand-500/20 text-brand-300 border border-brand-400/30 flex items-center justify-center text-xs font-700 shrink-0">
       {initials}
     </div>
   );
@@ -36,7 +36,7 @@ export default function AppShell({
 
   return (
     <div className="min-h-screen bg-ink-50">
-      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-ink-100">
+      <header className="sticky top-0 z-30 bg-ink-50/70 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
 
           {/* Logo */}
@@ -44,10 +44,10 @@ export default function AppShell({
             onClick={() => onNavigate({ name: 'landing' })}
             className="flex items-center gap-2.5 group shrink-0"
           >
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-soft">
-              <Compass className="text-white" size={18} strokeWidth={2.5} />
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shadow-soft">
+              <Compass className="text-ink-950" size={18} strokeWidth={2.5} />
             </div>
-            <span className="font-display text-lg font-800 text-ink-900 group-hover:text-brand-700 transition-colors">
+            <span className="font-display text-lg font-800 text-ink-900 group-hover:text-brand-300 transition-colors">
               Planora
             </span>
           </button>
@@ -79,7 +79,7 @@ export default function AppShell({
                       </span>
                       <button
                         onClick={onSignOut}
-                        className="btn-ghost text-ink-500 hover:text-rose-600 gap-1.5"
+                        className="btn-ghost text-ink-500 hover:text-rose-400 gap-1.5"
                         title="Sign out"
                       >
                         <LogOut size={15} />
