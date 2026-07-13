@@ -267,7 +267,7 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
                   >
                     {forgotLoading ? (
                       <span className="flex items-center gap-2">
-                        <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                        <span className="h-4 w-4 rounded-full border-2 border-glass/30 border-t-white animate-spin" />
                         Sending…
                       </span>
                     ) : (
@@ -431,7 +431,7 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
           )}
 
           {/* Footer */}
-          <div className="mt-6 pt-5 border-t border-white/10 text-center">
+          <div className="mt-6 pt-5 border-t border-glass/10 text-center">
             <button
               type="button"
               onClick={() => onNavigate({ name: 'landing' })}

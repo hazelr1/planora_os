@@ -4,32 +4,142 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Theme tokens ─────────────────────────────────────────────────────────
+   Every color Tailwind class in this app (ink-*, brand-*, glass) resolves
+   through these CSS variables, so switching the `data-theme` attribute on
+   <html> re-themes the entire app instantly — no component classNames need
+   to change between light and dark. Dark is the default (matches the
+   app's original design); light overrides are scoped to [data-theme="light"].
+   Destination themes (Workspace-only) override a small subset of the
+   --brand-* variables on a scoped wrapper further down the tree — see
+   DestinationThemeScope.tsx — which is why brand is variable-driven too. */
+:root {
+  color-scheme: dark;
+
+  --ink-50: 4 7 15;
+  --ink-100: 14 19 31;
+  --ink-200: 22 29 44;
+  --ink-300: 33 42 61;
+  --ink-400: 91 104 133;
+  --ink-500: 126 139 165;
+  --ink-600: 156 167 190;
+  --ink-700: 188 198 216;
+  --ink-800: 218 224 235;
+  --ink-900: 239 242 248;
+  --ink-950: 255 255 255;
+
+  --brand-50: 236 254 255;
+  --brand-100: 207 250 254;
+  --brand-200: 165 243 252;
+  --brand-300: 103 232 249;
+  --brand-400: 34 211 238;
+  --brand-500: 6 182 212;
+  --brand-600: 8 145 178;
+  --brand-700: 14 116 144;
+  --brand-800: 21 94 117;
+  --brand-900: 22 78 99;
+  --brand-950: 8 51 68;
+
+  --glass: 255 255 255;
+
+  /* Referenced by .btn-primary / hero gradients; destination themes override these too */
+  --accent-from: 34 211 238;
+  --accent-via: 59 130 246;
+  --accent-to: 139 92 246;
+
+  /* AI-accent violet — matches Tailwind's default violet scale, since dark
+     is this app's original design and every existing violet-NNN class was
+     tuned against it. */
+  --violet-50: 245 243 255;
+  --violet-100: 237 233 254;
+  --violet-200: 221 214 254;
+  --violet-300: 196 181 253;
+  --violet-400: 167 139 250;
+  --violet-500: 139 92 246;
+  --violet-600: 124 58 237;
+  --violet-700: 109 40 217;
+  --violet-800: 91 33 182;
+  --violet-900: 76 29 149;
+  --violet-950: 46 16 101;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --ink-50: 248 244 236;
+  --ink-100: 255 255 255;
+  --ink-200: 238 231 216;
+  --ink-300: 224 215 195;
+  --ink-400: 168 158 138;
+  --ink-500: 122 113 97;
+  --ink-600: 90 83 71;
+  --ink-700: 66 60 52;
+  --ink-800: 45 41 36;
+  --ink-900: 28 25 22;
+  --ink-950: 10 9 8;
+
+  /* Turquoise / Emerald / Sea Green — tuned darker than the dark-mode cyan so it stays legible on ivory/cream */
+  --brand-50: 230 253 250;
+  --brand-100: 204 250 241;
+  --brand-200: 153 245 227;
+  --brand-300: 94 224 202;
+  --brand-400: 20 184 166;
+  --brand-500: 13 148 136;
+  --brand-600: 15 118 110;
+  --brand-700: 17 94 89;
+  --brand-800: 19 78 74;
+  --brand-900: 22 65 62;
+  --brand-950: 4 39 37;
+
+  --glass: 15 23 42;
+
+  --accent-from: 20 184 166;
+  --accent-via: 13 148 136;
+  --accent-to: 5 150 105;
+
+  /* Shifted one stop deeper than the dark-mode scale so the same class
+     names (e.g. text-violet-300) stay legible as dark-on-light instead of
+     pale-lavender-on-light. Translucent bg-/border- usages look correct at
+     either end since low-opacity tints are forgiving of exact hue. */
+  --violet-50: 245 240 255;
+  --violet-100: 232 220 255;
+  --violet-200: 216 195 255;
+  --violet-300: 167 139 250;
+  --violet-400: 139 92 246;
+  --violet-500: 124 58 237;
+  --violet-600: 109 40 217;
+  --violet-700: 91 33 182;
+  --violet-800: 76 29 149;
+  --violet-900: 46 16 101;
+  --violet-950: 30 10 66;
+}
+
 @layer base {
   html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
   body {
     @apply bg-ink-50 text-ink-800 font-sans;
-    background-image:
-      radial-gradient(ellipse 70% 45% at 15% -10%, rgba(34,211,238,0.09), transparent),
-      radial-gradient(ellipse 60% 50% at 100% 0%, rgba(59,130,246,0.08), transparent),
-      radial-gradient(ellipse 65% 55% at 90% 100%, rgba(139,92,246,0.08), transparent),
-      radial-gradient(ellipse 50% 40% at 0% 60%, rgba(124,58,237,0.05), transparent);
-    background-attachment: fixed;
+    transition: background-color 0.4s ease, color 0.4s ease;
   }
 }
 
 @layer components {
   .card {
-    @apply rounded-2xl bg-ink-100/60 backdrop-blur-2xl border border-white/[0.08] shadow-card transition-all duration-300 ease-out;
+    @apply rounded-2xl bg-ink-100/60 backdrop-blur-2xl border border-glass/[0.08] shadow-card transition-all duration-300 ease-out;
   }
   .card-interactive {
-    @apply hover:-translate-y-0.5 hover:shadow-card-hover hover:border-white/[0.14];
+    @apply hover:-translate-y-0.5 hover:shadow-card-hover hover:border-glass/[0.14];
   }
   .btn {
     @apply relative inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 ease-out disabled:opacity-50 disabled:pointer-events-none;
   }
   .btn-primary {
     @apply btn text-white shadow-soft hover:-translate-y-0.5 hover:shadow-glow-lg active:translate-y-0;
-    background-image: linear-gradient(100deg, #22d3ee 0%, #3b82f6 55%, #8b5cf6 100%);
+    background-image: linear-gradient(
+      100deg,
+      rgb(var(--accent-from)) 0%,
+      rgb(var(--accent-via)) 55%,
+      rgb(var(--accent-to)) 100%
+    );
     background-size: 160% 100%;
     background-position: 0% 0%;
     transition: background-position 0.5s ease-out, box-shadow 0.25s ease-out, transform 0.2s ease-out;
@@ -38,16 +148,16 @@
     background-position: 100% 0%;
   }
   .btn-ghost {
-    @apply btn text-ink-600 hover:bg-white/5 hover:text-ink-800;
+    @apply btn text-ink-600 hover:bg-glass/5 hover:text-ink-800;
   }
   .btn-outline {
-    @apply btn border border-white/15 bg-white/5 text-ink-700 hover:bg-white/10 hover:border-white/25;
+    @apply btn border border-glass/15 bg-glass/5 text-ink-700 hover:bg-glass/10 hover:border-glass/25;
   }
   .btn-danger {
     @apply btn bg-rose-500/90 text-white hover:bg-rose-500 shadow-soft hover:-translate-y-0.5;
   }
   .input {
-    @apply w-full rounded-xl border border-white/10 bg-ink-200/60 px-3.5 py-2.5 text-sm text-ink-800 placeholder:text-ink-500/70 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/60 transition;
+    @apply w-full rounded-xl border border-glass/10 bg-ink-200/60 px-3.5 py-2.5 text-sm text-ink-800 placeholder:text-ink-500/70 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/60 transition;
   }
   .label {
     @apply block text-xs font-semibold uppercase tracking-wide text-ink-500 mb-1.5;
@@ -87,13 +197,20 @@
 
 /* Skeleton loading blocks — replaces plain spinners across the app */
 .skeleton {
-  @apply relative overflow-hidden rounded-lg bg-white/[0.06];
+  @apply relative overflow-hidden rounded-lg bg-glass/[0.06];
 }
 .skeleton::after {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.08) 45%, rgba(255,255,255,0.14) 50%, rgba(255,255,255,0.08) 55%, transparent 80%);
+  background-image: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgb(var(--glass) / 0.08) 45%,
+    rgb(var(--glass) / 0.14) 50%,
+    rgb(var(--glass) / 0.08) 55%,
+    transparent 80%
+  );
   background-size: 200% 100%;
   animation: shimmer 1.6s ease-in-out infinite;
 }
@@ -112,8 +229,8 @@
 /* Scrollbar */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 9999px; border: 2px solid transparent; background-clip: padding-box; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); background-clip: padding-box; }
+::-webkit-scrollbar-thumb { background: rgb(var(--glass) / 0.08); border-radius: 9999px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: rgb(var(--glass) / 0.15); background-clip: padding-box; }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {

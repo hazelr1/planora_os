@@ -314,7 +314,7 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
           <button
             ref={closeRef}
             onClick={handleCancel}
-            className="rounded-lg p-1.5 text-ink-500 hover:text-ink-800 hover:bg-white/5 transition shrink-0"
+            className="rounded-lg p-1.5 text-ink-500 hover:text-ink-800 hover:bg-glass/5 transition shrink-0"
             aria-label="Close review"
           >
             <X size={17} />
@@ -327,7 +327,7 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
           {/* User request */}
           <div>
             <p className="text-xs font-700 uppercase tracking-wide text-ink-600 mb-1.5">Your request</p>
-            <p className="text-sm text-ink-700 bg-ink-200/40 rounded-xl px-3.5 py-2.5 border border-white/10 leading-relaxed italic">
+            <p className="text-sm text-ink-700 bg-ink-200/40 rounded-xl px-3.5 py-2.5 border border-glass/10 leading-relaxed italic">
               "{p.instruction}"
             </p>
           </div>
@@ -361,7 +361,7 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
           {/* Budget impact */}
           <div>
             <p className="text-xs font-700 uppercase tracking-wide text-ink-600 mb-2">Budget impact</p>
-            <div className="rounded-xl border border-white/10 bg-ink-200/40 grid grid-cols-3 divide-x divide-white/10 text-center text-sm">
+            <div className="rounded-xl border border-glass/10 bg-ink-200/40 grid grid-cols-3 divide-x divide-glass/10 text-center text-sm">
               <div className="px-3 py-3">
                 <p className="text-xs text-ink-600 mb-0.5">Current</p>
                 <p className="font-700 text-ink-800">{fmt(p.old_estimated_total, currency)}</p>
@@ -398,7 +398,7 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl border border-white/10 bg-ink-200/40 px-4 py-6 text-center">
+              <div className="rounded-xl border border-glass/10 bg-ink-200/40 px-4 py-6 text-center">
                 <p className="text-sm text-ink-600">No changes proposed for this instruction.</p>
               </div>
             )}

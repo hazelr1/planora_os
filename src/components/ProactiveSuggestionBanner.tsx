@@ -81,7 +81,7 @@ export default function ProactiveSuggestionBanner({ trip, onAskCopilot }: Proact
       </div>
       <button
         onClick={() => setDismissed((prev) => new Set(prev).add(active.id))}
-        className="rounded-lg p-1 text-violet-300/60 hover:text-violet-200 hover:bg-white/5 transition shrink-0"
+        className="rounded-lg p-1 text-violet-300/60 hover:text-violet-200 hover:bg-glass/5 transition shrink-0"
         aria-label="Dismiss suggestion"
       >
         <X size={14} />

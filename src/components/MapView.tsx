@@ -92,7 +92,7 @@ export default function MapView({ days, currency, selectedActivityId, onSelectAc
 
   return (
     <div className="card overflow-hidden">
-      <div className="px-5 py-3 border-b border-white/10 bg-ink-200/30 flex items-center justify-between">
+      <div className="px-5 py-3 border-b border-glass/10 bg-ink-200/30 flex items-center justify-between">
         <p className="text-sm font-700 text-ink-900 flex items-center gap-2">
           <MapPin size={15} className="text-brand-400" /> Trip map
         </p>
@@ -154,7 +154,7 @@ export default function MapView({ days, currency, selectedActivityId, onSelectAc
       </div>
 
       {/* Legend */}
-      <div className="px-5 py-3 border-t border-white/10 flex flex-wrap gap-x-4 gap-y-1.5">
+      <div className="px-5 py-3 border-t border-glass/10 flex flex-wrap gap-x-4 gap-y-1.5">
         {(Object.keys(categoryDotColor) as ActivityCategory[])
           .filter((cat) => mappable.some((m) => m.activity.category === cat))
           .map((cat) => (

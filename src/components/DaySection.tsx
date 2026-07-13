@@ -1,14 +1,10 @@
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Plus, CalendarDays } from 'lucide-react';
+import { Plus, CalendarDays, Footprints } from 'lucide-react';
 import type { Activity, Day } from '../types';
 import ActivityCard from './ActivityCard';
 import EmptyState from './EmptyState';
 import { formatDate } from '../utils/dates';
-
-function timeToMinutes(time: string): number {
-  const [h, m] = time.split(':').map(Number);
-  return (h || 0) * 60 + (m || 0);
-}
+import { timeToMinutes, detectConflicts, estimateDayTravelMinutes } from '../utils/schedule';
 
 function sortActivities(activities: Activity[]): Activity[] {
   return [...activities].sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
@@ -41,11 +37,13 @@ export default function DaySection({
   onSelectActivity,
 }: DaySectionProps) {
   const sorted = sortActivities(day.activities);
+  const conflicts = detectConflicts(sorted);
+  const travel = estimateDayTravelMinutes(sorted);
 
   return (
     <section className="card overflow-hidden">
       {/* Day header */}
-      <div className="px-5 py-4 border-b border-white/10 bg-ink-200/30">
+      <div className="px-5 py-4 border-b border-glass/10 bg-ink-200/30">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
             <div className="h-9 w-9 rounded-xl bg-brand-500 text-ink-950 flex items-center justify-center font-display font-700 text-sm shrink-0 mt-0.5">
@@ -58,10 +56,26 @@ export default function DaySection({
                   <span className="text-sm text-ink-600 font-medium">— {day.theme}</span>
                 )}
               </div>
-              <p className="text-xs text-ink-600 flex items-center gap-1 mt-0.5">
-                <CalendarDays size={11} />
-                {formatDate(day.date)}
-              </p>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5">
+                <p className="text-xs text-ink-600 flex items-center gap-1">
+                  <CalendarDays size={11} />
+                  {formatDate(day.date)}
+                </p>
+                {travel.estimatedSegments > 0 && (
+                  <p
+                    className="text-xs text-ink-600 flex items-center gap-1"
+                    title={travel.missingSegments > 0 ? 'Partial estimate — some activities are missing coordinates' : 'Estimated from straight-line distance, not live traffic/transit data'}
+                  >
+                    <Footprints size={11} />
+                    ~{travel.totalMinutes} min estimated travel{travel.missingSegments > 0 ? ' (partial)' : ''}
+                  </p>
+                )}
+                {conflicts.size > 0 && (
+                  <span className="chip bg-rose-500/15 text-rose-300 border border-rose-500/30 text-[10px]">
+                    {conflicts.size} time conflict{conflicts.size === 1 ? '' : 's'}
+                  </span>
+                )}
+              </div>
               {day.summary && (
                 <p className="text-sm text-ink-600 mt-1.5 leading-relaxed max-w-prose">{day.summary}</p>
               )}
@@ -93,7 +107,7 @@ export default function DaySection({
           <SortableContext items={sorted.map((a) => a.id)} strategy={verticalListSortingStrategy}>
             <div className="relative space-y-3">
               {/* Connecting timeline line */}
-              <div className="absolute left-[1.65rem] top-2 bottom-2 w-px bg-white/10" aria-hidden="true" />
+              <div className="absolute left-[1.65rem] top-2 bottom-2 w-px bg-glass/10" aria-hidden="true" />
               {sorted.map((a, idx, arr) => (
                 <div
                   key={a.id}
@@ -117,6 +131,7 @@ export default function DaySection({
                       onToggleLock={() => onToggleLock(a.id)}
                       highlighted={selectedActivityId === a.id}
                       onSelect={onSelectActivity ? () => onSelectActivity(a.id) : undefined}
+                      hasConflict={conflicts.has(a.id)}
                     />
                   </div>
                 </div>

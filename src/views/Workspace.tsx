@@ -8,31 +8,40 @@ import {
   AlertTriangle, Calendar, CheckCircle2, Clock, FlaskConical, Gauge, List as ListIcon,
   Loader2, Map as MapIcon, MapPin, Pencil, RefreshCw, Save, CalendarDays, Users,
 } from 'lucide-react';
-import type { AIRevisionProposal, Activity, Screen, Trip } from '../types';
+import type { AIRevisionProposal, Activity, Screen, Trip, TripStatus } from '../types';
 import DaySection from '../components/DaySection';
 import CalendarView from '../components/CalendarView';
 import ListView from '../components/ListView';
 import MapView from '../components/MapView';
-import TripIntelligencePanel from '../components/TripIntelligencePanel';
-import ProactiveSuggestionBanner from '../components/ProactiveSuggestionBanner';
-import AIAssistantPanel from '../components/AIAssistantPanel';
 import AIChangeReview from '../components/AIChangeReview';
 import ActivityModal, { type ActivityModalData } from '../components/ActivityModal';
 import ConfirmDialog from '../components/ConfirmDialog';
-import TripEditModal from '../components/TripEditModal';
 import EmptyState from '../components/EmptyState';
+import WorkspaceShell from '../components/workspace/WorkspaceShell';
+import DestinationThemeScope from '../components/workspace/DestinationThemeScope';
+import DestinationHeroBanner from '../components/workspace/DestinationHeroBanner';
+import DestinationDivider from '../components/workspace/DestinationDivider';
+import { detectDestinationTheme, getDestinationTheme } from '../components/workspace/destinationThemes';
+import OverviewSection from '../components/workspace/OverviewSection';
+import FlightsSection from '../components/workspace/FlightsSection';
+import HotelsSection from '../components/workspace/HotelsSection';
+import BudgetSection from '../components/workspace/BudgetSection';
+import PackingSection from '../components/workspace/PackingSection';
+import DocumentsSection from '../components/workspace/DocumentsSection';
+import GallerySection from '../components/workspace/GallerySection';
+import SettingsSection from '../components/workspace/SettingsSection';
+import type { WorkspaceSectionId } from '../components/workspace/types';
 import { useActivityEditor } from '../hooks/useActivityEditor';
 import { useSaveStatus } from '../hooks/useSaveStatus';
 import { tripRepository } from '../data';
 import { supabase } from '../lib/supabase';
-import { isOverBudget } from '../utils/budget';
 import { formatDateRange } from '../utils/dates';
 import { timeToMinutes } from '../utils/schedule';
 
 interface WorkspaceProps {
   tripId: string;
   onNavigate: (screen: Screen) => void;
-  onUpdateTripFields: (id: string, fields: { title?: string; budget?: number; currency?: string }) => Promise<void>;
+  onUpdateTripFields: (id: string, fields: { title?: string; budget?: number; currency?: string; status?: TripStatus }) => Promise<void>;
 }
 
 type LoadStatus = 'loading' | 'ready' | 'error' | 'not_found';
@@ -85,7 +94,7 @@ function DayTabButton({
           ? 'bg-brand-500 text-ink-950 shadow-soft'
           : isOver
           ? 'bg-brand-500/20 border border-brand-400/40 text-brand-200'
-          : 'bg-ink-200/60 border border-white/10 text-ink-600 hover:bg-ink-300/60'
+          : 'bg-ink-200/60 border border-glass/10 text-ink-600 hover:bg-ink-300/60'
       }`}
     >
       {day.label}
@@ -104,13 +113,13 @@ const VIEW_TABS: { id: ViewMode; label: string; Icon: typeof Clock }[] = [
 export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: WorkspaceProps) {
   const [trip, setTrip] = useState<Trip | null>(null);
   const [loadStatus, setLoadStatus] = useState<LoadStatus>('loading');
+  const [activeSection, setActiveSection] = useState<WorkspaceSectionId>('overview');
   const [activeDay, setActiveDay] = useState(0);
   const [viewMode, setViewMode] = useState<ViewMode>('timeline');
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
   const [modal, setModal] = useState<ActivityModalData | null>(null);
   const [moveActivityId, setMoveActivityId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [editingTrip, setEditingTrip] = useState(false);
   const [reviewProposal, setReviewProposal] = useState<AIRevisionProposal | null>(null);
   const [showAppliedBanner, setShowAppliedBanner] = useState(false);
   const [resetConfirm, setResetConfirm] = useState(false);
@@ -218,7 +227,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
   // ── Loading ────────────────────────────────────────────────────────────────
   if (loadStatus === 'loading') {
     return (
-      <div className="space-y-5">
+      <div className="p-6 space-y-5">
         <div>
           <div className="skeleton h-7 w-64 mb-2.5" />
           <div className="skeleton h-4 w-96 max-w-full" />
@@ -243,34 +252,35 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
 
   if (loadStatus === 'not_found') {
     return (
-      <div className="card p-12 text-center">
-        <p className="text-base font-600 text-ink-800 mb-1">Trip not found</p>
-        <p className="text-sm text-ink-600 mb-6">This trip may have been deleted.</p>
-        <button onClick={() => onNavigate({ name: 'trips' })} className="btn-primary">
-          Back to My Trips
-        </button>
+      <div className="p-6">
+        <div className="card p-12 text-center">
+          <p className="text-base font-600 text-ink-800 mb-1">Trip not found</p>
+          <p className="text-sm text-ink-600 mb-6">This trip may have been deleted.</p>
+          <button onClick={() => onNavigate({ name: 'trips' })} className="btn-primary">
+            Back to My Trips
+          </button>
+        </div>
       </div>
     );
   }
 
   if (loadStatus === 'error') {
     return (
-      <div className="card p-12 text-center">
-        <AlertTriangle size={24} className="text-rose-400 mx-auto mb-3" />
-        <p className="text-base font-600 text-ink-800 mb-1">Could not load this trip</p>
-        <p className="text-sm text-ink-600 mb-6">Please check your connection and try again.</p>
-        <button onClick={load} className="btn-primary">Retry</button>
+      <div className="p-6">
+        <div className="card p-12 text-center">
+          <AlertTriangle size={24} className="text-rose-400 mx-auto mb-3" />
+          <p className="text-base font-600 text-ink-800 mb-1">Could not load this trip</p>
+          <p className="text-sm text-ink-600 mb-6">Please check your connection and try again.</p>
+          <button onClick={load} className="btn-primary">Retry</button>
+        </div>
       </div>
     );
   }
 
   if (!trip) return null;
 
+  const destinationTheme = getDestinationTheme(detectDestinationTheme(trip.destination));
   const dateRange = formatDateRange(trip.startDate, trip.endDate);
-  const over = isOverBudget(trip);
-  const draggedActivity = activeDragId
-    ? trip.days.flatMap((d) => d.activities).find((a) => a.id === activeDragId)
-    : null;
 
   const openAdd = (dayId: string) => setModal({ mode: 'add', activity: null, dayId });
 
@@ -294,12 +304,12 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
     if (idx >= 0) setActiveDay(idx);
   };
 
-  const handleTripEdit = (title: string, budget: number, currency: string) => {
+  const handleTripSettingsSave = (fields: { title: string; budget: number; currency: string; status: TripStatus }) => {
     const prev = trip;
-    setTrip({ ...trip, title, budget, currency });
+    setTrip({ ...trip, ...fields });
     void track(async () => {
       try {
-        await onUpdateTripFields(trip.id, { title, budget, currency });
+        await onUpdateTripFields(trip.id, fields);
       } catch {
         setTrip(prev);
         throw new Error('Failed to save trip changes.');
@@ -307,55 +317,54 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
     });
   };
 
-  return (
-    <div className="space-y-5">
-      {/* Trip header */}
-      <div>
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="font-display text-2xl font-800 text-ink-900">{trip.title}</h1>
-              {trip.isDemo && (
-                <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/20 px-2 py-0.5 text-xs font-700">
-                  <FlaskConical size={11} /> Demo Data
-                </span>
-              )}
+  const draggedActivity = activeDragId
+    ? trip.days.flatMap((d) => d.activities).find((a) => a.id === activeDragId)
+    : null;
+
+  const header = (
+    <div className="space-y-4">
+      {destinationTheme && <DestinationHeroBanner theme={destinationTheme} destination={trip.destination} />}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="font-display text-2xl font-800 text-ink-900">{trip.title}</h1>
+            {trip.isDemo && (
+              <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/20 px-2 py-0.5 text-xs font-700">
+                <FlaskConical size={11} /> Demo Data
+              </span>
+            )}
+            <button
+              onClick={() => setActiveSection('settings')}
+              className="rounded-lg p-1.5 text-ink-500 hover:text-ink-800 hover:bg-glass/5 transition"
+              aria-label="Edit trip settings"
+              title="Edit trip settings"
+            >
+              <Pencil size={16} />
+            </button>
+            {trip.isDemo && (
               <button
-                onClick={() => setEditingTrip(true)}
-                className="rounded-lg p-1.5 text-ink-500 hover:text-ink-800 hover:bg-white/5 transition"
-                aria-label="Edit trip"
+                onClick={() => setResetConfirm(true)}
+                disabled={resetLoading}
+                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-600 text-ink-500 hover:text-ink-800 hover:bg-glass/5 border border-glass/10 transition"
+                title="Reset demo trip to original state"
               >
-                <Pencil size={16} />
+                {resetLoading ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
+                Reset Demo
               </button>
-              {trip.isDemo && (
-                <button
-                  onClick={() => setResetConfirm(true)}
-                  disabled={resetLoading}
-                  className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-600 text-ink-500 hover:text-ink-800 hover:bg-white/5 border border-white/10 transition"
-                  title="Reset demo trip to original state"
-                >
-                  {resetLoading
-                    ? <Loader2 size={12} className="animate-spin" />
-                    : <RefreshCw size={12} />
-                  }
-                  Reset Demo
-                </button>
-              )}
-            </div>
-            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-ink-600">
-              <span className="flex items-center gap-1.5"><MapPin size={13} /> {trip.destination}</span>
-              <span className="flex items-center gap-1.5"><Calendar size={13} /> {dateRange}</span>
-              <span className="flex items-center gap-1.5"><Users size={13} /> {trip.travelers} {trip.travelers === 1 ? 'traveler' : 'travelers'}</span>
-              <span className="flex items-center gap-1.5"><Gauge size={13} /> {trip.pace}</span>
-            </div>
+            )}
           </div>
-          <div className="sm:shrink-0">
-            <SaveBar status={saveStatus} errorMessage={errorMessage} retry={retry} />
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-ink-600">
+            <span className="flex items-center gap-1.5"><MapPin size={13} /> {trip.destination}</span>
+            <span className="flex items-center gap-1.5"><Calendar size={13} /> {dateRange}</span>
+            <span className="flex items-center gap-1.5"><Users size={13} /> {trip.travelers} {trip.travelers === 1 ? 'traveler' : 'travelers'}</span>
+            <span className="flex items-center gap-1.5"><Gauge size={13} /> {trip.pace}</span>
           </div>
+        </div>
+        <div className="sm:shrink-0">
+          <SaveBar status={saveStatus} errorMessage={errorMessage} retry={retry} />
         </div>
       </div>
 
-      {/* Changes applied banner */}
       {showAppliedBanner && (
         <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 flex items-center gap-2.5" role="status">
           <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
@@ -363,37 +372,62 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
         </div>
       )}
 
-      {/* Proactive AI suggestions (budget, schedule density) — reviewable only, never auto-applied */}
-      <ProactiveSuggestionBanner trip={trip} onAskCopilot={setCopilotPrompt} />
+      {destinationTheme && <DestinationDivider theme={destinationTheme} />}
+    </div>
+  );
 
-      {/* Over-budget warning (kept alongside the actionable suggestion above) */}
-      {over && (
-        <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 flex items-center gap-2.5">
-          <AlertTriangle size={16} className="text-rose-400 shrink-0" />
-          <p className="text-sm text-rose-300 font-medium">
-            Your itinerary currently exceeds the trip budget. Consider locking must-dos and asking the AI to trim costs.
-          </p>
-        </div>
-      )}
+  let sectionContent: React.ReactNode;
+  switch (activeSection) {
+    case 'overview':
+      sectionContent = <OverviewSection trip={trip} onAskCopilot={setCopilotPrompt} onNavigate={setActiveSection} />;
+      break;
+    case 'flights':
+      sectionContent = <FlightsSection trip={trip} />;
+      break;
+    case 'hotels':
+      sectionContent = <HotelsSection trip={trip} />;
+      break;
+    case 'budget':
+      sectionContent = <BudgetSection trip={trip} />;
+      break;
+    case 'packing':
+      sectionContent = <PackingSection trip={trip} />;
+      break;
+    case 'documents':
+      sectionContent = <DocumentsSection tripId={trip.id} />;
+      break;
+    case 'gallery':
+      sectionContent = <GallerySection tripId={trip.id} />;
+      break;
+    case 'settings':
+      sectionContent = (
+        <SettingsSection
+          trip={trip}
+          onSave={handleTripSettingsSave}
+          onRequestResetDemo={() => setResetConfirm(true)}
+          resetLoading={resetLoading}
+        />
+      );
+      break;
+    case 'days':
+    default:
+      sectionContent = (
+        <div className="space-y-4">
+          {/* View switcher */}
+          <div className="flex gap-1.5 rounded-xl bg-ink-200/60 p-1 w-full sm:w-fit overflow-x-auto">
+            {VIEW_TABS.map(({ id, label, Icon }) => (
+              <button
+                key={id}
+                onClick={() => setViewMode(id)}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-600 transition shrink-0 ${
+                  viewMode === id ? 'bg-ink-300/80 text-ink-900 shadow-soft' : 'text-ink-500 hover:text-ink-700'
+                }`}
+              >
+                <Icon size={13} /> {label}
+              </button>
+            ))}
+          </div>
 
-      {/* View switcher */}
-      <div className="flex gap-1.5 rounded-xl bg-ink-200/60 p-1 w-full sm:w-fit overflow-x-auto">
-        {VIEW_TABS.map(({ id, label, Icon }) => (
-          <button
-            key={id}
-            onClick={() => setViewMode(id)}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-600 transition shrink-0 ${
-              viewMode === id ? 'bg-ink-300/80 text-ink-900 shadow-soft' : 'text-ink-500 hover:text-ink-700'
-            }`}
-          >
-            <Icon size={13} /> {label}
-          </button>
-        ))}
-      </div>
-
-      {/* Main grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div className="lg:col-span-2">
           {trip.days.length === 0 ? (
             <div className="card">
               <EmptyState
@@ -460,16 +494,23 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
             />
           )}
         </div>
-        <div className="space-y-5">
-          <TripIntelligencePanel trip={trip} />
-          <AIAssistantPanel
-            trip={trip}
-            onRevisionProposed={setReviewProposal}
-            externalPrompt={copilotPrompt}
-            onExternalPromptHandled={() => setCopilotPrompt(null)}
-          />
-        </div>
-      </div>
+      );
+      break;
+  }
+
+  return (
+    <DestinationThemeScope destination={trip.destination}>
+      <WorkspaceShell
+        trip={trip}
+        activeSection={activeSection}
+        onSelectSection={setActiveSection}
+        header={header}
+        onRevisionProposed={setReviewProposal}
+        externalPrompt={copilotPrompt}
+        onExternalPromptHandled={() => setCopilotPrompt(null)}
+      >
+        {sectionContent}
+      </WorkspaceShell>
 
       {/* Activity modal */}
       {modal && (
@@ -518,7 +559,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
                 <button
                   key={d.id}
                   onClick={() => executeMoveToDay(d.id)}
-                  className="w-full rounded-xl border border-white/10 bg-ink-200/40 px-4 py-2.5 text-left text-sm font-600 text-ink-700 hover:bg-ink-300/60 hover:border-white/20 transition"
+                  className="w-full rounded-xl border border-glass/10 bg-ink-200/40 px-4 py-2.5 text-left text-sm font-600 text-ink-700 hover:bg-ink-300/60 hover:border-glass/20 transition"
                 >
                   {d.label}
                   {d.theme ? ` — ${d.theme}` : ''}
@@ -533,18 +574,6 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
         </div>
       )}
 
-      {/* Trip edit modal */}
-      {editingTrip && (
-        <TripEditModal
-          trip={trip}
-          onSave={(title, budget, currency) => {
-            setEditingTrip(false);
-            handleTripEdit(title, budget, currency);
-          }}
-          onClose={() => setEditingTrip(false)}
-        />
-      )}
-
       {/* AI Change Review */}
       {reviewProposal && (
         <AIChangeReview
@@ -556,6 +585,6 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
           onClose={() => setReviewProposal(null)}
         />
       )}
-    </div>
+    </DestinationThemeScope>
   );
 }

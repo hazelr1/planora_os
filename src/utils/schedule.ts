@@ -56,3 +56,81 @@ export function recalculateDaySchedule(
 
   return updates;
 }
+
+/**
+ * Returns the IDs of activities whose scheduled time overlaps a neighboring
+ * activity on the same day (i.e. one starts before the previous one ends).
+ * Input order doesn't matter — activities are sorted by time internally.
+ */
+export function detectConflicts(activities: Activity[]): Set<string> {
+  const conflicts = new Set<string>();
+  const sorted = [...activities].sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
+
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = sorted[i - 1];
+    const current = sorted[i];
+    const prevEnd = timeToMinutes(prev.time) + prev.duration;
+    if (timeToMinutes(current.time) < prevEnd) {
+      conflicts.add(prev.id);
+      conflicts.add(current.id);
+    }
+  }
+
+  return conflicts;
+}
+
+const WALKING_SPEED_KMH = 4.5;
+const TRANSIT_SPEED_KMH = 25;
+const WALK_VS_TRANSIT_THRESHOLD_KM = 1.5;
+
+/** Great-circle distance in kilometers between two coordinates. */
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/**
+ * Best-effort estimated travel time (minutes) between two activities, based
+ * on straight-line distance between their coordinates — not a real routing
+ * API, so it's always presented to the user as an estimate. Returns null
+ * when either activity is missing coordinates.
+ */
+export function estimateTravelMinutes(a: Activity, b: Activity): number | null {
+  if (a.latitude == null || a.longitude == null || b.latitude == null || b.longitude == null) return null;
+  const km = haversineKm(a.latitude, a.longitude, b.latitude, b.longitude);
+  const speed = km <= WALK_VS_TRANSIT_THRESHOLD_KM ? WALKING_SPEED_KMH : TRANSIT_SPEED_KMH;
+  return Math.max(1, Math.round((km / speed) * 60));
+}
+
+/**
+ * Total estimated travel time across a day's activities in time order.
+ * `segments` counts how many gaps could be estimated vs. how many are
+ * missing coordinates, so callers can caveat a partial estimate.
+ */
+export function estimateDayTravelMinutes(activities: Activity[]): {
+  totalMinutes: number;
+  estimatedSegments: number;
+  missingSegments: number;
+} {
+  const sorted = [...activities].sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
+  let totalMinutes = 0;
+  let estimatedSegments = 0;
+  let missingSegments = 0;
+
+  for (let i = 1; i < sorted.length; i++) {
+    const minutes = estimateTravelMinutes(sorted[i - 1], sorted[i]);
+    if (minutes == null) {
+      missingSegments++;
+    } else {
+      totalMinutes += minutes;
+      estimatedSegments++;
+    }
+  }
+
+  return { totalMinutes, estimatedSegments, missingSegments };
+}

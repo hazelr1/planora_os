@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import AppShell from './components/AppShell';
+import AnimatedBackground from './components/AnimatedBackground';
 import Landing from './views/Landing';
 import SignIn from './views/SignIn';
 import ResetPassword from './views/ResetPassword';
@@ -135,17 +136,22 @@ export default function App() {
   // ── Loading gate (session check) ──────────────────────────────────────────
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-ink-50 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-10 w-10 rounded-full border-2 border-brand-500/20 border-t-brand-400 animate-spin" />
-          <p className="text-sm text-ink-600">Checking session…</p>
+      <>
+        <AnimatedBackground />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-10 w-10 rounded-full border-2 border-brand-500/20 border-t-brand-400 animate-spin" />
+            <p className="text-sm text-ink-600">Checking session…</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <AppShell screen={screen} onNavigate={navigate} user={user} onSignOut={handleSignOut}>
+    <>
+    <AnimatedBackground />
+    <AppShell screen={screen} onNavigate={navigate} user={user} onSignOut={handleSignOut} fullBleed={screen.name === 'workspace'}>
       {screen.name === 'landing' && (
         <Landing onNavigate={navigate} onTryDemo={handleTryDemo} />
       )}
@@ -188,5 +194,6 @@ export default function App() {
         />
       )}
     </AppShell>
+    </>
   );
 }

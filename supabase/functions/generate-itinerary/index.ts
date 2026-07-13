@@ -139,14 +139,35 @@ interface OpenAIItinerary {
   days: OpenAIDay[];
 }
 
+/** Every calendar date in the trip, inclusive, as YYYY-MM-DD strings. */
+function enumerateDates(startDate: string, endDate: string): string[] {
+  const dates: string[] = [];
+  const cursor = new Date(startDate + "T00:00:00");
+  const end = new Date(endDate + "T00:00:00");
+  while (cursor <= end) {
+    dates.push(cursor.toISOString().slice(0, 10));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return dates;
+}
+
 async function callOpenAI(req: GenerateRequest, apiKey: string): Promise<OpenAIItinerary> {
+  const dates = enumerateDates(req.start_date, req.end_date);
+  const numDays = dates.length;
+  const dateList = dates.map((d, i) => `Day ${i + 1}: ${d}`).join("\n");
+
   const userPrompt = `
 Destination: ${req.destination}
-Dates: ${req.start_date} to ${req.end_date}
+Trip length: exactly ${numDays} day${numDays !== 1 ? "s" : ""} (${req.start_date} to ${req.end_date})
 Budget: ${req.budget} ${req.currency} (total, for ${req.travelers} traveler${req.travelers !== 1 ? "s" : ""})
 Travel pace: ${req.travel_pace}
 Interests: ${req.interests.join(", ")}
 ${req.special_requests ? `Special requests: ${req.special_requests}` : ""}
+
+REQUIRED DAYS — the "days" array MUST contain exactly ${numDays} entries, one per date below, in this exact order. Do not omit, merge, or summarize any day, even for long trips:
+${dateList}
+
+For each day, cover a full schedule: a morning activity, an afternoon activity, an evening activity, and meals (breakfast/lunch/dinner using the "Food" category) where appropriate for the pace. Include transportation between distant locations as its own activity using the "Transport" category when relevant.
 `.trim();
 
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -162,7 +183,7 @@ ${req.special_requests ? `Special requests: ${req.special_requests}` : ""}
         {
           role: "system",
           content:
-            "You are Planora, an expert travel itinerary planner. Create a realistic and editable itinerary based on the user's destination, dates, budget, traveler count, pace, interests, and special requests. Group activities geographically. Include reasonable travel and rest time. Avoid impossible schedules. Do not claim confirmed availability, live prices, reservations, or opening hours. All prices are estimates. Explain briefly why each activity fits the user. For every activity, set cost_confidence to 'high' when you are confident in the estimated_cost (e.g. well-known fixed-price attractions), 'medium' for typical estimates, and 'low' when the price is highly variable or uncertain. For every activity, also provide your best-effort real-world latitude and longitude for its location — use your knowledge of the destination's geography; if you are not reasonably confident of the coordinates, still provide your best estimate rather than a placeholder. Return only structured data matching the required schema.",
+            "You are Planora, an expert travel itinerary planner. Create a realistic and editable itinerary based on the user's destination, dates, budget, traveler count, pace, interests, and special requests. The user prompt lists the exact required dates — you MUST return one entry in the days array for every single one of them, in order, never fewer. Group activities geographically. Include reasonable travel and rest time. Avoid impossible schedules. Do not claim confirmed availability, live prices, reservations, or opening hours. All prices are estimates. Explain briefly why each activity fits the user. For every activity, set cost_confidence to 'high' when you are confident in the estimated_cost (e.g. well-known fixed-price attractions), 'medium' for typical estimates, and 'low' when the price is highly variable or uncertain. For every activity, also provide your best-effort real-world latitude and longitude for its location — use your knowledge of the destination's geography; if you are not reasonably confident of the coordinates, still provide your best estimate rather than a placeholder. Return only structured data matching the required schema.",
         },
         { role: "user", content: userPrompt },
       ],
@@ -175,7 +196,10 @@ ${req.special_requests ? `Special requests: ${req.special_requests}` : ""}
         },
       },
       temperature: 0.7,
-      max_tokens: 8000,
+      // Scale with trip length so longer itineraries don't get truncated
+      // mid-generation — roughly 900 tokens/day plus headroom, capped well
+      // under the model's context limit.
+      max_tokens: Math.min(16_000, Math.max(4000, numDays * 900 + 2000)),
     }),
   });
 
@@ -218,8 +242,15 @@ async function persistItinerary(
   userId: string,
   req: GenerateRequest,
   itinerary: OpenAIItinerary,
+  expectedDays: number,
 ): Promise<{ tripId: string; warnings: string[] }> {
   const warnings: string[] = [];
+  if (itinerary.days.length < expectedDays) {
+    warnings.push(
+      `The AI generated ${itinerary.days.length} of ${expectedDays} requested days. ` +
+      `Ask the AI Copilot to add the missing days.`,
+    );
+  }
 
   // 1. Insert trip
   const { data: tripData, error: tripErr } = await supabase
@@ -379,9 +410,10 @@ Deno.serve(async (req: Request) => {
     }
 
     // Persist
+    const expectedDays = enumerateDates(input.start_date, input.end_date).length;
     let result: { tripId: string; warnings: string[] };
     try {
-      result = await persistItinerary(supabase, user.id, input, itinerary);
+      result = await persistItinerary(supabase, user.id, input, itinerary, expectedDays);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "UNKNOWN";
       console.error("[generate-itinerary] DB error:", msg);

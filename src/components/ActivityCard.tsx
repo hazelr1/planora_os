@@ -2,7 +2,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
   MapPin, Timer, DollarSign, Sparkles, Pencil, Trash2, Lock, Unlock, MoveRight,
-  StickyNote, ExternalLink, ChevronUp, ChevronDown, GripVertical, CloudOff, History,
+  StickyNote, ExternalLink, ChevronUp, ChevronDown, GripVertical, CloudOff, History, AlertTriangle,
 } from 'lucide-react';
 import type { Activity, ActivityCategory, CostConfidence } from '../types';
 import { formatDuration } from '../utils/budget';
@@ -22,6 +22,8 @@ interface ActivityCardProps {
   highlighted?: boolean;
   /** Selects the card, typically to highlight its map marker in return. */
   onSelect?: () => void;
+  /** True when this activity's time overlaps a neighboring activity the same day. */
+  hasConflict?: boolean;
 }
 
 const categoryColors: Record<ActivityCategory, string> = {
@@ -34,7 +36,7 @@ const categoryColors: Record<ActivityCategory, string> = {
   Nightlife: 'bg-violet-500/15 text-violet-300 border border-violet-500/20',
   Transport: 'bg-slate-500/15 text-slate-300 border border-slate-500/20',
   Accommodation: 'bg-teal-500/15 text-teal-300 border border-teal-500/20',
-  Other: 'bg-white/5 text-ink-600 border border-white/10',
+  Other: 'bg-glass/5 text-ink-600 border border-glass/10',
 };
 
 const confidenceColors: Record<CostConfidence, string> = {
@@ -55,6 +57,7 @@ export default function ActivityCard({
   onToggleLock,
   highlighted = false,
   onSelect,
+  hasConflict = false,
 }: ActivityCardProps) {
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activity.location + ', ' + activity.title)}`;
 
@@ -71,7 +74,7 @@ export default function ActivityCard({
       style={style}
       onClick={onSelect}
       className={`rounded-xl border bg-ink-200/40 backdrop-blur-sm transition-shadow hover:shadow-soft ${
-        activity.locked ? 'border-brand-400/30 bg-brand-500/5' : 'border-white/10'
+        hasConflict ? 'border-rose-500/40' : activity.locked ? 'border-brand-400/30 bg-brand-500/5' : 'border-glass/10'
       } ${highlighted ? 'ring-2 ring-brand-400/60' : ''}`}
     >
       <div className="p-4">
@@ -81,7 +84,7 @@ export default function ActivityCard({
             type="button"
             {...attributes}
             {...listeners}
-            className="mt-0.5 shrink-0 rounded-lg p-1 text-ink-500 hover:text-ink-700 hover:bg-white/5 transition cursor-grab active:cursor-grabbing touch-none"
+            className="mt-0.5 shrink-0 rounded-lg p-1 text-ink-500 hover:text-ink-700 hover:bg-glass/5 transition cursor-grab active:cursor-grabbing touch-none"
             aria-label="Drag to reorder or move to another day"
             onClick={(e) => e.stopPropagation()}
           >
@@ -110,7 +113,7 @@ export default function ActivityCard({
             <button
               onClick={onMoveUp}
               disabled={isFirst}
-              className="rounded-lg p-1 text-ink-500 hover:text-ink-800 hover:bg-white/5 transition disabled:opacity-25 disabled:pointer-events-none"
+              className="rounded-lg p-1 text-ink-500 hover:text-ink-800 hover:bg-glass/5 transition disabled:opacity-25 disabled:pointer-events-none"
               aria-label="Move up"
             >
               <ChevronUp size={15} />
@@ -118,7 +121,7 @@ export default function ActivityCard({
             <button
               onClick={onMoveDown}
               disabled={isLast}
-              className="rounded-lg p-1 text-ink-500 hover:text-ink-800 hover:bg-white/5 transition disabled:opacity-25 disabled:pointer-events-none"
+              className="rounded-lg p-1 text-ink-500 hover:text-ink-800 hover:bg-glass/5 transition disabled:opacity-25 disabled:pointer-events-none"
               aria-label="Move down"
             >
               <ChevronDown size={15} />
@@ -144,8 +147,16 @@ export default function ActivityCard({
           </span>
         </div>
 
-        {/* Intelligence row: cost confidence, weather, last updated */}
+        {/* Intelligence row: conflicts, cost confidence, weather, last updated */}
         <div className="mt-2 flex flex-wrap items-center gap-2">
+          {hasConflict && (
+            <span
+              className="chip bg-rose-500/15 text-rose-300 border border-rose-500/30 font-600"
+              title="This activity's time overlaps a neighboring activity — adjust the time or duration to resolve it."
+            >
+              <AlertTriangle size={11} /> Time conflict
+            </span>
+          )}
           <span
             className={`chip ${confidenceColors[activity.costConfidence]}`}
             title={`AI cost estimate confidence: ${activity.costConfidence}`}
@@ -153,7 +164,7 @@ export default function ActivityCard({
             {activity.costConfidence} confidence
           </span>
           <span
-            className="chip bg-white/5 text-ink-500 border border-white/10"
+            className="chip bg-glass/5 text-ink-500 border border-glass/10"
             title="Weather forecasts require a weather provider to be connected"
           >
             <CloudOff size={11} /> Weather unavailable
@@ -175,7 +186,7 @@ export default function ActivityCard({
         {activity.notes.length > 0 && (
           <div className="mt-3 space-y-1.5">
             {activity.notes.map((note) => (
-              <div key={note.id} className="flex items-start gap-2 rounded-lg bg-ink-200/40 border border-white/10 px-3 py-2">
+              <div key={note.id} className="flex items-start gap-2 rounded-lg bg-ink-200/40 border border-glass/10 px-3 py-2">
                 <StickyNote size={12} className="text-ink-500 mt-0.5 shrink-0" />
                 <span className="text-xs text-ink-700 leading-relaxed flex-1">{note.text}</span>
               </div>
@@ -184,7 +195,7 @@ export default function ActivityCard({
         )}
 
         {/* Actions */}
-        <div className="mt-4 flex items-center gap-1 flex-wrap border-t border-white/10 pt-3">
+        <div className="mt-4 flex items-center gap-1 flex-wrap border-t border-glass/10 pt-3">
           <button onClick={onEdit} className="btn-ghost px-2.5 py-1.5 text-xs">
             <Pencil size={12} /> Edit
           </button>

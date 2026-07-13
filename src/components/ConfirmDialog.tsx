@@ -40,7 +40,7 @@ export default function ConfirmDialog({
       <div className="relative w-full max-w-sm card p-6 animate-scale-in" role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
         <button
           onClick={onCancel}
-          className="absolute right-4 top-4 rounded-lg p-1 text-ink-500 hover:text-ink-800 hover:bg-white/5 transition"
+          className="absolute right-4 top-4 rounded-lg p-1 text-ink-500 hover:text-ink-800 hover:bg-glass/5 transition"
         >
           <X size={16} />
         </button>

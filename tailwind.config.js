@@ -1,6 +1,18 @@
 /** @type {import('tailwindcss').Config} */
+function themeVar(name) {
+  return ({ opacityValue }) =>
+    opacityValue === undefined ? `rgb(var(--${name}))` : `rgb(var(--${name}) / ${opacityValue})`;
+}
+
+function scale(prefix) {
+  return Object.fromEntries(
+    [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950].map((k) => [k, themeVar(`${prefix}-${k}`)]),
+  );
+}
+
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  darkMode: ['class', '[data-theme="dark"]'],
   theme: {
     extend: {
       fontFamily: {
@@ -8,32 +20,17 @@ export default {
         display: ['"Plus Jakarta Sans"', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       colors: {
-        ink: {
-          50: '#04070F',
-          100: '#0e131f',
-          200: '#161d2c',
-          300: '#212a3d',
-          400: '#5b6885',
-          500: '#7e8ba5',
-          600: '#9ca7be',
-          700: '#bcc6d8',
-          800: '#dae0eb',
-          900: '#eff2f8',
-          950: '#ffffff',
-        },
-        brand: {
-          50: '#ecfeff',
-          100: '#cffafe',
-          200: '#a5f3fc',
-          300: '#67e8f9',
-          400: '#22d3ee',
-          500: '#06b6d4',
-          600: '#0891b2',
-          700: '#0e7490',
-          800: '#155e75',
-          900: '#164e63',
-          950: '#083344',
-        },
+        // Every shade below resolves through a CSS variable (see index.css),
+        // so switching data-theme="light"/"dark" on <html> re-themes the
+        // entire app without touching component classNames. `glass` is the
+        // theme-aware stand-in for what used to be hardcoded `white/NN`
+        // overlay utilities (borders, subtle hover backgrounds) — it's
+        // literal white in dark mode and a soft ink tone in light mode, so
+        // glass borders/hovers read correctly against either background.
+        ink: scale('ink'),
+        brand: scale('brand'),
+        violet: scale('violet'),
+        glass: themeVar('glass'),
       },
       boxShadow: {
         soft: '0 1px 2px rgba(0,0,0,0.2), 0 0 1px rgba(255,255,255,0.04)',

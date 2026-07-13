@@ -116,7 +116,7 @@ export default function TripForm({ onSubmit, onCancel, submitLabel = 'Generate I
               className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${
                 pace === p
                   ? 'border-brand-500/60 bg-brand-500/15 text-brand-300'
-                  : 'border-white/10 bg-ink-200/40 text-ink-600 hover:bg-ink-300/60'
+                  : 'border-glass/10 bg-ink-200/40 text-ink-600 hover:bg-ink-300/60'
               }`}
             >
               {p}
@@ -138,7 +138,7 @@ export default function TripForm({ onSubmit, onCancel, submitLabel = 'Generate I
                 className={`chip border transition ${
                   active
                     ? 'bg-brand-500 text-ink-950 border-brand-500'
-                    : 'bg-ink-200/40 text-ink-600 border-white/10 hover:bg-ink-300/60'
+                    : 'bg-ink-200/40 text-ink-600 border-glass/10 hover:bg-ink-300/60'
                 }`}
               >
                 {i}

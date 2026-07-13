@@ -109,7 +109,7 @@ export default function ResetPassword({ onDone }: ResetPasswordProps) {
               <button type="submit" className="btn-primary w-full justify-center mt-2" disabled={loading}>
                 {loading ? (
                   <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                    <span className="h-4 w-4 rounded-full border-2 border-glass/30 border-t-white animate-spin" />
                     Saving…
                   </span>
                 ) : (

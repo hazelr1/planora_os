@@ -174,7 +174,7 @@ export default function AIAssistantPanel({ trip, onRevisionProposed, externalPro
   const chips = trip.isDemo ? DEMO_CHIPS : SUGGESTION_CHIPS;
 
   return (
-    <div className="ai-surface p-5 sticky top-20 flex flex-col max-h-[calc(100vh-6rem)]">
+    <div className="ai-surface p-5 flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center gap-2.5 mb-4 shrink-0">
         <div className="h-9 w-9 rounded-xl ai-gradient flex items-center justify-center shrink-0 shadow-soft">
@@ -192,7 +192,7 @@ export default function AIAssistantPanel({ trip, onRevisionProposed, externalPro
           {messages.map((m) => (
             <div key={m.id} className={`flex gap-2 ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
               <div className={`h-6 w-6 rounded-lg flex items-center justify-center shrink-0 ${
-                m.role === 'user' ? 'bg-white/10 text-ink-700' : 'ai-gradient text-white'
+                m.role === 'user' ? 'bg-glass/10 text-ink-700' : 'ai-gradient text-white'
               }`}>
                 {m.role === 'user' ? <User size={12} /> : <Sparkles size={12} />}
               </div>
@@ -268,7 +268,7 @@ export default function AIAssistantPanel({ trip, onRevisionProposed, externalPro
                 className={`chip transition-colors border ${
                   trip.isDemo
                     ? 'bg-amber-500/10 text-amber-300 border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/30'
-                    : 'bg-ink-200/40 text-ink-600 border-white/10 hover:bg-violet-500/10 hover:text-violet-200 hover:border-violet-400/20'
+                    : 'bg-ink-200/40 text-ink-600 border-glass/10 hover:bg-violet-500/10 hover:text-violet-200 hover:border-violet-400/20'
                 }`}
               >
                 {chip}

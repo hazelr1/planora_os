@@ -1,11 +1,16 @@
 import { Compass, ArrowLeft, LogOut } from 'lucide-react';
 import type { Screen, User as AppUser } from '../types';
+import ThemeToggle from './ThemeToggle';
 
 interface AppShellProps {
   screen: Screen;
   onNavigate: (screen: Screen) => void;
   children: React.ReactNode;
   hideChrome?: boolean;
+  /** Fills the viewport edge-to-edge below the header, with its own internal
+   * scroll regions, instead of the centered max-width/padded page container.
+   * Used by the Workspace screen's Notion/Linear-style 3-column layout. */
+  fullBleed?: boolean;
   user?: AppUser | null;
   onSignOut?: () => void;
 }
@@ -25,7 +30,7 @@ function UserAvatar({ name }: { name: string }) {
 }
 
 export default function AppShell({
-  screen, onNavigate, children, hideChrome = false, user, onSignOut,
+  screen, onNavigate, children, hideChrome = false, fullBleed = false, user, onSignOut,
 }: AppShellProps) {
   if (hideChrome) {
     return <div className="min-h-screen bg-ink-50">{children}</div>;
@@ -35,8 +40,8 @@ export default function AppShell({
   const displayName = user?.name || user?.email || '';
 
   return (
-    <div className="min-h-screen bg-ink-50">
-      <header className="sticky top-0 z-30 bg-ink-50/70 backdrop-blur-xl border-b border-white/10">
+    <div className={fullBleed ? 'h-screen flex flex-col bg-ink-50 overflow-hidden' : 'min-h-screen bg-ink-50'}>
+      <header className="sticky top-0 z-30 bg-ink-50/70 backdrop-blur-xl border-b border-glass/10 shrink-0">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
 
           {/* Logo */}
@@ -54,6 +59,7 @@ export default function AppShell({
 
           {/* Nav */}
           <nav className="flex items-center gap-1 sm:gap-2">
+            <ThemeToggle />
             {isWorkspace ? (
               <button onClick={() => onNavigate({ name: 'trips' })} className="btn-ghost">
                 <ArrowLeft size={16} />
@@ -110,7 +116,7 @@ export default function AppShell({
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <main className={fullBleed ? 'flex-1 min-h-0 overflow-hidden' : 'max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8'}>
         {children}
       </main>
     </div>

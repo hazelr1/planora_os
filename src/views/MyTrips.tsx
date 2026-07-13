@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Map, Plus } from 'lucide-react';
-import type { Screen, Trip } from '../types';
+import type { Screen, Trip, TripStatus } from '../types';
 import TripCard from '../components/TripCard';
 import ConfirmDialog from '../components/ConfirmDialog';
 import TripEditModal from '../components/TripEditModal';
@@ -14,7 +14,7 @@ interface MyTripsProps {
   onNavigate: (screen: Screen) => void;
   onDuplicate: (id: string) => void;
   onDelete: (id: string) => void;
-  onUpdateTripFields: (id: string, fields: { title?: string; budget?: number; currency?: string }) => Promise<void>;
+  onUpdateTripFields: (id: string, fields: { title?: string; budget?: number; currency?: string; status?: TripStatus }) => Promise<void>;
 }
 
 function TripCardSkeleton() {

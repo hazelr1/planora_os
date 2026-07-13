@@ -13,7 +13,7 @@ interface TripCardProps {
 const statusStyles: Record<string, string> = {
   Planning: 'bg-amber-500/15 text-amber-300 border border-amber-500/20',
   Confirmed: 'bg-brand-500/15 text-brand-300 border border-brand-400/20',
-  Completed: 'bg-white/5 text-ink-600 border border-white/10',
+  Completed: 'bg-glass/5 text-ink-600 border border-glass/10',
 };
 
 export default function TripCard({ trip, onOpen, onEdit, onDuplicate, onDelete }: TripCardProps) {
@@ -34,7 +34,7 @@ export default function TripCard({ trip, onOpen, onEdit, onDuplicate, onDelete }
             </span>
             <button
               onClick={onEdit}
-              className="rounded-lg p-1.5 text-ink-500 hover:text-ink-800 hover:bg-white/5 transition"
+              className="rounded-lg p-1.5 text-ink-500 hover:text-ink-800 hover:bg-glass/5 transition"
               aria-label={`Edit ${trip.title}`}
             >
               <Pencil size={14} />
@@ -62,15 +62,15 @@ export default function TripCard({ trip, onOpen, onEdit, onDuplicate, onDelete }
         {trip.interests.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-1">
             {trip.interests.slice(0, 4).map((i) => (
-              <span key={i} className="chip bg-white/5 text-ink-600 text-[10px] border border-white/10">{i}</span>
+              <span key={i} className="chip bg-glass/5 text-ink-600 text-[10px] border border-glass/10">{i}</span>
             ))}
             {trip.interests.length > 4 && (
-              <span className="chip bg-white/5 text-ink-500 text-[10px] border border-white/10">+{trip.interests.length - 4}</span>
+              <span className="chip bg-glass/5 text-ink-500 text-[10px] border border-glass/10">+{trip.interests.length - 4}</span>
             )}
           </div>
         )}
 
-        <div className="mt-auto pt-3 mt-3 border-t border-white/10 flex items-center gap-1 text-xs text-ink-500">
+        <div className="mt-auto pt-3 mt-3 border-t border-glass/10 flex items-center gap-1 text-xs text-ink-500">
           <Clock size={11} />
           <span>Updated {formatLastUpdated(trip.lastUpdated)}</span>
         </div>

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import type { Trip, User } from '../types';
+import type { Trip, TripStatus, User } from '../types';
 import { tripRepository } from '../data';
 
 export function useTrips(user?: User | null) {
@@ -35,7 +35,7 @@ export function useTrips(user?: User | null) {
   /** Updates top-level trip fields (title, budget, currency, status). Refreshes the list. */
   const updateTripFields = useCallback(async (
     id: string,
-    fields: { title?: string; budget?: number; currency?: string },
+    fields: { title?: string; budget?: number; currency?: string; status?: TripStatus },
   ): Promise<void> => {
     const result = await tripRepository.updateTrip(id, fields);
     if (!result.ok) throw new Error(result.error.message);

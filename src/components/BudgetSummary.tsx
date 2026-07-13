@@ -42,7 +42,7 @@ export default function BudgetSummary({ trip }: BudgetSummaryProps) {
           <span className="text-ink-600">Estimated total</span>
           <span className="font-700 text-ink-900">{trip.currency} {total.toLocaleString()}</span>
         </div>
-        <div className="flex items-center justify-between text-sm pt-1 border-t border-white/10">
+        <div className="flex items-center justify-between text-sm pt-1 border-t border-glass/10">
           <span className="text-ink-600">{over ? 'Over budget by' : 'Remaining budget'}</span>
           <span className={`font-700 ${over ? 'text-rose-400' : 'text-brand-300'}`}>
             {trip.currency} {Math.abs(remaining).toLocaleString()}
