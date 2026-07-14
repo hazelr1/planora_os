@@ -399,6 +399,16 @@ Deno.serve(async (req: Request) => {
     if (errors.length > 0) return jsonRes({ error: errors[0] }, 500);
 
     // ── Recalculate sort_order for affected days ───────────────────────────────
+    // Previously one awaited round trip per activity per day, sequentially —
+    // for a handful of affected multi-activity days this added several
+    // seconds of pure network latency after the mutations above had already
+    // completed, long enough that the client's "Applying…" state looked
+    // stuck even though the revision had already succeeded. Fetching each
+    // day's order is still sequential (cheap, one SELECT per day), but the
+    // per-activity sort_order writes within and across days are independent
+    // rows with no ordering dependency on each other, so they can all fire
+    // concurrently.
+    const sortUpdates: Promise<unknown>[] = [];
     for (const dayId of affectedDayIds) {
       const { data: dayActs } = await svcClient
         .from("activities")
@@ -408,10 +418,11 @@ Deno.serve(async (req: Request) => {
 
       if (!dayActs) continue;
       const ids = (dayActs as { id: string }[]).map((r) => r.id);
-      for (let i = 0; i < ids.length; i++) {
-        await svcClient.from("activities").update({ sort_order: i }).eq("id", ids[i]);
-      }
+      ids.forEach((id, i) => {
+        sortUpdates.push(svcClient.from("activities").update({ sort_order: i }).eq("id", id));
+      });
     }
+    await Promise.all(sortUpdates);
 
     // ── Mark revision accepted ────────────────────────────────────────────────
     await svcClient

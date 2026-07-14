@@ -48,7 +48,16 @@ class SupabaseAuthRepository implements IAuthRepository {
     const { data, error } = await supabase.auth.signUp({
       email: input.email,
       password: input.password,
-      options: { data: { name: input.name } },
+      options: {
+        data: { name: input.name },
+        // Without this, the confirmation email links back to whatever "Site
+        // URL" happens to be configured in the Supabase dashboard — which
+        // silently drifts from wherever the app is actually deployed. Must
+        // still be present in the project's Auth "Redirect URLs" allowlist,
+        // or Supabase rejects the redirect with its own error page even
+        // though the email itself already confirmed correctly server-side.
+        emailRedirectTo: `${window.location.origin}${window.location.pathname}`,
+      },
     });
 
     if (error) {

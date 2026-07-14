@@ -49,10 +49,10 @@ export default function App() {
     }
 
     if (status === 'authenticated' && screen.name === 'signin') {
-      if (suppressAuthRedirectRef.current) {
-        suppressAuthRedirectRef.current = false;
-        return;
-      }
+      // Only handleSignUpSettled clears this — see its comment for why this
+      // effect must not clear it itself, even on the very transition it's
+      // suppressing.
+      if (suppressAuthRedirectRef.current) return;
       setScreen({ name: 'trips' });
     }
   }, [status, screen.name, pendingScreen]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -88,7 +88,20 @@ export default function App() {
   }, []);
 
   const handleSignUpSettled = useCallback(() => {
-    suppressAuthRedirectRef.current = false;
+    // supabase-js dispatches auth state changes (the transient SIGNED_IN,
+    // then the deliberate SIGNED_OUT from supabaseAuthRepository.signUp)
+    // asynchronously — they can still be in flight when the signUp() promise
+    // this callback follows has already resolved. Clearing the suppression
+    // immediately let the very first of those events sneak past this guard
+    // and briefly navigate away from Sign In, which remounted it and wiped
+    // the "check your inbox" confirmation card before anyone saw it. Waiting
+    // one tick past any reasonable auth-event delivery window lets both
+    // transient events pass through useAuth's onAuthStateChange listener
+    // while still ignored below, and this only ever risks masking one
+    // nearly instant real sign-in from this same screen.
+    setTimeout(() => {
+      suppressAuthRedirectRef.current = false;
+    }, 800);
   }, []);
 
   const handleSignOut = useCallback(async () => {

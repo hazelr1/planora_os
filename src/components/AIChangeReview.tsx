@@ -238,7 +238,13 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
         setApplyStatus('error');
         return;
       }
+      // Close unconditionally on success rather than leaving it entirely to
+      // the caller's onApplied — that made this dialog's closing dependent
+      // on every future onApplied implementation remembering to also clear
+      // whatever state renders it, the same shape of bug as onClose/onCancel
+      // above.
       onApplied();
+      onClose();
     } catch (err) {
       const isTimeout = err instanceof DOMException && err.name === 'TimeoutError';
       setApplyError(isTimeout ? 'The request timed out. Please try again.' : 'Something went wrong. Check your connection.');
