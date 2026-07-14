@@ -6,6 +6,7 @@ import {
 import type { AIRevisionProposal, Day, RevisionChange, RevisionOperation } from '../types';
 import { revisionRepository } from '../data';
 import { supabase } from '../lib/supabase';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface AIChangeReviewProps {
   proposal: AIRevisionProposal;
@@ -170,11 +171,15 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
   const [tryError, setTryError] = useState<string | null>(null);
 
   const closeRef = useRef<HTMLButtonElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Focus close button on mount; ESC closes
+  // Traps Tab within the dialog and restores focus on close, in addition to
+  // the close-button focus this already had.
+  useFocusTrap(containerRef, true, closeRef);
+
+  // ESC closes
   useEffect(() => {
-    closeRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') handleCancel();
     };
@@ -300,7 +305,7 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
     >
       <div className="absolute inset-0 bg-ink-950/60 backdrop-blur-sm" onClick={handleCancel} aria-hidden="true" />
 
-      <div className="relative w-full sm:max-w-xl max-h-[92dvh] flex flex-col rounded-t-2xl sm:rounded-2xl ai-surface shadow-pop animate-scale-in overflow-hidden">
+      <div ref={containerRef} className="relative w-full sm:max-w-xl max-h-[92dvh] flex flex-col rounded-t-2xl sm:rounded-2xl ai-surface shadow-pop animate-scale-in overflow-hidden">
 
         {/* ── Header ── */}
         <div className="flex items-start gap-3 px-5 py-4 border-b border-violet-400/15 shrink-0">

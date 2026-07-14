@@ -16,11 +16,13 @@ interface WorkspaceShellProps {
   onRevisionProposed: (proposal: AIRevisionProposal) => void;
   externalPrompt: string | null;
   onExternalPromptHandled: () => void;
+  /** Forwarded to CopilotDock/AIAssistantPanel — see AIAssistantPanel's own doc comment. */
+  aiGreeting?: string;
 }
 
 export default function WorkspaceShell({
   trip, activeSection, onSelectSection, header, children,
-  onRevisionProposed, externalPrompt, onExternalPromptHandled,
+  onRevisionProposed, externalPrompt, onExternalPromptHandled, aiGreeting,
 }: WorkspaceShellProps) {
   const [mobileCopilotOpen, setMobileCopilotOpen] = useState(false);
 
@@ -53,6 +55,7 @@ export default function WorkspaceShell({
           onRevisionProposed={onRevisionProposed}
           externalPrompt={externalPrompt}
           onExternalPromptHandled={onExternalPromptHandled}
+          aiGreeting={aiGreeting}
         />
       </div>
 
@@ -103,6 +106,7 @@ export default function WorkspaceShell({
               onRevisionProposed={onRevisionProposed}
               externalPrompt={externalPrompt}
               onExternalPromptHandled={onExternalPromptHandled}
+              aiGreeting={aiGreeting}
             />
           </div>
         </motion.div>

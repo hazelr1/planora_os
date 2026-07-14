@@ -9,6 +9,8 @@ interface AIAssistantPanelProps {
   /** Set by the proactive suggestion banner to trigger a copilot request from outside the panel. */
   externalPrompt?: string | null;
   onExternalPromptHandled?: () => void;
+  /** The destination's authored concierge opener (see ExperienceCopy.aiGreeting) — shown once, before the first real message, only for a themed destination. */
+  aiGreeting?: string;
 }
 
 const SUGGESTION_CHIPS = [
@@ -54,7 +56,7 @@ function generateId(): string {
   return crypto.randomUUID();
 }
 
-export default function AIAssistantPanel({ trip, onRevisionProposed, externalPrompt, onExternalPromptHandled }: AIAssistantPanelProps) {
+export default function AIAssistantPanel({ trip, onRevisionProposed, externalPrompt, onExternalPromptHandled, aiGreeting }: AIAssistantPanelProps) {
   const [messages, setMessages] = useState<CopilotMessage[]>(() => loadHistory(trip.id));
   const [input, setInput] = useState('');
   const [status, setStatus] = useState<PanelStatus>('idle');
@@ -182,13 +184,18 @@ export default function AIAssistantPanel({ trip, onRevisionProposed, externalPro
         </div>
         <div>
           <h3 className="font-display text-base font-700 text-ink-900">AI Copilot</h3>
-          <p className="text-xs text-ink-600">Ask questions or request itinerary changes</p>
+          <p className="text-xs text-ink-600">
+            {aiGreeting ? 'Your concierge for this trip' : 'Ask questions or request itinerary changes'}
+          </p>
         </div>
       </div>
 
-      {/* Conversation */}
+      {/* Conversation. aria-live announces new messages to screen reader
+          users without them having to navigate back into the panel — a
+          chat log is exactly the kind of region that updates outside the
+          user's own action (the assistant's reply arrives asynchronously). */}
       {messages.length > 0 && (
-        <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-3 mb-3 pr-0.5 min-h-0">
+        <div ref={scrollRef} aria-live="polite" role="log" className="flex-1 overflow-y-auto space-y-3 mb-3 pr-0.5 min-h-0">
           {messages.map((m) => (
             <div key={m.id} className={`flex gap-2 ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
               <div className={`h-6 w-6 rounded-lg flex items-center justify-center shrink-0 ${
@@ -247,6 +254,22 @@ export default function AIAssistantPanel({ trip, onRevisionProposed, externalPro
         <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 px-3.5 py-3 flex items-start gap-2 mb-4 shrink-0">
           <AlertTriangle size={14} className="text-rose-400 mt-0.5 shrink-0" />
           <p className="text-xs text-rose-300 leading-relaxed whitespace-pre-line">{errorMessage}</p>
+        </div>
+      )}
+
+      {/* Concierge greeting — the destination's authored opening line, shown
+          once before any real conversation exists. Not stored in `messages`;
+          purely a welcome moment, styled identically to a real assistant
+          bubble so it reads as "the concierge already said hello," not as a
+          separate UI element. */}
+      {status !== 'analyzing' && messages.length === 0 && aiGreeting && (
+        <div className="flex gap-2 mb-3 shrink-0">
+          <div className="h-6 w-6 rounded-lg flex items-center justify-center shrink-0 ai-gradient text-white">
+            <Sparkles size={12} />
+          </div>
+          <div className="rounded-xl px-3 py-2 text-xs leading-relaxed max-w-[85%] bg-violet-500/10 text-violet-100 border border-violet-400/20">
+            {aiGreeting}
+          </div>
         </div>
       )}
 

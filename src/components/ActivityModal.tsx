@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Plus, Pencil, Trash2, X, StickyNote } from 'lucide-react';
 import type { Activity, ActivityCategory, Note } from '../types';
 import type { ActivityInput } from '../hooks/useActivityEditor';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 export type ActivityModalMode = 'add' | 'edit';
 
@@ -39,6 +40,8 @@ export default function ActivityModal({
 }: ActivityModalProps) {
   const { mode, activity, dayId, focusNotes } = data;
   const notesRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(containerRef, true);
 
   // Form fields
   const [title, setTitle] = useState(activity?.title ?? '');
@@ -139,7 +142,7 @@ export default function ActivityModal({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-ink-950/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-xl card max-h-[94vh] overflow-hidden flex flex-col rounded-t-2xl sm:rounded-2xl" role="dialog" aria-modal="true" aria-labelledby="activity-modal-title">
+      <div ref={containerRef} className="relative w-full max-w-xl card max-h-[94vh] overflow-hidden flex flex-col rounded-t-2xl sm:rounded-2xl" role="dialog" aria-modal="true" aria-labelledby="activity-modal-title">
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-glass/10 shrink-0">

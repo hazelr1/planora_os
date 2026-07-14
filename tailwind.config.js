@@ -16,8 +16,33 @@ export default {
   theme: {
     extend: {
       fontFamily: {
+        // Clean, humanist workhorse for body/UI text — legible at small
+        // sizes, quiet enough to let the display face carry personality.
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['"Plus Jakarta Sans"', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        // Fraunces replaces Plus Jakarta Sans as the display face: a
+        // editorial serif with real character (soft, slightly warm optical
+        // curves) — the kind of typeface luxury travel print and Aman-style
+        // hospitality branding actually use, rather than another geometric
+        // sans that reads as "generic SaaS." Used for headings and large
+        // numerals only, never body copy.
+        display: ['Fraunces', 'Georgia', 'ui-serif', 'serif'],
+      },
+      // Numeric font-weight utilities. Extends (never replaces) Tailwind's
+      // named scale — font-medium/font-semibold/font-normal keep working —
+      // but the app's own components have always written font-600/700/800
+      // directly, and Tailwind never generated those classes: there was no
+      // fontWeight entry for them, so every one of those 87 declarations
+      // across the codebase was silently a no-op. This is the fix, and it
+      // requires touching no component file — every heading that already
+      // asked for font-800 starts actually rendering at 800 the moment this
+      // ships.
+      fontWeight: {
+        400: '400',
+        500: '500',
+        600: '600',
+        700: '700',
+        800: '800',
+        900: '900',
       },
       colors: {
         // Every shade below resolves through a CSS variable (see index.css),
@@ -32,14 +57,22 @@ export default {
         violet: scale('violet'),
         glass: themeVar('glass'),
       },
+      // Shadow values are CSS variables (see index.css) rather than static
+      // strings, so light mode gets warm, low-contrast elevation suited to
+      // an ivory ground and dark mode keeps its deeper, glow-capable
+      // shadows — "elegant shadows instead of harsh borders" means
+      // something different on each background, and a single flat rgba
+      // value can't serve both.
       boxShadow: {
-        soft: '0 1px 2px rgba(0,0,0,0.2), 0 0 1px rgba(255,255,255,0.04)',
-        card: '0 4px 24px -4px rgba(0,0,0,0.4), 0 0 1px rgba(255,255,255,0.06)',
-        pop: '0 20px 60px -12px rgba(0,0,0,0.55), 0 0 1px rgba(255,255,255,0.08)',
-        glow: '0 0 32px -8px rgba(34,211,238,0.16)',
-        'glow-lg': '0 8px 40px -8px rgba(34,211,238,0.22), 0 0 60px -20px rgba(139,92,246,0.25)',
+        soft: 'var(--shadow-soft)',
+        card: 'var(--shadow-card)',
+        'card-hover': 'var(--shadow-card-hover)',
+        pop: 'var(--shadow-pop)',
+        glow: 'var(--shadow-glow)',
+        'glow-lg': 'var(--shadow-glow-lg)',
+        // AI-specific, deliberately not theme-tuned — violet reads as "the
+        // AI's own accent" consistently regardless of light/dark.
         'glow-violet': '0 0 0 1px rgba(167,139,250,0.25), 0 0 32px -6px rgba(139,92,246,0.35)',
-        'card-hover': '0 16px 48px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.08)',
       },
       keyframes: {
         'fade-in': {
@@ -72,9 +105,12 @@ export default {
         },
       },
       animation: {
-        'fade-in': 'fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-        'scale-in': 'scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-        'slide-up': 'slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+        // Slightly slower than before across the board — premium motion
+        // reads as considered rather than snappy; the easing curve itself
+        // (a gentle overshoot-free ease-out) is unchanged.
+        'fade-in': 'fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+        'scale-in': 'scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+        'slide-up': 'slide-up 0.45s cubic-bezier(0.16, 1, 0.3, 1)',
         shimmer: 'shimmer 2.2s ease-in-out infinite',
         'glow-pulse': 'glow-pulse 2.4s ease-in-out infinite',
         float: 'float 3.5s ease-in-out infinite',

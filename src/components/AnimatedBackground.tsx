@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useTheme } from '../hooks/useTheme';
 
 interface Blob {
@@ -9,32 +9,40 @@ interface Blob {
   duration: number;
 }
 
-// Light mode: prominent, slowly drifting turquoise/emerald/sea-green blobs
-// over the ivory/cream base — the "animated moving gradient blobs" look.
+// Light mode: gentle, slowly drifting turquoise/emerald blobs over the
+// ivory base — subtle ambient movement, not a prominent decorative layer.
+// Colors match the refined --brand scale in index.css.
 const LIGHT_BLOBS: Blob[] = [
-  { color: 'rgba(20,184,166,0.22)', size: 620, start: { x: '5%', y: '-10%' }, drift: { x: ['5%', '18%', '5%'], y: ['-10%', '5%', '-10%'] }, duration: 26 },
-  { color: 'rgba(5,150,105,0.18)', size: 560, start: { x: '70%', y: '10%' }, drift: { x: ['70%', '55%', '70%'], y: ['10%', '28%', '10%'] }, duration: 32 },
-  { color: 'rgba(94,224,202,0.20)', size: 480, start: { x: '30%', y: '65%' }, drift: { x: ['30%', '45%', '30%'], y: ['65%', '48%', '65%'] }, duration: 22 },
+  { color: 'rgba(45,158,138,0.12)', size: 620, start: { x: '5%', y: '-10%' }, drift: { x: ['5%', '18%', '5%'], y: ['-10%', '5%', '-10%'] }, duration: 26 },
+  { color: 'rgba(16,109,79,0.10)', size: 560, start: { x: '70%', y: '10%' }, drift: { x: ['70%', '55%', '70%'], y: ['10%', '28%', '10%'] }, duration: 32 },
+  { color: 'rgba(108,199,178,0.12)', size: 480, start: { x: '30%', y: '65%' }, drift: { x: ['30%', '45%', '30%'], y: ['65%', '48%', '65%'] }, duration: 22 },
 ];
 
-// Dark mode: the existing subtler ambient glow, kept gently animated rather
-// than static.
+// Dark mode: deep navy with rich blue and turquoise ambient glow — kept
+// entirely within that family so the AI copilot's violet accent (see
+// .ai-surface in index.css) stays visually distinct from the app's own
+// background atmosphere.
 const DARK_BLOBS: Blob[] = [
-  { color: 'rgba(34,211,238,0.09)', size: 700, start: { x: '10%', y: '-15%' }, drift: { x: ['10%', '20%', '10%'], y: ['-15%', '-5%', '-15%'] }, duration: 34 },
-  { color: 'rgba(59,130,246,0.08)', size: 620, start: { x: '85%', y: '0%' }, drift: { x: ['85%', '70%', '85%'], y: ['0%', '15%', '0%'] }, duration: 38 },
-  { color: 'rgba(139,92,246,0.07)', size: 640, start: { x: '75%', y: '90%' }, drift: { x: ['75%', '60%', '75%'], y: ['90%', '78%', '90%'] }, duration: 30 },
-  { color: 'rgba(124,58,237,0.05)', size: 500, start: { x: '0%', y: '55%' }, drift: { x: ['0%', '12%', '0%'], y: ['55%', '42%', '55%'] }, duration: 28 },
+  { color: 'rgba(42,199,205,0.09)', size: 700, start: { x: '10%', y: '-15%' }, drift: { x: ['10%', '20%', '10%'], y: ['-15%', '-5%', '-15%'] }, duration: 34 },
+  { color: 'rgba(45,130,235,0.10)', size: 620, start: { x: '85%', y: '0%' }, drift: { x: ['85%', '70%', '85%'], y: ['0%', '15%', '0%'] }, duration: 38 },
+  { color: 'rgba(37,99,235,0.07)', size: 640, start: { x: '75%', y: '90%' }, drift: { x: ['75%', '60%', '75%'], y: ['90%', '78%', '90%'] }, duration: 30 },
+  { color: 'rgba(13,132,150,0.06)', size: 500, start: { x: '0%', y: '55%' }, drift: { x: ['0%', '12%', '0%'], y: ['55%', '42%', '55%'] }, duration: 28 },
 ];
 
 /**
- * Full-viewport animated backdrop, shared by every screen. Swaps blob count/
- * intensity/motion by theme rather than just color, per the design brief:
- * light mode is meant to read as visibly moving gradient blobs, dark mode as
- * a subtle ambient glow. Respects prefers-reduced-motion via the global CSS
- * rule (animation-duration is forced to ~0 there).
+ * Full-viewport animated backdrop, shared by every screen. Both themes read
+ * as subtle, slow-drifting ambient light rather than a decorative layer —
+ * light mode a soft turquoise/emerald wash over ivory, dark mode a rich
+ * blue/turquoise glow against deep navy.
+ *
+ * Reduced motion is handled explicitly via Framer's `useReducedMotion`,
+ * not the app's global CSS rule — that rule only forces CSS
+ * animation/transition durations to ~0, and has no effect on Framer
+ * Motion's `animate` prop, which drives its own loop outside CSS entirely.
  */
 export default function AnimatedBackground() {
   const { resolvedTheme } = useTheme();
+  const prefersReducedMotion = useReducedMotion();
   const blobs = resolvedTheme === 'light' ? LIGHT_BLOBS : DARK_BLOBS;
 
   return (
@@ -50,7 +58,7 @@ export default function AnimatedBackground() {
             top: blob.start.y,
             background: blob.color,
           }}
-          animate={{ left: blob.drift.x, top: blob.drift.y }}
+          animate={prefersReducedMotion ? undefined : { left: blob.drift.x, top: blob.drift.y }}
           transition={{ duration: blob.duration, repeat: Infinity, ease: 'easeInOut' }}
         />
       ))}

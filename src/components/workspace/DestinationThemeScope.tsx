@@ -1,9 +1,5 @@
-import type { CSSProperties, ReactNode } from 'react';
-import { detectDestinationTheme, getDestinationTheme, type DestinationTheme } from './destinationThemes';
-
-function resolveDestinationTheme(destination: string): DestinationTheme | null {
-  return getDestinationTheme(detectDestinationTheme(destination));
-}
+import type { ReactNode } from 'react';
+import { projectExperienceTokensToCss, useExperienceTokens } from '../../destinations';
 
 interface DestinationThemeScopeProps {
   destination: string;
@@ -11,32 +7,23 @@ interface DestinationThemeScopeProps {
 }
 
 /**
- * Scopes destination-themed accent colors to everything inside it, by
- * overriding a handful of CSS custom properties (--brand-300..600,
- * --accent-from/via/to) on this wrapper. Because CSS variables only
- * cascade downward, this can never leak out and affect the rest of the
- * site — Landing/SignIn/MyTrips/CreateTrip stay on the plain light/dark
- * theme regardless of what's set here. Falls through to a plain
- * passthrough div when the destination doesn't match a known theme (still
- * `h-full` so it doesn't disturb WorkspaceShell's flex layout).
+ * Scopes destination experience tokens to everything inside it, by
+ * overriding CSS custom properties (--brand-300..600, --accent-from/via/to,
+ * plus the --dest-* surface) on this wrapper. Because CSS variables only
+ * cascade downward, this can never leak out and affect the rest of the site
+ * — Landing/SignIn/MyTrips/CreateTrip stay on the plain light/dark theme
+ * regardless of what's set here.
+ *
+ * Reads tokens only — never `DestinationProfile` — via `useExperienceTokens`,
+ * which already applies the theming policy (see policy.ts) and falls back
+ * to the app's default tokens on its own, so this component never has to
+ * branch on "is there a theme or not."
  */
 export default function DestinationThemeScope({ destination, children }: DestinationThemeScopeProps) {
-  const theme = resolveDestinationTheme(destination);
-
-  const style: CSSProperties | undefined = theme
-    ? ({
-        '--brand-300': theme.brand[300],
-        '--brand-400': theme.brand[400],
-        '--brand-500': theme.brand[500],
-        '--brand-600': theme.brand[600],
-        '--accent-from': theme.accent.from,
-        '--accent-via': theme.accent.via,
-        '--accent-to': theme.accent.to,
-      } as CSSProperties)
-    : undefined;
+  const { tokens, origin } = useExperienceTokens(destination);
 
   return (
-    <div className="h-full" style={style} data-destination-theme={theme?.id ?? 'default'}>
+    <div className="h-full" style={projectExperienceTokensToCss(tokens)} data-destination-theme={origin}>
       {children}
     </div>
   );

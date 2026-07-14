@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  DndContext, DragOverlay, PointerSensor, useSensor, useSensors, useDroppable,
+  DndContext, DragOverlay, KeyboardSensor, PointerSensor, useSensor, useSensors, useDroppable,
   type DragEndEvent, type DragStartEvent,
 } from '@dnd-kit/core';
-import { arrayMove } from '@dnd-kit/sortable';
+import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import {
   AlertTriangle, Calendar, CheckCircle2, Clock, FlaskConical, Gauge, List as ListIcon,
   Loader2, Map as MapIcon, MapPin, Pencil, RefreshCw, Save, CalendarDays, Users,
@@ -16,12 +16,13 @@ import MapView from '../components/MapView';
 import AIChangeReview from '../components/AIChangeReview';
 import ActivityModal, { type ActivityModalData } from '../components/ActivityModal';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import EmptyState from '../components/EmptyState';
 import WorkspaceShell from '../components/workspace/WorkspaceShell';
 import DestinationThemeScope from '../components/workspace/DestinationThemeScope';
-import DestinationHeroBanner from '../components/workspace/DestinationHeroBanner';
+import DestinationHero from '../components/workspace/DestinationHero';
 import DestinationDivider from '../components/workspace/DestinationDivider';
-import { detectDestinationTheme, getDestinationTheme } from '../components/workspace/destinationThemes';
+import { useExperienceTokens } from '../destinations';
 import OverviewSection from '../components/workspace/OverviewSection';
 import FlightsSection from '../components/workspace/FlightsSection';
 import HotelsSection from '../components/workspace/HotelsSection';
@@ -132,8 +133,29 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
 
   const setTripSafe = useCallback((t: Trip) => setTrip(t), []);
   const editor = useActivityEditor(trip ?? ({} as Trip), setTripSafe, track);
+  const { tokens: destinationTokens, copy: destinationCopy, origin: destinationOrigin } =
+    useExperienceTokens(trip?.destination ?? '');
+  const moveDialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(moveDialogRef, !!moveActivityId);
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+  useEffect(() => {
+    if (!moveActivityId) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMoveActivityId(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [moveActivityId]);
+
+  // KeyboardSensor makes the drag handle itself operable via keyboard (Tab
+  // to it, Space to pick up, arrow keys to move, Space to drop, Escape to
+  // cancel) — reordering within a day and moving between days already had
+  // full keyboard-operable alternatives (the up/down chevrons and the
+  // "Move to day" button on each activity card), so this closes the last
+  // gap: using the same interaction model as a mouse user, not a secondary
+  // one.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   const load = useCallback(async () => {
     setLoadStatus('loading');
@@ -279,7 +301,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
 
   if (!trip) return null;
 
-  const destinationTheme = getDestinationTheme(detectDestinationTheme(trip.destination));
+  const showDestinationTheming = destinationOrigin === 'handcrafted';
   const dateRange = formatDateRange(trip.startDate, trip.endDate);
 
   const openAdd = (dayId: string) => setModal({ mode: 'add', activity: null, dayId });
@@ -323,7 +345,9 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
 
   const header = (
     <div className="space-y-4">
-      {destinationTheme && <DestinationHeroBanner theme={destinationTheme} destination={trip.destination} />}
+      {showDestinationTheming && (
+        <DestinationHero tokens={destinationTokens} copy={destinationCopy} destination={trip.destination} />
+      )}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
@@ -372,7 +396,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
         </div>
       )}
 
-      {destinationTheme && <DestinationDivider theme={destinationTheme} />}
+      {showDestinationTheming && <DestinationDivider tokens={destinationTokens} />}
     </div>
   );
 
@@ -508,6 +532,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
         onRevisionProposed={setReviewProposal}
         externalPrompt={copilotPrompt}
         onExternalPromptHandled={() => setCopilotPrompt(null)}
+        aiGreeting={showDestinationTheming ? destinationCopy.aiGreeting : undefined}
       >
         {sectionContent}
       </WorkspaceShell>
@@ -541,7 +566,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
       <ConfirmDialog
         isOpen={resetConfirm}
         title="Reset demo trip?"
-        message={resetError ?? "This will delete all your current demo edits and restore the original Tokyo itinerary. This cannot be undone."}
+        message={resetError ?? `This will delete all your current demo edits and restore the original ${trip.destination} itinerary. This cannot be undone.`}
         confirmLabel="Reset"
         destructive
         onConfirm={handleResetDemo}
@@ -552,7 +577,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
       {moveActivityId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-ink-950/60 backdrop-blur-sm" onClick={() => setMoveActivityId(null)} />
-          <div className="relative w-full max-w-sm card p-5 animate-scale-in" role="dialog" aria-modal="true" aria-labelledby="move-dialog-title">
+          <div ref={moveDialogRef} className="relative w-full max-w-sm card p-5 animate-scale-in" role="dialog" aria-modal="true" aria-labelledby="move-dialog-title">
             <h3 id="move-dialog-title" className="font-display text-base font-700 text-ink-900 mb-3">Move activity to</h3>
             <div className="space-y-2">
               {trip.days.map((d) => (

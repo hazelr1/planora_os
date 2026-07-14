@@ -11,6 +11,8 @@ interface CopilotDockProps {
   onExternalPromptHandled: () => void;
   /** Renders as a full-height mobile sheet instead of a resizable desktop column. */
   variant?: 'panel' | 'sheet';
+  /** Forwarded to AIAssistantPanel — see its own doc comment. */
+  aiGreeting?: string;
 }
 
 const MIN_WIDTH = 300;
@@ -26,7 +28,7 @@ const WIDTH_STORAGE_KEY = 'planora-copilot-width';
  * how many times the user collapses/expands or resizes the panel.
  */
 export default function CopilotDock({
-  trip, onRevisionProposed, externalPrompt, onExternalPromptHandled, variant = 'panel',
+  trip, onRevisionProposed, externalPrompt, onExternalPromptHandled, variant = 'panel', aiGreeting,
 }: CopilotDockProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [width, setWidth] = useState(() => {
@@ -60,6 +62,7 @@ export default function CopilotDock({
       onRevisionProposed={onRevisionProposed}
       externalPrompt={externalPrompt}
       onExternalPromptHandled={onExternalPromptHandled}
+      aiGreeting={aiGreeting}
     />
   );
 
