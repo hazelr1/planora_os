@@ -48,19 +48,19 @@ export default function ResetPassword({ onDone }: ResetPasswordProps) {
 
         <div className="card p-8">
           {success ? (
-            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-4 flex items-start gap-3 animate-scale-in" role="status">
-              <CheckCircle2 size={18} className="text-emerald-400 shrink-0 mt-0.5" />
+            <div className="rounded-xl bg-emerald-500/10 px-4 py-4 flex items-start gap-3 animate-scale-in" role="status">
+              <CheckCircle2 size={18} className="text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-semibold text-emerald-300">Password updated.</p>
-                <p className="text-sm text-emerald-300/80 mt-1">Taking you to your trips…</p>
+                <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Password updated.</p>
+                <p className="text-sm text-emerald-700 dark:text-emerald-300/80 mt-1">Taking you to your trips…</p>
               </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4" noValidate>
               {error && (
-                <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 flex items-start gap-2.5 animate-scale-in">
-                  <AlertCircle size={15} className="text-rose-400 shrink-0 mt-0.5" />
-                  <p className="text-sm text-rose-300">{error}</p>
+                <div className="rounded-xl bg-rose-500/10 px-4 py-3 flex items-start gap-2.5 animate-scale-in">
+                  <AlertCircle size={15} className="text-rose-700 dark:text-rose-400 shrink-0 mt-0.5" />
+                  <p className="text-sm text-rose-700 dark:text-rose-300">{error}</p>
                 </div>
               )}
 
@@ -98,11 +98,11 @@ export default function ResetPassword({ onDone }: ResetPasswordProps) {
                     autoComplete="new-password" disabled={loading}
                   />
                   {confirmPassword && confirmPassword === password && (
-                    <CheckCircle2 size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-400" />
+                    <CheckCircle2 size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-700 dark:text-emerald-400" />
                   )}
                 </div>
                 {confirmPassword && confirmPassword !== password && (
-                  <p className="mt-1 text-xs text-rose-400">Passwords do not match.</p>
+                  <p className="mt-1 text-xs text-rose-700 dark:text-rose-400">Passwords do not match.</p>
                 )}
               </div>
 

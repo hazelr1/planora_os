@@ -58,7 +58,7 @@ export default function ProactiveSuggestionBanner({ trip, onAskCopilot }: Proact
   if (!active) return null;
 
   return (
-    <div className="rounded-xl border border-violet-400/20 bg-violet-500/10 px-4 py-3 flex items-start gap-2.5" role="status">
+    <div className="rounded-xl bg-violet-500/10 px-4 py-3 flex items-start gap-2.5" role="status">
       <Sparkles size={16} className="text-violet-300 shrink-0 mt-0.5" />
       <div className="flex-1 min-w-0">
         <p className="text-sm text-violet-100 leading-relaxed">{active.message}</p>

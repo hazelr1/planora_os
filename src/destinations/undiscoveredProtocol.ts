@@ -20,7 +20,7 @@
  * signal is thinner.
  */
 
-import { lighten, mix } from './colorMath';
+import { buildDestinationGradients, lighten, mix } from './colorMath';
 import {
   ARCHITECTURE_LABEL, ARCHITECTURE_MOTIF, CLIMATE_LABEL, CLIMATE_PALETTE, CLIMATE_TEXTURE, CLIMATE_TRAVEL_INFO,
   CULTURE_LABEL, CULTURE_MOTION, CULTURE_VOICE, GEOGRAPHY_LABEL, GEOGRAPHY_MOTIF,
@@ -177,10 +177,7 @@ export function synthesizeDestinationProfile(destinationText: string, metadata: 
       secondary,
       accent: { from: brand400, via: secondary, to: brand600 },
     },
-    gradients: {
-      hero: `linear-gradient(120deg, rgb(${brand300}) 0%, rgb(${brand400}) 45%, rgb(${brand600}) 100%)`,
-      ambient: `linear-gradient(160deg, rgba(${brand400},0.12) 0%, rgba(${brand600},0.05) 100%)`,
-    },
+    gradients: buildDestinationGradients(brand300, brand400, brand600),
     imagery: {
       photographyStyle: metadata.photographyStyle ?? `${CLIMATE_LABEL[climate]}, drawn from ${name}'s own light`,
     },

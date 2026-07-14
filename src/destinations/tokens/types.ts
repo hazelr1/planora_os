@@ -29,7 +29,7 @@
  */
 
 import type { Transition } from 'framer-motion';
-import type { MotifStroke, RGBTriplet } from '../types';
+import type { DestinationIllustrationStyle, MotifStroke, RGBTriplet } from '../types';
 
 export interface ExperienceColorTokens {
   /** The primary identifiable hue — icon color, active states, most accent UI. */
@@ -96,4 +96,6 @@ export interface ExperienceTokens {
   iconTreatment: ExperienceIconTreatmentTokens;
   decorativeDensity: DensityToken;
   textureStyle: TextureStyleToken;
+  /** Drives how DestinationMotif colors/weights its line art — see illustration.paletteBias in ../types.ts. Previously authored but never mapped through to this consumption layer. */
+  illustrationPaletteBias: DestinationIllustrationStyle['paletteBias'];
 }

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&family=Bebas+Neue&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -131,14 +131,21 @@
   --shadow-glow: 0 0 28px -8px rgba(45,158,138,0.20);
   --shadow-glow-lg: 0 8px 32px -8px rgba(45,158,138,0.22), 0 0 48px -16px rgba(16,109,79,0.20);
 
-  /* Shifted one stop deeper than the dark-mode scale so the same class
-     names (e.g. text-violet-300) stay legible as dark-on-light instead of
-     pale-lavender-on-light. Translucent bg-/border- usages look correct at
-     either end since low-opacity tints are forgiving of exact hue. */
+  /* -100/-200/-300 are pulled from Tailwind's own -500/-600/-700 hues, not a
+     one-stop shift off the dark-mode scale — the previous one-stop shift
+     left them at 1.2–2.6:1 contrast against the light ivory background
+     (verified with the WCAG relative-luminance formula), i.e. still
+     effectively invisible, since every real usage of these three shades is
+     text (the AI Copilot's message bubbles, proposal summaries, "AI
+     reason" notes — see AIAssistantPanel.tsx/ActivityCard.tsx/
+     AIChangeReview.tsx), never a background wash. These three now measure
+     5.4–8.5:1. Translucent bg-/border- usages of the *other* shades are
+     unaffected and stay correct at either end since low-opacity tints are
+     forgiving of exact hue. */
   --violet-50: 245 240 255;
-  --violet-100: 232 220 255;
-  --violet-200: 216 195 255;
-  --violet-300: 167 139 250;
+  --violet-100: 124 58 237;
+  --violet-200: 109 40 217;
+  --violet-300: 91 33 182;
   --violet-400: 139 92 246;
   --violet-500: 124 58 237;
   --violet-600: 109 40 217;
@@ -174,7 +181,7 @@
     @apply hover:-translate-y-0.5 hover:shadow-card-hover hover:border-glass/[0.10];
   }
   .btn {
-    @apply relative inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-[250ms] ease-out disabled:opacity-50 disabled:pointer-events-none;
+    @apply relative inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-[250ms] ease-out disabled:opacity-50 disabled:pointer-events-none;
   }
   .btn-primary {
     @apply btn text-white shadow-soft hover:-translate-y-0.5 hover:shadow-glow-lg active:translate-y-0;
@@ -206,6 +213,22 @@
   .label {
     @apply block text-xs font-semibold uppercase tracking-wide text-ink-500 mb-1.5;
   }
+  /* Semantic text roles — reach for one of these instead of picking an
+     ink-NNN shade by feel, so hierarchy stays the same decision everywhere:
+     heading (primary), body (readable prose), muted (secondary/meta),
+     faint (tertiary — timestamps, disabled hints, icon accents). */
+  .text-heading {
+    @apply text-ink-900;
+  }
+  .text-body {
+    @apply text-ink-700;
+  }
+  .text-muted {
+    @apply text-ink-600;
+  }
+  .text-faint {
+    @apply text-ink-500;
+  }
   .chip {
     @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium;
   }
@@ -214,6 +237,17 @@
      font-display in the app gets a touch of editorial refinement for free. */
   .font-display {
     letter-spacing: -0.015em;
+  }
+  /* Editorial section label — a small tracked-caps word beside a hairline
+     rule, the "ABOUT THE TOUR ———" convention from travel-magazine layouts.
+     Used sparingly, only to introduce a genuinely new section on the
+     Landing page — never inside the Workspace's denser, functional screens. */
+  .section-eyebrow {
+    @apply flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.2em] text-ink-500;
+  }
+  .section-eyebrow::after {
+    content: '';
+    @apply h-px flex-1 bg-ink-400/25;
   }
 }
 
@@ -275,6 +309,60 @@
 }
 .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
 .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+/* ─── Destination theme scope overrides ────────────────────────────────────
+   DestinationThemeScope stamps `data-destination-theme` on a wrapper around
+   the entire Trip Workspace and projects the resolved ExperienceTokens onto
+   CSS custom properties there (see tokens/cssVariables.ts). Outside that
+   scope the --dest-* variables are simply unset, so every rule below falls
+   back to the app's normal, destination-agnostic values — Landing/MyTrips/
+   SignIn are untouched. Written outside any @layer so it always wins on
+   specificity regardless of Tailwind's own layer ordering, without needing
+   !important anywhere. This is deliberately the *only* place a destination
+   reaches into the app's base component styles — every other destination
+   surface (hero, divider, motif) is its own dedicated component. */
+[data-destination-theme] .card {
+  border-radius: var(--dest-radius, 1rem);
+  border-color: rgb(var(--glass) / var(--dest-glass-opacity, 0.06));
+  box-shadow: var(--dest-elevation-shadow, var(--shadow-card));
+  transition-duration: var(--dest-hover-duration, 400ms);
+}
+[data-destination-theme] .card-interactive:hover {
+  border-color: rgb(var(--glass) / calc(var(--dest-glass-opacity, 0.06) + 0.04));
+}
+[data-destination-theme] .btn {
+  transition-duration: var(--dest-hover-duration, 250ms);
+}
+[data-destination-theme] .animate-fade-in,
+[data-destination-theme] .animate-slide-up,
+[data-destination-theme] .animate-scale-in {
+  animation-duration: var(--dest-motion-duration, inherit);
+  animation-timing-function: var(--dest-motion-ease, inherit);
+}
+[data-destination-theme] .font-display {
+  letter-spacing: var(--dest-heading-tracking, -0.015em);
+}
+
+/* Faint, full-bleed atmosphere behind the Workspace's content column — an
+   ambient wash of the destination's palette plus its texture pattern, both
+   already computed as CSS variables. Absolutely positioned so it can never
+   affect layout or scroll height; opacity is kept in the token system's
+   lowest range on purpose (see texturePattern.ts's own comment on this). */
+.dest-ambient-backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--dest-ambient, none);
+  opacity: 0.5;
+}
+.dest-texture-backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--dest-texture-image, none);
+  background-repeat: repeat;
+  opacity: var(--dest-texture-opacity, 0);
+}
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 10px; height: 10px; }

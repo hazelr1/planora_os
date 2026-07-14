@@ -99,5 +99,6 @@ export function deriveExperienceTokens(profile: DestinationProfile): ExperienceT
     },
     decorativeDensity: deriveDecorativeDensity(profile.decorativeAssets.length),
     textureStyle: profile.texture.kind,
+    illustrationPaletteBias: profile.illustration.paletteBias,
   };
 }

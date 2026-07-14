@@ -141,7 +141,7 @@ export default function ActivityModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="absolute inset-0 bg-ink-950/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div ref={containerRef} className="relative w-full max-w-xl card max-h-[94vh] overflow-hidden flex flex-col rounded-t-2xl sm:rounded-2xl" role="dialog" aria-modal="true" aria-labelledby="activity-modal-title">
 
         {/* Header */}
@@ -167,7 +167,7 @@ export default function ActivityModal({
                 autoFocus={!focusNotes}
                 required
               />
-              {errors.title && <p className="text-xs text-rose-400 mt-1">{errors.title}</p>}
+              {errors.title && <p className="text-xs text-rose-700 dark:text-rose-400 mt-1">{errors.title}</p>}
             </div>
 
             {/* Description */}
@@ -282,7 +282,7 @@ export default function ActivityModal({
                             <button type="button" onClick={() => startEditNote(note)} className="rounded p-1 text-ink-500 hover:text-ink-800 hover:bg-glass/5 transition" aria-label="Edit note">
                               <Pencil size={11} />
                             </button>
-                            <button type="button" onClick={() => handleDeleteNote(note.id)} className="rounded p-1 text-ink-500 hover:text-rose-400 hover:bg-rose-500/10 transition" aria-label="Delete note">
+                            <button type="button" onClick={() => handleDeleteNote(note.id)} className="rounded p-1 text-ink-500 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 transition" aria-label="Delete note">
                               <Trash2 size={11} />
                             </button>
                           </div>

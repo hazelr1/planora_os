@@ -39,7 +39,7 @@ export default function OverviewSection({ trip, onAskCopilot, onNavigate }: Over
   return (
     <div className="space-y-5 max-w-4xl">
       {trip.isDemo && (
-        <div className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/20 px-2.5 py-1 text-xs font-700">
+        <div className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-300 px-2.5 py-1 text-xs font-700">
           <FlaskConical size={12} /> Demo Data
         </div>
       )}
@@ -73,14 +73,14 @@ export default function OverviewSection({ trip, onAskCopilot, onNavigate }: Over
           className={`card card-interactive p-5 text-left ${over ? 'border-rose-500/25' : ''}`}
         >
           <div className="flex items-center gap-2.5 mb-3">
-            <div className={`h-9 w-9 rounded-xl flex items-center justify-center ${over ? 'bg-rose-500/15 text-rose-400' : 'bg-brand-500/15 text-brand-300'}`}>
+            <div className={`h-9 w-9 rounded-xl flex items-center justify-center ${over ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400' : 'bg-brand-500/15 text-brand-300'}`}>
               <Wallet size={17} />
             </div>
             <h3 className="font-display text-base font-700 text-ink-900">Budget</h3>
             <ArrowRight size={14} className="text-ink-500 ml-auto" />
           </div>
           <p className="text-2xl font-800 font-display text-ink-900">{trip.currency} {total.toLocaleString()}</p>
-          <p className={`text-xs mt-1 ${over ? 'text-rose-400' : 'text-ink-600'}`}>
+          <p className={`text-xs mt-1 ${over ? 'text-rose-700 dark:text-rose-400' : 'text-ink-600'}`}>
             {over ? `${trip.currency} ${Math.abs(remaining).toLocaleString()} over budget` : `${trip.currency} ${remaining.toLocaleString()} remaining`}
           </p>
         </motion.button>
@@ -111,7 +111,7 @@ export default function OverviewSection({ trip, onAskCopilot, onNavigate }: Over
             <Sparkles size={15} className="text-violet-300" />
             <h3 className="font-display text-base font-700 text-ink-900">Up next</h3>
           </div>
-          <button onClick={() => onNavigate('days')} className="w-full text-left rounded-xl bg-ink-200/40 border border-glass/10 hover:border-glass/20 transition px-4 py-3">
+          <button onClick={() => onNavigate('days')} className="w-full text-left rounded-xl bg-ink-200/40 hover:bg-ink-300/50 transition px-4 py-3">
             <p className="text-xs text-ink-600">{nextDay.label} · {nextActivity.time}</p>
             <p className="text-sm font-600 text-ink-900 mt-0.5">{nextActivity.title}</p>
           </button>

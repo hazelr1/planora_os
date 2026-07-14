@@ -14,7 +14,10 @@
  */
 
 import type { CSSProperties } from 'react';
-import type { ElevationToken, ExperienceTokens, GlassIntensityToken, BorderStyleToken, SpacingMoodToken } from './types';
+import type {
+  ElevationToken, ExperienceTokens, GlassIntensityToken, BorderStyleToken, SpacingMoodToken, TypographyEmphasisToken,
+} from './types';
+import { getTextureBackgroundImage, getTextureOpacity } from './texturePattern';
 
 const ELEVATION_SHADOW: Record<ElevationToken, string> = {
   flat: 'none',
@@ -31,7 +34,35 @@ const BORDER_RADIUS: Record<BorderStyleToken, string> = { sharp: '0.5rem', soft:
 
 const SPACING_SCALE: Record<SpacingMoodToken, string> = { tight: '0.85', balanced: '1', generous: '1.2' };
 
+// Subtle, restrained heading variation — never a dramatic weight/tracking
+// swing, just enough that an "expressive" destination's headings feel a
+// touch more confident and a "quiet" one a touch more composed.
+const HEADING_TRACKING: Record<TypographyEmphasisToken, string> = {
+  quiet: '-0.02em',
+  balanced: '-0.015em',
+  expressive: '-0.008em',
+};
+const HEADING_WEIGHT: Record<TypographyEmphasisToken, string> = {
+  quiet: '600',
+  balanced: '700',
+  expressive: '700',
+};
+
+function easeToCss(transition: ExperienceTokens['motion']['transition']): string {
+  const ease = 'ease' in transition ? transition.ease : undefined;
+  if (Array.isArray(ease) && ease.length === 4) return `cubic-bezier(${ease.join(',')})`;
+  return 'cubic-bezier(0.16, 1, 0.3, 1)'; // matches the app's own default entrance easing
+}
+
+function durationMs(transition: ExperienceTokens['motion']['transition'], fallback: number): number {
+  const duration = 'duration' in transition ? transition.duration : undefined;
+  return typeof duration === 'number' ? duration * 1000 : fallback;
+}
+
 export function projectExperienceTokensToCss(tokens: ExperienceTokens): CSSProperties {
+  const entranceMs = durationMs(tokens.motion.transition, 500);
+  const textureImage = getTextureBackgroundImage(tokens.textureStyle);
+
   return {
     '--brand-300': tokens.colors.accentSoft,
     '--brand-400': tokens.colors.accent,
@@ -46,5 +77,14 @@ export function projectExperienceTokensToCss(tokens: ExperienceTokens): CSSPrope
     '--dest-glass-opacity': String(GLASS_OPACITY[tokens.glassIntensity]),
     '--dest-radius': BORDER_RADIUS[tokens.borderStyle],
     '--dest-spacing-scale': SPACING_SCALE[tokens.spacingMood],
+    '--dest-heading-tracking': HEADING_TRACKING[tokens.typographyEmphasis],
+    '--dest-heading-weight': HEADING_WEIGHT[tokens.typographyEmphasis],
+    '--dest-motion-duration': `${Math.round(entranceMs)}ms`,
+    // Hover/press feedback should always read as snappier than a full entrance, never as slow as one.
+    '--dest-hover-duration': `${Math.round(Math.min(420, Math.max(150, entranceMs * 0.55)))}ms`,
+    '--dest-motion-ease': easeToCss(tokens.motion.transition),
+    '--dest-stagger': `${Math.round(tokens.motion.staggerChildren * 1000)}ms`,
+    ...(textureImage ? { '--dest-texture-image': textureImage } : {}),
+    '--dest-texture-opacity': String(getTextureOpacity(tokens.glassIntensity)),
   } as CSSProperties;
 }

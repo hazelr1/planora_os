@@ -46,6 +46,14 @@ export interface DestinationAtmosphere {
   essence: string;
   /** An evocative editorial pull-quote — distinct from `essence`: essence is descriptive, quote is emotional. Shown large/italic in a destination hero. */
   quote: string;
+  /**
+   * Optional destination-flavored override for a loading moment (e.g. "Sketching your first morning in Kyoto…").
+   * Optional because most consumers are fine with copy.ts's generic, still-themed template built from `essence`/`name`
+   * — only worth authoring explicitly when a destination calls for something more specific than the template produces.
+   */
+  loadingMessage?: string;
+  /** Same reasoning as `loadingMessage`, for an empty day/section rather than a loading moment. */
+  emptyStateMessage?: string;
 }
 
 /**
@@ -210,11 +218,17 @@ export type GeographyTag =
 export type CultureTag =
   | 'minimalist' | 'festive' | 'artisanal' | 'opulent' | 'spiritual' | 'rustic' | 'cosmopolitan';
 
-export type DestinationOrigin = 'handcrafted' | 'generated';
+/**
+ * 'handcrafted' — matched against the registry, a human-authored benchmark experience.
+ * 'ai-generated' — synthesized on the spot by the AI Destination World Generator (see aiWorld.ts) from a live model
+ * call, then cached so the same destination never needs to be regenerated.
+ * 'undiscovered' — the deterministic, offline Undiscovered Protocol fallback (see undiscoveredProtocol.ts): shown
+ * instantly while an AI generation is in flight, and permanently if that generation fails or is unavailable.
+ */
+export type DestinationOrigin = 'handcrafted' | 'ai-generated' | 'undiscovered';
 
 export interface ResolvedDestinationExperience {
   profile: DestinationProfile;
-  /** 'handcrafted' when matched against the registry, 'generated' when synthesized by the Undiscovered Protocol. */
   origin: DestinationOrigin;
   /** Which alias/keyword triggered a handcrafted match — useful for debugging and for prioritizing what to hand-author next. */
   matchedOn?: string;

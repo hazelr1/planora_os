@@ -1,20 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-
-export type ThemeMode = 'light' | 'dark' | 'system';
-export type ResolvedTheme = 'light' | 'dark';
-
-interface ThemeContextValue {
-  /** The user's chosen preference — may be 'system'. */
-  mode: ThemeMode;
-  /** What's actually applied right now ('system' resolved to light/dark). */
-  resolvedTheme: ResolvedTheme;
-  setMode: (mode: ThemeMode) => void;
-  /** Cycles light -> dark -> system -> light. */
-  cycleMode: () => void;
-}
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { ThemeContext, type ThemeMode, type ResolvedTheme } from './useTheme';
 
 const STORAGE_KEY = 'planora-theme-mode';
-const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function systemPrefersDark(): boolean {
   return window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -58,10 +45,4 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
-}
-
-export function useTheme(): ThemeContextValue {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error('useTheme must be used within a ThemeProvider');
-  return ctx;
 }

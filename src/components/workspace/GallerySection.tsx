@@ -41,9 +41,9 @@ export default function GallerySection({ tripId }: { tripId: string }) {
         </div>
 
         {error && (
-          <div className="mt-3 rounded-lg bg-rose-500/10 border border-rose-500/20 px-3 py-2 flex items-start gap-2">
-            <AlertTriangle size={13} className="text-rose-400 mt-0.5 shrink-0" />
-            <p className="text-xs text-rose-300">{error}</p>
+          <div className="mt-3 rounded-lg bg-rose-500/10 px-3 py-2 flex items-start gap-2">
+            <AlertTriangle size={13} className="text-rose-700 dark:text-rose-400 mt-0.5 shrink-0" />
+            <p className="text-xs text-rose-700 dark:text-rose-300">{error}</p>
           </div>
         )}
       </div>
@@ -72,7 +72,7 @@ export default function GallerySection({ tripId }: { tripId: string }) {
                 <img src={f.url} alt="" className="h-full w-full object-cover" loading="lazy" />
                 <button
                   onClick={(e) => { e.stopPropagation(); void remove(f.path); }}
-                  className="absolute top-1.5 right-1.5 rounded-lg p-1.5 bg-ink-950/70 text-white opacity-0 group-hover:opacity-100 transition hover:bg-rose-500/80"
+                  className="absolute top-1.5 right-1.5 rounded-lg p-1.5 bg-black/70 text-white opacity-0 group-hover:opacity-100 transition hover:bg-rose-500/80"
                   aria-label="Delete photo"
                 >
                   <Trash2 size={13} />
@@ -87,7 +87,7 @@ export default function GallerySection({ tripId }: { tripId: string }) {
       <AnimatePresence>
         {preview && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

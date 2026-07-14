@@ -3,6 +3,16 @@ import { AlertTriangle, Bot, Loader2, Send, Sparkles, User, Zap } from 'lucide-r
 import type { AIRevisionProposal, CopilotMessage, CopilotReply, Trip } from '../types';
 import { supabase } from '../lib/supabase';
 
+/** The concierge's authored voice — sent to the server so the AI's actual replies (not just its one-time greeting) answer in this destination's character. See ExperienceCopy in src/destinations/copy.ts. */
+export interface DestinationVoiceBrief {
+  name: string;
+  essence: string;
+  mood: string[];
+  voiceTags: string[];
+  formality: number;
+  exuberance: number;
+}
+
 interface AIAssistantPanelProps {
   trip: Trip;
   onRevisionProposed: (proposal: AIRevisionProposal) => void;
@@ -11,6 +21,10 @@ interface AIAssistantPanelProps {
   onExternalPromptHandled?: () => void;
   /** The destination's authored concierge opener (see ExperienceCopy.aiGreeting) — shown once, before the first real message, only for a themed destination. */
   aiGreeting?: string;
+  /** Destination-flavored line shown while the model is thinking (see ExperienceCopy.loadingMessage). Falls back to a generic "Thinking…" when absent. */
+  loadingMessage?: string;
+  /** Forwarded to revise-itinerary so the concierge's actual replies carry the destination's voice, not just its greeting. */
+  destinationVoice?: DestinationVoiceBrief;
 }
 
 const SUGGESTION_CHIPS = [
@@ -56,7 +70,9 @@ function generateId(): string {
   return crypto.randomUUID();
 }
 
-export default function AIAssistantPanel({ trip, onRevisionProposed, externalPrompt, onExternalPromptHandled, aiGreeting }: AIAssistantPanelProps) {
+export default function AIAssistantPanel({
+  trip, onRevisionProposed, externalPrompt, onExternalPromptHandled, aiGreeting, loadingMessage, destinationVoice,
+}: AIAssistantPanelProps) {
   const [messages, setMessages] = useState<CopilotMessage[]>(() => loadHistory(trip.id));
   const [input, setInput] = useState('');
   const [status, setStatus] = useState<PanelStatus>('idle');
@@ -110,7 +126,19 @@ export default function AIAssistantPanel({ trip, onRevisionProposed, externalPro
             'Authorization': `Bearer ${session.access_token}`,
             'Apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
           },
-          body: JSON.stringify({ trip_id: trip.id, instruction: trimmed, conversation_history: conversationHistory }),
+          body: JSON.stringify({
+            trip_id: trip.id,
+            instruction: trimmed,
+            conversation_history: conversationHistory,
+            destination_voice: destinationVoice ? {
+              name: destinationVoice.name,
+              essence: destinationVoice.essence,
+              mood: destinationVoice.mood,
+              voice_tags: destinationVoice.voiceTags,
+              formality: destinationVoice.formality,
+              exuberance: destinationVoice.exuberance,
+            } : undefined,
+          }),
           signal: AbortSignal.timeout(60_000),
         },
       );
@@ -178,7 +206,7 @@ export default function AIAssistantPanel({ trip, onRevisionProposed, externalPro
   return (
     <div className="ai-surface p-5 flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-2.5 mb-4 shrink-0">
+      <div className="flex items-center gap-2.5 mb-5 shrink-0">
         <div className="h-9 w-9 rounded-xl ai-gradient flex items-center justify-center shrink-0 shadow-soft">
           <Bot className="text-white" size={18} />
         </div>
@@ -205,21 +233,21 @@ export default function AIAssistantPanel({ trip, onRevisionProposed, externalPro
               </div>
 
               {m.text && (
-                <div className={`rounded-xl px-3 py-2 text-xs leading-relaxed max-w-[85%] ${
+                <div className={`rounded-xl px-3.5 py-2.5 text-xs leading-relaxed max-w-[85%] ${
                   m.role === 'user'
-                    ? 'bg-brand-500/15 text-ink-800 border border-brand-400/20'
-                    : 'bg-violet-500/10 text-violet-100 border border-violet-400/20'
+                    ? 'bg-brand-500/15 text-ink-800'
+                    : 'bg-violet-500/10 text-violet-100'
                 }`}>
                   {m.text}
                 </div>
               )}
 
               {m.proposal && (
-                <div className="rounded-xl px-3 py-2.5 text-xs bg-violet-500/10 border border-violet-400/20 max-w-[85%] space-y-2">
+                <div className="rounded-xl px-3.5 py-3 text-xs bg-violet-500/10 max-w-[85%] space-y-2">
                   <p className="text-violet-100 leading-relaxed">{m.proposal.summary}</p>
                   <div className="flex items-center justify-between text-[10px] text-violet-200/80">
                     <span>{m.proposal.changes.length} change{m.proposal.changes.length === 1 ? '' : 's'} proposed</span>
-                    <span className={m.proposal.budget_difference > 0 ? 'text-rose-300' : m.proposal.budget_difference < 0 ? 'text-emerald-300' : ''}>
+                    <span className={m.proposal.budget_difference > 0 ? 'text-rose-700 dark:text-rose-300' : m.proposal.budget_difference < 0 ? 'text-emerald-700 dark:text-emerald-300' : ''}>
                       {m.proposal.budget_difference === 0
                         ? 'No budget change'
                         : `${m.proposal.budget_difference > 0 ? '+' : ''}${trip.currency} ${Math.round(m.proposal.budget_difference).toLocaleString()}`}
@@ -241,19 +269,19 @@ export default function AIAssistantPanel({ trip, onRevisionProposed, externalPro
 
       {/* Analyzing state */}
       {status === 'analyzing' && (
-        <div className="rounded-xl bg-violet-500/10 border border-violet-400/20 px-3.5 py-3 flex items-center gap-2.5 mb-4 shrink-0">
+        <div className="rounded-xl bg-violet-500/10 px-3.5 py-3 flex items-center gap-2.5 mb-4 shrink-0">
           <span className="typing-dots"><span /><span /><span /></span>
           <p className="text-xs text-violet-200 leading-relaxed font-medium">
-            Thinking…
+            {loadingMessage || 'Thinking…'}
           </p>
         </div>
       )}
 
       {/* Error state */}
       {status === 'error' && errorMessage && (
-        <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 px-3.5 py-3 flex items-start gap-2 mb-4 shrink-0">
-          <AlertTriangle size={14} className="text-rose-400 mt-0.5 shrink-0" />
-          <p className="text-xs text-rose-300 leading-relaxed whitespace-pre-line">{errorMessage}</p>
+        <div className="rounded-xl bg-rose-500/10 px-3.5 py-3 flex items-start gap-2 mb-4 shrink-0">
+          <AlertTriangle size={14} className="text-rose-700 dark:text-rose-400 mt-0.5 shrink-0" />
+          <p className="text-xs text-rose-700 dark:text-rose-300 leading-relaxed whitespace-pre-line">{errorMessage}</p>
         </div>
       )}
 
@@ -267,7 +295,7 @@ export default function AIAssistantPanel({ trip, onRevisionProposed, externalPro
           <div className="h-6 w-6 rounded-lg flex items-center justify-center shrink-0 ai-gradient text-white">
             <Sparkles size={12} />
           </div>
-          <div className="rounded-xl px-3 py-2 text-xs leading-relaxed max-w-[85%] bg-violet-500/10 text-violet-100 border border-violet-400/20">
+          <div className="rounded-xl px-3.5 py-2.5 text-xs leading-relaxed max-w-[85%] bg-violet-500/10 text-violet-100">
             {aiGreeting}
           </div>
         </div>
@@ -278,7 +306,7 @@ export default function AIAssistantPanel({ trip, onRevisionProposed, externalPro
         <div className="mb-3 shrink-0">
           <p className="text-xs font-semibold text-ink-600 uppercase tracking-wide mb-2">
             {trip.isDemo
-              ? <span className="flex items-center gap-1"><Zap size={11} className="text-amber-400" /> Quick requests</span>
+              ? <span className="flex items-center gap-1"><Zap size={11} className="text-amber-700 dark:text-amber-400" /> Quick requests</span>
               : 'Try asking'
             }
           </p>
@@ -288,10 +316,10 @@ export default function AIAssistantPanel({ trip, onRevisionProposed, externalPro
                 key={chip}
                 type="button"
                 onClick={() => handleChipClick(chip)}
-                className={`chip transition-colors border ${
+                className={`chip transition-colors ${
                   trip.isDemo
-                    ? 'bg-amber-500/10 text-amber-300 border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/30'
-                    : 'bg-ink-200/40 text-ink-600 border-glass/10 hover:bg-violet-500/10 hover:text-violet-200 hover:border-violet-400/20'
+                    ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20'
+                    : 'bg-ink-200/40 text-ink-600 hover:bg-violet-500/10 hover:text-violet-200'
                 }`}
               >
                 {chip}

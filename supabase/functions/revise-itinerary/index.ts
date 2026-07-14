@@ -66,6 +66,57 @@ interface ConversationTurn {
   content: string;
 }
 
+// ─── Destination voice ────────────────────────────────────────────────────────
+//
+// Lets the concierge's actual replies — not just its one-time greeting —
+// answer in the destination's authored character (see ExperienceCopy in
+// src/destinations/copy.ts, threaded down through AIAssistantPanel). This is
+// tone/register only: it's appended to the system prompt as an additional
+// instruction, never replacing any of the existing safety/accuracy rules
+// (no fake availability/prices, preserve locked activities, etc).
+
+interface DestinationVoice {
+  name: string;
+  essence: string;
+  mood: string[];
+  voice_tags: string[];
+  formality: number;
+  exuberance: number;
+}
+
+function sanitizeVoice(raw: unknown): DestinationVoice | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const name = typeof r.name === "string" ? r.name.trim().slice(0, 80) : "";
+  if (!name) return null;
+  return {
+    name,
+    essence: typeof r.essence === "string" ? r.essence.trim().slice(0, 220) : "",
+    mood: Array.isArray(r.mood) ? r.mood.filter((m) => typeof m === "string").slice(0, 6) : [],
+    voice_tags: Array.isArray(r.voice_tags) ? r.voice_tags.filter((v) => typeof v === "string").slice(0, 4) : [],
+    formality: typeof r.formality === "number" && Number.isFinite(r.formality) ? Math.min(1, Math.max(0, r.formality)) : 0.5,
+    exuberance: typeof r.exuberance === "number" && Number.isFinite(r.exuberance) ? Math.min(1, Math.max(0, r.exuberance)) : 0.45,
+  };
+}
+
+function describeRegister(value: number, low: string, mid: string, high: string): string {
+  if (value < 0.35) return low;
+  if (value < 0.65) return mid;
+  return high;
+}
+
+function buildVoiceInstruction(voice: DestinationVoice): string {
+  const formalityWord = describeRegister(voice.formality, "casual and relaxed", "friendly and approachable", "polished and formal");
+  const exuberanceWord = describeRegister(voice.exuberance, "calm and understated", "warm and engaged", "energetic and enthusiastic");
+  const traits = voice.voice_tags.length ? voice.voice_tags.join(", ") : "warm, curious";
+  const moodClause = voice.mood.length ? ` The trip's mood is ${voice.mood.join(", ")}.` : "";
+  return (
+    ` This trip is to ${voice.name}. Answer in a voice that is ${traits} — ${formalityWord}, ${exuberanceWord}.${moodClause}` +
+    ` ${voice.essence ? `Keep in mind: ${voice.essence}.` : ""}` +
+    " Let this voice color your wording and phrasing naturally — a passing local expression or a specific, real cultural detail is welcome where it fits — but never let tone override accuracy, safety, or any of the rules above."
+  );
+}
+
 // ─── Proposal types (match the contract with the frontend) ───────────────────
 
 interface ActivitySnapshot {
@@ -278,6 +329,7 @@ async function callOpenAI(
   history: ConversationTurn[],
   instruction: string,
   apiKey: string,
+  voice: DestinationVoice | null,
 ): Promise<CopilotModelReply> {
   const messages = [
     {
@@ -288,7 +340,8 @@ async function callOpenAI(
         "Answer questions helpfully and concisely using the trip's destination and dates for context. " +
         "For itinerary modification requests, propose the smallest necessary changes. Preserve locked activities exactly. " +
         "Do not claim confirmed availability, live prices, or opening hours. All costs are estimates. Explain every proposed change clearly. " +
-        "If a constraint cannot be satisfied, state it clearly in the constraints list. Return only structured data matching the required schema.",
+        "If a constraint cannot be satisfied, state it clearly in the constraints list. Return only structured data matching the required schema." +
+        (voice ? buildVoiceInstruction(voice) : ""),
     },
     { role: "user", content: `ITINERARY CONTEXT:\n${context}` },
     { role: "assistant", content: "Understood. I have the current itinerary. What would you like?" },
@@ -361,7 +414,7 @@ Deno.serve(async (req: Request) => {
     const { data: { user }, error: authErr } = await supabase.auth.getUser();
     if (authErr || !user) return jsonRes({ error: "Authentication required." }, 401);
 
-    let body: { trip_id?: string; instruction?: string; conversation_history?: ConversationTurn[] };
+    let body: { trip_id?: string; instruction?: string; conversation_history?: ConversationTurn[]; destination_voice?: unknown };
     try {
       body = await req.json();
     } catch {
@@ -372,6 +425,8 @@ Deno.serve(async (req: Request) => {
     if (!trip_id?.trim()) return jsonRes({ error: "trip_id is required." }, 400);
     if (!instruction?.trim()) return jsonRes({ error: "instruction is required." }, 400);
     if (instruction.length > 1000) return jsonRes({ error: "Instruction must be 1000 characters or fewer." }, 400);
+
+    const voice = sanitizeVoice(body.destination_voice);
 
     // Cap history to the last 10 turns so the prompt doesn't grow unbounded
     // over a long copilot session.
@@ -449,7 +504,7 @@ Deno.serve(async (req: Request) => {
 
     let modelReply: CopilotModelReply;
     try {
-      modelReply = await callOpenAI(context, history, instruction.trim(), apiKey);
+      modelReply = await callOpenAI(context, history, instruction.trim(), apiKey, voice);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "UNKNOWN";
       console.error("[revise-itinerary] OpenAI error:", msg);

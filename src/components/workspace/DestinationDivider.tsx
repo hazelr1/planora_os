@@ -6,7 +6,13 @@ export default function DestinationDivider({ tokens }: { tokens: ExperienceToken
   return (
     <div className="flex items-center gap-3 my-5 text-brand-400" aria-hidden="true">
       <div className="h-px flex-1 bg-current opacity-20" />
-      <DestinationMotif strokes={tokens.iconTreatment.motif} className="h-5 w-10 opacity-60" />
+      <DestinationMotif
+        strokes={tokens.iconTreatment.motif}
+        strokeWeight={tokens.iconTreatment.strokeWeight}
+        paletteBias={tokens.illustrationPaletteBias}
+        secondaryColor={tokens.colors.secondary}
+        className="h-5 w-10 opacity-60"
+      />
       <div className="h-px flex-1 bg-current opacity-20" />
     </div>
   );

@@ -1,6 +1,9 @@
+import { useEffect, useState } from 'react';
 import { MapPin, Calendar, Wallet, Users, Copy, Trash2, ArrowRight, Clock, Pencil } from 'lucide-react';
 import type { Trip } from '../types';
 import { formatDateRange, formatLastUpdated } from '../utils/dates';
+import { useExperienceTokens } from '../destinations';
+import { getDestinationPhotoUrl } from '../services/destinationImages';
 
 interface TripCardProps {
   trip: Trip;
@@ -11,35 +14,59 @@ interface TripCardProps {
 }
 
 const statusStyles: Record<string, string> = {
-  Planning: 'bg-amber-500/15 text-amber-300 border border-amber-500/20',
-  Confirmed: 'bg-brand-500/15 text-brand-300 border border-brand-400/20',
-  Completed: 'bg-glass/5 text-ink-600 border border-glass/10',
+  Planning: 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
+  Confirmed: 'bg-brand-500/15 text-brand-300',
+  Completed: 'bg-glass/5 text-ink-600',
 };
 
 export default function TripCard({ trip, onOpen, onEdit, onDuplicate, onDelete }: TripCardProps) {
+  const { tokens } = useExperienceTokens(trip.destination);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setPhotoUrl(null);
+    getDestinationPhotoUrl(trip.destination).then((url) => {
+      if (!cancelled) setPhotoUrl(url);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [trip.destination]);
+
   return (
-    <div className="card card-interactive overflow-hidden flex flex-col">
-      <div className="h-1.5 bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500" />
+    <div className="card card-interactive overflow-hidden rounded-[28px] flex flex-col">
+      <div className="relative aspect-[16/9] shrink-0 overflow-hidden">
+        {/* Procedural gradient — renders immediately, no loading flash. The
+            permanent fallback if no photo ever resolves, not a placeholder. */}
+        <div className="absolute inset-0" style={{ backgroundImage: tokens.gradients.hero }} />
+        {/* Real photo, cross-faded on top once/if one resolves. */}
+        {photoUrl && (
+          <img
+            src={photoUrl}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover animate-fade-in"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+        <span className={`chip absolute right-3 top-3 ${statusStyles[trip.status] ?? statusStyles.Planning}`}>
+          {trip.status}
+        </span>
+        <div className="absolute inset-x-3 bottom-3 flex items-center gap-1.5 rounded-full bg-black/40 backdrop-blur-sm px-3 py-1.5 w-fit max-w-[calc(100%-1.5rem)]">
+          <MapPin size={13} className="shrink-0 text-white" />
+          <span className="text-sm font-medium text-white truncate">{trip.destination}</span>
+        </div>
+      </div>
       <div className="p-5 flex flex-col flex-1">
         <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <h3 className="font-display text-lg font-700 text-ink-900 truncate">{trip.title}</h3>
-            <p className="text-sm text-ink-600 flex items-center gap-1.5 mt-1">
-              <MapPin size={13} className="shrink-0" /> {trip.destination}
-            </p>
-          </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className={`chip ${statusStyles[trip.status] ?? statusStyles.Planning}`}>
-              {trip.status}
-            </span>
-            <button
-              onClick={onEdit}
-              className="rounded-lg p-1.5 text-ink-500 hover:text-ink-800 hover:bg-glass/5 transition"
-              aria-label={`Edit ${trip.title}`}
-            >
-              <Pencil size={14} />
-            </button>
-          </div>
+          <h3 className="font-display text-lg font-700 text-ink-900 truncate min-w-0">{trip.title}</h3>
+          <button
+            onClick={onEdit}
+            className="rounded-full p-1.5 text-ink-500 hover:text-ink-800 hover:bg-glass/5 transition shrink-0"
+            aria-label={`Edit ${trip.title}`}
+          >
+            <Pencil size={14} />
+          </button>
         </div>
 
         <div className="mt-4 space-y-2 text-sm text-ink-600">
@@ -62,15 +89,15 @@ export default function TripCard({ trip, onOpen, onEdit, onDuplicate, onDelete }
         {trip.interests.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-1">
             {trip.interests.slice(0, 4).map((i) => (
-              <span key={i} className="chip bg-glass/5 text-ink-600 text-[10px] border border-glass/10">{i}</span>
+              <span key={i} className="chip bg-glass/5 text-ink-600 text-[10px]">{i}</span>
             ))}
             {trip.interests.length > 4 && (
-              <span className="chip bg-glass/5 text-ink-500 text-[10px] border border-glass/10">+{trip.interests.length - 4}</span>
+              <span className="chip bg-glass/5 text-ink-500 text-[10px]">+{trip.interests.length - 4}</span>
             )}
           </div>
         )}
 
-        <div className="mt-auto pt-3 mt-3 border-t border-glass/10 flex items-center gap-1 text-xs text-ink-500">
+        <div className="mt-auto pt-3 border-t border-glass/10 flex items-center gap-1 text-xs text-ink-500">
           <Clock size={11} />
           <span>Updated {formatLastUpdated(trip.lastUpdated)}</span>
         </div>
@@ -84,7 +111,7 @@ export default function TripCard({ trip, onOpen, onEdit, onDuplicate, onDelete }
           </button>
           <button
             onClick={onDelete}
-            className="btn-outline px-3 text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/30"
+            className="btn-outline px-3 text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/30"
             aria-label={`Delete ${trip.title}`}
           >
             <Trash2 size={15} />

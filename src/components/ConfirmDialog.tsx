@@ -45,7 +45,7 @@ export default function ConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-ink-950/60 backdrop-blur-sm" onClick={onCancel} />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
       <div ref={containerRef} className="relative w-full max-w-sm card p-6 animate-scale-in" role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
         <button
           onClick={onCancel}
@@ -54,7 +54,7 @@ export default function ConfirmDialog({
           <X size={16} />
         </button>
         <div className="flex items-start gap-3">
-          <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${destructive ? 'bg-rose-500/15 text-rose-400' : 'bg-amber-500/15 text-amber-400'}`}>
+          <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${destructive ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400' : 'bg-amber-500/15 text-amber-700 dark:text-amber-400'}`}>
             <AlertTriangle size={18} />
           </div>
           <div className="min-w-0">

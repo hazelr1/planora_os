@@ -237,11 +237,11 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
               </p>
 
               {forgotSent ? (
-                <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-4 flex items-start gap-3 animate-scale-in" role="status">
-                  <CheckCircle2 size={18} className="text-emerald-400 shrink-0 mt-0.5" />
+                <div className="rounded-xl bg-emerald-500/10 px-4 py-4 flex items-start gap-3 animate-scale-in" role="status">
+                  <CheckCircle2 size={18} className="text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-semibold text-emerald-300">Check your inbox.</p>
-                    <p className="text-sm text-emerald-300/80 mt-1 leading-relaxed">
+                    <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Check your inbox.</p>
+                    <p className="text-sm text-emerald-700 dark:text-emerald-300/80 mt-1 leading-relaxed">
                       If an account exists for {forgotEmail.trim()}, we've sent a link to reset your password.
                     </p>
                   </div>
@@ -249,9 +249,9 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
               ) : (
                 <form onSubmit={handleForgotPassword} className="space-y-4" noValidate>
                   {forgotError && (
-                    <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 flex items-start gap-2.5 animate-scale-in">
-                      <AlertCircle size={15} className="text-rose-400 shrink-0 mt-0.5" />
-                      <p className="text-sm text-rose-300">{forgotError}</p>
+                    <div className="rounded-xl bg-rose-500/10 px-4 py-3 flex items-start gap-2.5 animate-scale-in">
+                      <AlertCircle size={15} className="text-rose-700 dark:text-rose-400 shrink-0 mt-0.5" />
+                      <p className="text-sm text-rose-700 dark:text-rose-300">{forgotError}</p>
                     </div>
                   )}
                   <Field
@@ -286,11 +286,11 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
               </button>
             </div>
           ) : signUpSuccess ? (
-            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-4 flex items-start gap-3 animate-scale-in" role="status">
-              <CheckCircle2 size={18} className="text-emerald-400 shrink-0 mt-0.5" />
+            <div className="rounded-xl bg-emerald-500/10 px-4 py-4 flex items-start gap-3 animate-scale-in" role="status">
+              <CheckCircle2 size={18} className="text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-semibold text-emerald-300">Account created successfully.</p>
-                <p className="text-sm text-emerald-300/80 mt-1 leading-relaxed">
+                <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Account created successfully.</p>
+                <p className="text-sm text-emerald-700 dark:text-emerald-300/80 mt-1 leading-relaxed">
                   Please verify your email using the link sent to your inbox before signing in.
                 </p>
               </div>
@@ -316,9 +316,9 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
 
               {/* Error banner */}
               {error && (
-                <div className="mb-5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 flex items-start gap-2.5 animate-scale-in">
-                  <AlertCircle size={15} className="text-rose-400 shrink-0 mt-0.5" />
-                  <p className="text-sm text-rose-300">{error}</p>
+                <div className="mb-5 rounded-xl bg-rose-500/10 px-4 py-3 flex items-start gap-2.5 animate-scale-in">
+                  <AlertCircle size={15} className="text-rose-700 dark:text-rose-400 shrink-0 mt-0.5" />
+                  <p className="text-sm text-rose-700 dark:text-rose-300">{error}</p>
                 </div>
               )}
 
@@ -353,7 +353,7 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
               >
                 {loadingSignIn ? (
                   <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 rounded-full border-2 border-ink-950/30 border-t-ink-950 animate-spin" />
+                    <span className="h-4 w-4 rounded-full border-2 border-black/30 border-t-black animate-spin" />
                     Signing in…
                   </span>
                 ) : (
@@ -404,11 +404,11 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
                     disabled={loadingSignUp}
                   />
                   {signUpForm.confirmPassword && signUpForm.confirmPassword === signUpForm.password && (
-                    <CheckCircle2 size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-400" />
+                    <CheckCircle2 size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-700 dark:text-emerald-400" />
                   )}
                 </div>
                 {signUpForm.confirmPassword && signUpForm.confirmPassword !== signUpForm.password && (
-                  <p className="mt-1 text-xs text-rose-400">Passwords do not match.</p>
+                  <p className="mt-1 text-xs text-rose-700 dark:text-rose-400">Passwords do not match.</p>
                 )}
               </div>
               <button
@@ -418,7 +418,7 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
               >
                 {loadingSignUp ? (
                   <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 rounded-full border-2 border-ink-950/30 border-t-ink-950 animate-spin" />
+                    <span className="h-4 w-4 rounded-full border-2 border-black/30 border-t-black animate-spin" />
                     Creating account…
                   </span>
                 ) : (

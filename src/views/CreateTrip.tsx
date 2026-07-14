@@ -142,13 +142,13 @@ export default function CreateTrip({ onNavigate, onCreate }: CreateTripProps) {
 
       {/* Error state */}
       {status === 'error' && errorMessage && (
-        <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 mb-5 flex items-start gap-2.5">
-          <AlertTriangle size={16} className="text-rose-400 mt-0.5 shrink-0" />
+        <div className="rounded-xl bg-rose-500/10 px-4 py-3 mb-5 flex items-start gap-2.5">
+          <AlertTriangle size={16} className="text-rose-700 dark:text-rose-400 mt-0.5 shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-rose-300 font-medium whitespace-pre-line">{errorMessage}</p>
+            <p className="text-sm text-rose-700 dark:text-rose-300 font-medium whitespace-pre-line">{errorMessage}</p>
             <button
               onClick={handleRetry}
-              className="text-sm text-rose-300 underline underline-offset-2 hover:no-underline mt-1"
+              className="text-sm text-rose-700 dark:text-rose-300 underline underline-offset-2 hover:no-underline mt-1"
             >
               Try again
             </button>
@@ -158,9 +158,9 @@ export default function CreateTrip({ onNavigate, onCreate }: CreateTripProps) {
 
       {/* Partial-save warnings (non-blocking) */}
       {warnings.length > 0 && (
-        <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 mb-5">
-          <p className="text-sm text-amber-300 font-medium mb-1">Some items could not be saved:</p>
-          <ul className="text-sm text-amber-300/80 space-y-0.5 list-disc list-inside">
+        <div className="rounded-xl bg-amber-500/10 px-4 py-3 mb-5">
+          <p className="text-sm text-amber-700 dark:text-amber-300 font-medium mb-1">Some items could not be saved:</p>
+          <ul className="text-sm text-amber-700 dark:text-amber-300/80 space-y-0.5 list-disc list-inside">
             {warnings.map((w, i) => <li key={i}>{w}</li>)}
           </ul>
         </div>

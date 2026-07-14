@@ -40,7 +40,7 @@ export default function PackingSection({ trip }: { trip: Trip }) {
           </button>
         </div>
 
-        {error && <p className="text-sm text-rose-400 mb-3">{error}</p>}
+        {error && <p className="text-sm text-rose-700 dark:text-rose-400 mb-3">{error}</p>}
 
         {data?.packingChecklist.length ? (
           <ul className="space-y-2">

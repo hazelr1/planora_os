@@ -4,20 +4,16 @@ import type { ResolvedDestinationExperience } from './types';
  * Single source of truth for whether a resolved experience should currently
  * be applied to the live UI.
  *
- * The Undiscovered Protocol (see undiscoveredProtocol.ts) is fully
- * implemented and produces real, usable profiles today — but switching
- * every unmatched destination over to a generated theme is a visual change
- * across most existing trips (anything outside the six hand-authored
- * destinations), and deciding how that should look is a design decision,
- * not an architecture one. This flag keeps that decision explicit and in
- * one place rather than duplicated across every consumer.
- *
- * Flipping this to `true` is the entire cutover — no component changes
- * required, because every consumer already calls
- * `shouldApplyDestinationExperience` instead of checking `origin` itself.
+ * Every trip now gets its destination's atmosphere, regardless of origin:
+ * a hand-authored benchmark, an AI-generated world, or the deterministic
+ * Undiscovered Protocol fallback all produce a complete, intentional
+ * `DestinationProfile` (see aiWorld.ts and undiscoveredProtocol.ts) — there
+ * is no "lesser" tier to gate behind a flag anymore. This function stays as
+ * the single seam every consumer calls (instead of checking `origin`
+ * itself) in case a future, genuinely different policy need shows up —
+ * e.g. a user-level "reduce destination theming" preference.
  */
-export const APPLY_GENERATED_THEMES = false;
-
-export function shouldApplyDestinationExperience(experience: ResolvedDestinationExperience): boolean {
-  return experience.origin === 'handcrafted' || APPLY_GENERATED_THEMES;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept as the stable seam signature; see doc comment above.
+export function shouldApplyDestinationExperience(_experience: ResolvedDestinationExperience): boolean {
+  return true;
 }

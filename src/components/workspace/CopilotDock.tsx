@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Bot, PanelRightClose } from 'lucide-react';
 import type { AIRevisionProposal, Trip } from '../../types';
-import AIAssistantPanel from '../AIAssistantPanel';
+import AIAssistantPanel, { type DestinationVoiceBrief } from '../AIAssistantPanel';
 
 interface CopilotDockProps {
   trip: Trip;
@@ -13,6 +13,10 @@ interface CopilotDockProps {
   variant?: 'panel' | 'sheet';
   /** Forwarded to AIAssistantPanel — see its own doc comment. */
   aiGreeting?: string;
+  /** Forwarded to AIAssistantPanel — see its own doc comment. */
+  loadingMessage?: string;
+  /** Forwarded to AIAssistantPanel — see its own doc comment. */
+  destinationVoice?: DestinationVoiceBrief;
 }
 
 const MIN_WIDTH = 300;
@@ -29,6 +33,7 @@ const WIDTH_STORAGE_KEY = 'planora-copilot-width';
  */
 export default function CopilotDock({
   trip, onRevisionProposed, externalPrompt, onExternalPromptHandled, variant = 'panel', aiGreeting,
+  loadingMessage, destinationVoice,
 }: CopilotDockProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [width, setWidth] = useState(() => {
@@ -63,6 +68,8 @@ export default function CopilotDock({
       externalPrompt={externalPrompt}
       onExternalPromptHandled={onExternalPromptHandled}
       aiGreeting={aiGreeting}
+      loadingMessage={loadingMessage}
+      destinationVoice={destinationVoice}
     />
   );
 

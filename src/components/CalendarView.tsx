@@ -49,7 +49,7 @@ export default function CalendarView({
             {/* Date badge */}
             <div className="shrink-0 w-16 text-center pt-1">
               <div className="rounded-xl border border-glass/10 bg-ink-200/40 overflow-hidden">
-                <div className="bg-brand-500 text-ink-950 text-[10px] font-700 uppercase py-1">{badge.weekday}</div>
+                <div className="bg-brand-500 text-black text-[10px] font-700 uppercase py-1">{badge.weekday}</div>
                 <div className="py-1.5">
                   <p className="font-display text-xl font-800 text-ink-900 leading-none">{badge.day}</p>
                   <p className="text-[10px] text-ink-600 mt-0.5">{badge.month}</p>
@@ -68,7 +68,7 @@ export default function CalendarView({
                   </span>
                 )}
                 {conflicts.size > 0 && (
-                  <span className="chip bg-rose-500/15 text-rose-300 border border-rose-500/30 text-[10px]">
+                  <span className="chip bg-rose-500/15 text-rose-700 dark:text-rose-300 text-[10px]">
                     {conflicts.size} time conflict{conflicts.size === 1 ? '' : 's'}
                   </span>
                 )}

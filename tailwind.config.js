@@ -26,6 +26,10 @@ export default {
         // sans that reads as "generic SaaS." Used for headings and large
         // numerals only, never body copy.
         display: ['Fraunces', 'Georgia', 'ui-serif', 'serif'],
+        // Condensed display face reserved for oversized hero-scale wordmark
+        // moments (text-6xl+) sitting directly over a photo — a distinct
+        // register from Fraunces, not a replacement for it.
+        wordmark: ['Bebas Neue', 'Fraunces', 'ui-serif', 'serif'],
       },
       // Numeric font-weight utilities. Extends (never replaces) Tailwind's
       // named scale — font-medium/font-semibold/font-normal keep working —

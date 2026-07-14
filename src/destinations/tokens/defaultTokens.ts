@@ -46,4 +46,5 @@ export const DEFAULT_EXPERIENCE_TOKENS: ExperienceTokens = {
   iconTreatment: { motif: [], strokeWeight: 'regular', cornerStyle: 'soft' },
   decorativeDensity: 'minimal',
   textureStyle: 'none',
+  illustrationPaletteBias: 'muted',
 };

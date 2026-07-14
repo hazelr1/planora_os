@@ -1,15 +1,47 @@
 import { useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Sparkles, MapPin, Calendar, Wallet, Bot, ArrowRight, Check, Loader2 } from 'lucide-react';
 import type { Screen } from '../types';
+import StatTrio from '../components/StatTrio';
 
 interface LandingProps {
   onNavigate: (screen: Screen) => void;
   onTryDemo: () => Promise<void>;
 }
 
+/**
+ * Placeholder stock photography — see public/image/. Every filename here is
+ * deliberately named for what it depicts, not where it's used, so dropping
+ * in a real photo later is a straight file swap with no code changes.
+ */
+const HERO_IMAGE = '/image/landing-hero.jpg';
+const SHOWCASE = [
+  { name: 'Santorini', region: 'Greece', essence: 'Whitewashed cliffs above a caldera sea.', image: '/image/destination-santorini.jpg' },
+  { name: 'Kyoto', region: 'Japan', essence: 'Temple bells and quiet backstreets.', image: '/image/destination-kyoto.jpg' },
+  { name: 'Marrakech', region: 'Morocco', essence: 'Zellige tile and saffron-lit souks.', image: '/image/destination-marrakech.jpg' },
+  { name: 'Reykjavik', region: 'Iceland', essence: 'Glacial light over volcanic coastline.', image: '/image/destination-iceland.jpg' },
+];
+
+// Alternating tilt per card in the overlapping showcase cluster — a fixed,
+// hand-tuned sequence (not randomized) so the fan reads as designed, not
+// accidental, and stays identical on every render/reload.
+const SHOWCASE_TILT = ['-rotate-2', 'rotate-3', '-rotate-3', 'rotate-2'];
+
+const HERO_STATS: [{ value: string; label: string }, { value: string; label: string }, { value: string; label: string }] = [
+  { value: '50K+', label: 'trips planned' },
+  { value: '180+', label: 'destinations' },
+  { value: '12 min', label: 'avg. planning time' },
+];
+
+const revealUp = {
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0 },
+};
+
 export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
   const [demoLoading, setDemoLoading] = useState(false);
   const [demoError, setDemoError] = useState<string | null>(null);
+  const prefersReducedMotion = useReducedMotion();
 
   const handleTryDemo = async () => {
     setDemoLoading(true);
@@ -22,95 +54,184 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
     }
   };
 
+  const revealProps = prefersReducedMotion
+    ? {}
+    : { initial: 'hidden', whileInView: 'show', viewport: { once: true, margin: '-80px' } };
+
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex flex-col">
-      {/* Hero */}
-      <section className="flex-1 flex items-center justify-center">
-        <div className="max-w-3xl mx-auto text-center px-4 py-24 sm:py-28">
-          <div className="inline-flex items-center gap-2 chip bg-brand-500/10 border border-brand-400/20 mb-9 animate-fade-in">
+    <div className="flex flex-col">
+      {/* ─── Hero — full-bleed cinematic photography, editorial type over a scrim ─── */}
+      <section className="relative -mx-4 -mt-6 overflow-hidden sm:-mx-6 sm:-mt-8">
+        <div className="absolute inset-0">
+          <img src={HERO_IMAGE} alt="" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-transparent" />
+        </div>
+
+        <div className="relative flex min-h-[78vh] flex-col items-center justify-end px-4 pb-28 pt-24 text-center sm:min-h-[85vh] sm:pb-36">
+          <div className="inline-flex items-center gap-2 chip bg-white/10 text-white mb-8 animate-fade-in backdrop-blur-sm">
             <Sparkles size={13} className="text-violet-300" />
-            <span className="ai-shimmer font-semibold">AI-powered travel planner</span>
+            <span className="font-semibold">AI-powered travel planner</span>
           </div>
-          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-800 text-ink-900 leading-[1.12] tracking-tight animate-slide-up">
-            Your trip plan should<br />
-            <span className="text-brand-400">change when you do.</span>
+          <h1 className="font-display max-w-4xl text-5xl leading-[0.98] tracking-tight text-white animate-slide-up sm:text-7xl lg:text-8xl">
+            <span className="block font-500 text-white/80">Your trip plan</span>
+            <span className="font-wordmark block text-7xl uppercase leading-[0.82] tracking-wide text-white sm:text-9xl lg:text-[9.5rem]">
+              Changes
+            </span>
+            <span className="block font-700 text-3xl sm:text-5xl">when you do.</span>
           </h1>
-          <p className="mt-7 text-lg sm:text-xl text-ink-600 leading-relaxed max-w-2xl mx-auto animate-slide-up" style={{ animationDelay: '80ms' }}>
+          <p className="mx-auto mt-7 max-w-xl text-lg text-white/75 leading-relaxed animate-slide-up sm:text-xl" style={{ animationDelay: '80ms' }}>
             Generate a personalized itinerary, edit every detail, and let AI adapt it around your budget, time, and travel style.
           </p>
-          <div className="mt-11 flex flex-col sm:flex-row items-center justify-center gap-3 animate-slide-up" style={{ animationDelay: '140ms' }}>
-            <button
-              onClick={() => onNavigate({ name: 'create' })}
-              className="btn-primary text-base px-6 py-3 w-full sm:w-auto shadow-soft"
-            >
-              Start Planning <ArrowRight size={16} />
-            </button>
-            <button
-              onClick={handleTryDemo}
-              disabled={demoLoading}
-              className="btn-outline text-base px-6 py-3 w-full sm:w-auto min-w-[140px]"
-            >
-              {demoLoading
-                ? <><Loader2 size={15} className="animate-spin" /> Preparing…</>
-                : 'Try Demo'
-              }
-            </button>
+        </div>
+
+        {/* Floating glass panel — bridges the hero photograph and the page
+            content below it, so the CTA reads as its own elevated surface
+            rather than another row of hero copy. */}
+        <motion.div
+          className="card relative z-10 mx-4 -mt-16 max-w-2xl p-6 shadow-pop animate-scale-in sm:mx-auto sm:p-8"
+          style={{ animationDelay: '160ms' }}
+        >
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <button
+                onClick={() => onNavigate({ name: 'create' })}
+                className="btn-primary text-base px-6 py-3 w-full sm:w-auto"
+              >
+                Start Planning <ArrowRight size={16} />
+              </button>
+              <button
+                onClick={handleTryDemo}
+                disabled={demoLoading}
+                className="btn-outline text-base px-6 py-3 w-full sm:w-auto min-w-[140px]"
+              >
+                {demoLoading
+                  ? <><Loader2 size={15} className="animate-spin" /> Preparing…</>
+                  : 'Try Demo'
+                }
+              </button>
+            </div>
+            <div className="flex flex-col items-center gap-2 text-xs text-ink-500 sm:items-end">
+              {['No account required', 'Free to explore', 'Edit every detail'].map((text) => (
+                <span key={text} className="flex items-center gap-1.5">
+                  <Check size={12} className="text-brand-400 shrink-0" /> {text}
+                </span>
+              ))}
+            </div>
           </div>
           {demoError && (
-            <p className="mt-4 text-sm text-rose-400">{demoError}</p>
+            <p className="mt-4 text-center text-sm text-rose-700 dark:text-rose-400">{demoError}</p>
           )}
-          <div className="mt-8 flex items-center justify-center gap-6 text-xs text-ink-500">
-            {['No account required', 'Free to explore', 'Edit every detail'].map((text) => (
-              <span key={text} className="flex items-center gap-1.5">
-                <Check size={12} className="text-brand-400" /> {text}
-              </span>
-            ))}
+          <div className="mt-6 flex justify-center border-t border-glass/10 pt-5 sm:justify-start">
+            <StatTrio stats={HERO_STATS} />
           </div>
-        </div>
+        </motion.div>
       </section>
 
-      {/* Feature section */}
-      <section className="pb-24">
-        <div className="max-w-5xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="font-display text-2xl sm:text-3xl font-700 text-ink-900 tracking-tight">Everything your trip needs</h2>
-            <p className="text-ink-600 mt-3">All in one place, built to flex with your plans.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            <Feature icon={<MapPin size={20} />} title="Smart destinations" desc="Organize trips by city, region, or multi-stop route." />
-            <Feature icon={<Calendar size={20} />} title="Day-by-day plans" desc="Activities with times, durations, locations, and costs." />
-            <Feature icon={<Wallet size={20} />} title="Budget tracking" desc="Live estimated totals and remaining budget per trip." />
-            <Feature icon={<Bot size={20} />} title="AI replanning" desc="Ask the assistant to reshape your trip in seconds." />
-          </div>
+      {/* ─── Destination showcase ─── */}
+      <section className="pt-20 pb-24 sm:pt-24">
+        <div className="section-eyebrow mb-8">A world of destinations</div>
+        <motion.h2
+          {...revealProps}
+          variants={revealUp}
+          className="font-display max-w-lg text-3xl font-700 leading-[1.1] tracking-tight text-ink-900 sm:text-4xl"
+        >
+          Every destination gets its own atmosphere.
+        </motion.h2>
+        <motion.p
+          {...revealProps}
+          variants={revealUp}
+          transition={{ delay: 0.05 }}
+          className="mt-4 max-w-md text-ink-600 leading-relaxed"
+        >
+          Open a trip and Planora composes its palette, motion, and voice from the place itself — never a generic template.
+        </motion.p>
 
-          <div className="mt-14 rounded-2xl bg-gradient-to-r from-brand-500/15 via-blue-500/10 to-violet-500/15 border border-brand-400/20 p-8 sm:p-10 text-center backdrop-blur-2xl shadow-glow">
-            <p className="font-display text-xl sm:text-2xl font-700 leading-snug text-ink-900">
-              "The AI travel planner that adapts with you."
-            </p>
-            <p className="mt-3 text-brand-300/80 text-sm">
-              Build your perfect itinerary, then ask AI to make it better.
-            </p>
-            <button
-              onClick={() => onNavigate({ name: 'create' })}
-              className="btn-primary mt-7 text-sm px-6 py-2.5 mx-auto"
+        <motion.div
+          {...revealProps}
+          transition={{ staggerChildren: 0.08, delayChildren: 0.1 }}
+          className="mt-14 flex flex-nowrap gap-0 overflow-x-auto px-1 pb-6 pt-2 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 sm:pb-2"
+        >
+          {SHOWCASE.map((d, i) => (
+            <motion.div
+              key={d.name}
+              variants={revealUp}
+              style={{ zIndex: i + 1 }}
+              className={`card group relative aspect-[4/5] w-48 shrink-0 overflow-hidden p-0 shadow-pop transition-all duration-300 ease-out hover:z-20 hover:-translate-y-3 hover:rotate-0 hover:shadow-glow-lg sm:w-56 ${i > 0 ? '-ml-12 sm:-ml-16' : ''} ${SHOWCASE_TILT[i % SHOWCASE_TILT.length]}`}
             >
-              Plan your next trip <ArrowRight size={15} />
-            </button>
-          </div>
-        </div>
+              <img
+                src={d.image}
+                alt={`${d.name}, ${d.region}`}
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-[600ms] ease-out group-hover:scale-[1.06]"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+              <div className="relative flex h-full flex-col justify-end p-4">
+                <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/70">{d.region}</p>
+                <p className="font-display mt-1 text-xl font-600 text-white">{d.name}</p>
+                <p className="mt-1.5 text-[11px] leading-relaxed text-white/75 line-clamp-2">{d.essence}</p>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </section>
+
+      {/* ─── Feature section ─── */}
+      <section className="pb-28">
+        <div className="section-eyebrow mb-8">Everything your trip needs</div>
+        <motion.h2
+          {...revealProps}
+          variants={revealUp}
+          className="font-display max-w-lg text-3xl font-700 leading-[1.1] tracking-tight text-ink-900 sm:text-4xl"
+        >
+          All in one place, built to flex with your plans.
+        </motion.h2>
+
+        <motion.div
+          {...revealProps}
+          transition={{ staggerChildren: 0.08, delayChildren: 0.1 }}
+          className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
+        >
+          <Feature icon={<MapPin size={20} />} title="Smart destinations" desc="Organize trips by city, region, or multi-stop route." offset />
+          <Feature icon={<Calendar size={20} />} title="Day-by-day plans" desc="Activities with times, durations, locations, and costs." />
+          <Feature icon={<Wallet size={20} />} title="Budget tracking" desc="Live estimated totals and remaining budget per trip." offset />
+          <Feature icon={<Bot size={20} />} title="AI replanning" desc="Ask the assistant to reshape your trip in seconds." />
+        </motion.div>
+
+        <motion.div
+          {...revealProps}
+          variants={revealUp}
+          transition={{ delay: 0.15 }}
+          className="relative mt-16 overflow-hidden rounded-[28px] bg-gradient-to-br from-brand-500/15 via-blue-500/10 to-violet-500/15 p-10 text-center shadow-glow sm:p-14"
+        >
+          <p className="font-display mx-auto max-w-xl text-2xl font-700 leading-snug text-ink-900 sm:text-3xl">
+            &ldquo;The AI travel planner that adapts with you.&rdquo;
+          </p>
+          <p className="mt-4 text-sm text-brand-300/80">
+            Build your perfect itinerary, then ask AI to make it better.
+          </p>
+          <button
+            onClick={() => onNavigate({ name: 'create' })}
+            className="btn-primary mt-8 text-sm px-6 py-2.5 mx-auto"
+          >
+            Plan your next trip <ArrowRight size={15} />
+          </button>
+        </motion.div>
       </section>
     </div>
   );
 }
 
-function Feature({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
+function Feature({ icon, title, desc, offset }: { icon: React.ReactNode; title: string; desc: string; offset?: boolean }) {
   return (
-    <div className="card card-interactive p-6">
+    <motion.div
+      variants={revealUp}
+      className={`card card-interactive p-6 ${offset ? 'sm:mt-6' : ''}`}
+    >
       <div className="h-11 w-11 rounded-xl bg-brand-500/10 text-brand-300 flex items-center justify-center mb-4">
         {icon}
       </div>
       <h3 className="font-display text-sm font-700 text-ink-900">{title}</h3>
       <p className="text-xs text-ink-600 mt-2 leading-relaxed">{desc}</p>
-    </div>
+    </motion.div>
   );
 }

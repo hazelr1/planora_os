@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { PACES, INTERESTS, CURRENCIES } from '../lib/mockData';
-import type { Interest, TravelPace, Trip } from '../types';
+import type { Interest, TravelPace } from '../types';
 
 export interface TripFormValues {
   destination: string;
@@ -84,7 +84,7 @@ export default function TripForm({ onSubmit, onCancel, submitLabel = 'Generate I
       </div>
 
       {dateError && (
-        <p className="text-xs text-rose-400 -mt-4">{dateError}</p>
+        <p className="text-xs text-rose-700 dark:text-rose-400 -mt-4">{dateError}</p>
       )}
 
       <div className="grid grid-cols-2 gap-4">
@@ -107,16 +107,16 @@ export default function TripForm({ onSubmit, onCancel, submitLabel = 'Generate I
 
       <div>
         <span className="label">Travel pace</span>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="flex flex-wrap gap-2">
           {PACES.map((p) => (
             <button
               key={p}
               type="button"
               onClick={() => setPace(p)}
-              className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${
+              className={`chip border px-4 py-2 text-sm font-semibold transition ${
                 pace === p
-                  ? 'border-brand-500/60 bg-brand-500/15 text-brand-300'
-                  : 'border-glass/10 bg-ink-200/40 text-ink-600 hover:bg-ink-300/60'
+                  ? 'bg-brand-500 text-black border-brand-500'
+                  : 'bg-ink-200/40 text-ink-600 border-glass/10 hover:bg-ink-300/60'
               }`}
             >
               {p}
@@ -137,7 +137,7 @@ export default function TripForm({ onSubmit, onCancel, submitLabel = 'Generate I
                 onClick={() => toggleInterest(i)}
                 className={`chip border transition ${
                   active
-                    ? 'bg-brand-500 text-ink-950 border-brand-500'
+                    ? 'bg-brand-500 text-black border-brand-500'
                     : 'bg-ink-200/40 text-ink-600 border-glass/10 hover:bg-ink-300/60'
                 }`}
               >
@@ -159,43 +159,4 @@ export default function TripForm({ onSubmit, onCancel, submitLabel = 'Generate I
       </div>
     </form>
   );
-}
-
-export function formValuesToTrip(values: TripFormValues, id: string): Trip {
-  const start = new Date(values.startDate + 'T00:00:00');
-  const end = new Date(values.endDate + 'T00:00:00');
-  const days: Trip['days'] = [];
-  const cursor = new Date(start);
-  let dayNum = 1;
-  while (cursor <= end) {
-    const dayId = `${id}-day-${dayNum}`;
-    days.push({
-      id: dayId,
-      tripId: id,
-      label: `Day ${dayNum}`,
-      date: cursor.toISOString().slice(0, 10),
-      theme: '',
-      summary: '',
-      activities: [],
-    });
-    cursor.setDate(cursor.getDate() + 1);
-    dayNum++;
-  }
-  return {
-    id,
-    title: values.destination,
-    destination: values.destination,
-    startDate: values.startDate,
-    endDate: values.endDate,
-    budget: values.budget,
-    currency: values.currency,
-    travelers: values.travelers,
-    pace: values.pace,
-    interests: values.interests,
-    specialRequests: values.specialRequests,
-    status: 'Planning',
-    lastUpdated: new Date().toISOString(),
-    isDemo: false,
-    days,
-  };
 }

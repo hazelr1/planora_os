@@ -6,6 +6,7 @@ import type { WorkspaceSectionId } from './types';
 import WorkspaceSidebar from './WorkspaceSidebar';
 import MobileWorkspaceNav from './MobileWorkspaceNav';
 import CopilotDock from './CopilotDock';
+import type { DestinationVoiceBrief } from '../AIAssistantPanel';
 
 interface WorkspaceShellProps {
   trip: Trip;
@@ -18,11 +19,15 @@ interface WorkspaceShellProps {
   onExternalPromptHandled: () => void;
   /** Forwarded to CopilotDock/AIAssistantPanel — see AIAssistantPanel's own doc comment. */
   aiGreeting?: string;
+  /** Forwarded to CopilotDock/AIAssistantPanel — see AIAssistantPanel's own doc comment. */
+  loadingMessage?: string;
+  /** Forwarded to CopilotDock/AIAssistantPanel — see AIAssistantPanel's own doc comment. */
+  destinationVoice?: DestinationVoiceBrief;
 }
 
 export default function WorkspaceShell({
   trip, activeSection, onSelectSection, header, children,
-  onRevisionProposed, externalPrompt, onExternalPromptHandled, aiGreeting,
+  onRevisionProposed, externalPrompt, onExternalPromptHandled, aiGreeting, loadingMessage, destinationVoice,
 }: WorkspaceShellProps) {
   const [mobileCopilotOpen, setMobileCopilotOpen] = useState(false);
 
@@ -40,10 +45,21 @@ export default function WorkspaceShell({
 
       {/* Center panel — its own independent scroll region */}
       <div className="flex-1 min-w-0 h-full overflow-y-auto pb-20 md:pb-0">
-        <div className="px-4 sm:px-6 py-5">
-          {header}
-          <div className="mt-5">
-            {children}
+        {/* `relative` lives on the content wrapper itself (not the scroll
+            viewport above) so the backdrop's `inset:0` sizes to the full
+            scrollable content height and scrolls with it, instead of being
+            pinned to just the first screenful. Faint destination atmosphere
+            behind the content — see .dest-ambient-backdrop and
+            .dest-texture-backdrop in index.css. Both resolve to `none`
+            outside a themed trip, so this is a no-op everywhere else. */}
+        <div className="relative px-5 sm:px-8 py-6 sm:py-8">
+          <div className="dest-ambient-backdrop z-0" aria-hidden="true" />
+          <div className="dest-texture-backdrop z-0" aria-hidden="true" />
+          <div className="relative z-10">
+            {header}
+            <div className="mt-6">
+              {children}
+            </div>
           </div>
         </div>
       </div>
@@ -56,6 +72,8 @@ export default function WorkspaceShell({
           externalPrompt={externalPrompt}
           onExternalPromptHandled={onExternalPromptHandled}
           aiGreeting={aiGreeting}
+          loadingMessage={loadingMessage}
+          destinationVoice={destinationVoice}
         />
       </div>
 
@@ -83,7 +101,7 @@ export default function WorkspaceShell({
         style={{ pointerEvents: mobileCopilotOpen ? 'auto' : 'none' }}
         aria-hidden={!mobileCopilotOpen}
       >
-        <div className="absolute inset-0 bg-ink-950/70 backdrop-blur-sm" onClick={() => setMobileCopilotOpen(false)} />
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setMobileCopilotOpen(false)} />
         <motion.div
           className="relative w-full max-h-[85vh] h-[85vh] rounded-t-2xl overflow-hidden bg-ink-50 border-t border-glass/10 flex flex-col"
           animate={{ y: mobileCopilotOpen ? 0 : '100%' }}
@@ -107,6 +125,8 @@ export default function WorkspaceShell({
               externalPrompt={externalPrompt}
               onExternalPromptHandled={onExternalPromptHandled}
               aiGreeting={aiGreeting}
+              loadingMessage={loadingMessage}
+              destinationVoice={destinationVoice}
             />
           </div>
         </motion.div>

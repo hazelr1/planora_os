@@ -51,9 +51,9 @@ export default function DocumentsSection({ tripId }: { tripId: string }) {
         </button>
 
         {error && (
-          <div className="mt-3 rounded-lg bg-rose-500/10 border border-rose-500/20 px-3 py-2 flex items-start gap-2">
-            <AlertTriangle size={13} className="text-rose-400 mt-0.5 shrink-0" />
-            <p className="text-xs text-rose-300">{error}</p>
+          <div className="mt-3 rounded-lg bg-rose-500/10 px-3 py-2 flex items-start gap-2">
+            <AlertTriangle size={13} className="text-rose-700 dark:text-rose-400 mt-0.5 shrink-0" />
+            <p className="text-xs text-rose-700 dark:text-rose-300">{error}</p>
           </div>
         )}
       </div>
@@ -75,7 +75,7 @@ export default function DocumentsSection({ tripId }: { tripId: string }) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="flex items-center gap-3 rounded-xl border border-glass/10 bg-ink-200/40 px-4 py-3"
+                  className="flex items-center gap-3 rounded-xl bg-ink-200/40 px-4 py-3"
                 >
                   <FileText size={16} className="text-brand-300 shrink-0" />
                   <div className="min-w-0 flex-1">
@@ -93,7 +93,7 @@ export default function DocumentsSection({ tripId }: { tripId: string }) {
                   </a>
                   <button
                     onClick={() => void remove(f.path)}
-                    className="rounded-lg p-2 text-ink-500 hover:text-rose-400 hover:bg-rose-500/10 transition shrink-0"
+                    className="rounded-lg p-2 text-ink-500 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 transition shrink-0"
                     aria-label={`Delete ${displayName(f.name)}`}
                   >
                     <Trash2 size={15} />

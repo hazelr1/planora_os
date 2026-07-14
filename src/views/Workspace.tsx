@@ -57,8 +57,8 @@ function SaveBar({ status, errorMessage, retry }: { status: string; errorMessage
   return (
     <div className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
       status === 'saving' ? 'bg-brand-500/10 text-brand-300' :
-      status === 'saved' ? 'bg-emerald-500/10 text-emerald-300' :
-      'bg-rose-500/10 text-rose-300'
+      status === 'saved' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' :
+      'bg-rose-500/10 text-rose-700 dark:text-rose-300'
     }`}>
       {status === 'saving' && <Loader2 size={12} className="animate-spin" />}
       {status === 'saved' && <Save size={12} />}
@@ -90,12 +90,12 @@ function DayTabButton({
     <button
       ref={setNodeRef}
       onClick={onClick}
-      className={`shrink-0 rounded-xl px-4 py-2 text-sm font-600 transition ${
+      className={`shrink-0 rounded-full px-4 py-2 text-sm font-600 transition ${
         isActive
-          ? 'bg-brand-500 text-ink-950 shadow-soft'
+          ? 'bg-brand-500 text-black shadow-soft'
           : isOver
           ? 'bg-brand-500/20 border border-brand-400/40 text-brand-200'
-          : 'bg-ink-200/60 border border-glass/10 text-ink-600 hover:bg-ink-300/60'
+          : 'bg-ink-200/60 text-ink-600 hover:bg-ink-300/60'
       }`}
     >
       {day.label}
@@ -290,7 +290,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
     return (
       <div className="p-6">
         <div className="card p-12 text-center">
-          <AlertTriangle size={24} className="text-rose-400 mx-auto mb-3" />
+          <AlertTriangle size={24} className="text-rose-700 dark:text-rose-400 mx-auto mb-3" />
           <p className="text-base font-600 text-ink-800 mb-1">Could not load this trip</p>
           <p className="text-sm text-ink-600 mb-6">Please check your connection and try again.</p>
           <button onClick={load} className="btn-primary">Retry</button>
@@ -301,7 +301,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
 
   if (!trip) return null;
 
-  const showDestinationTheming = destinationOrigin === 'handcrafted';
+  const showDestinationTheming = destinationOrigin !== 'default';
   const dateRange = formatDateRange(trip.startDate, trip.endDate);
 
   const openAdd = (dayId: string) => setModal({ mode: 'add', activity: null, dayId });
@@ -353,7 +353,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="font-display text-2xl font-800 text-ink-900">{trip.title}</h1>
             {trip.isDemo && (
-              <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/20 px-2 py-0.5 text-xs font-700">
+              <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-300 px-2 py-0.5 text-xs font-700">
                 <FlaskConical size={11} /> Demo Data
               </span>
             )}
@@ -390,9 +390,9 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
       </div>
 
       {showAppliedBanner && (
-        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 flex items-center gap-2.5" role="status">
-          <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
-          <p className="text-sm text-emerald-300 font-medium">Changes applied. Your itinerary has been updated.</p>
+        <div className="rounded-xl bg-emerald-500/10 px-4 py-3 flex items-center gap-2.5" role="status">
+          <CheckCircle2 size={16} className="text-emerald-700 dark:text-emerald-400 shrink-0" />
+          <p className="text-sm text-emerald-700 dark:text-emerald-300 font-medium">Changes applied. Your itinerary has been updated.</p>
         </div>
       )}
 
@@ -443,7 +443,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
               <button
                 key={id}
                 onClick={() => setViewMode(id)}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-600 transition shrink-0 ${
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-600 transition shrink-0 ${
                   viewMode === id ? 'bg-ink-300/80 text-ink-900 shadow-soft' : 'text-ink-500 hover:text-ink-700'
                 }`}
               >
@@ -478,10 +478,12 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
                 onToggleLock={editor.toggleLock}
                 selectedActivityId={selectedActivityId}
                 onSelectActivity={setSelectedActivityId}
+                emptyStateDescription={showDestinationTheming ? destinationCopy.emptyStateMessage : undefined}
+                staggerMs={showDestinationTheming ? destinationTokens.motion.staggerChildren * 1000 : undefined}
               />
               <DragOverlay>
                 {draggedActivity ? (
-                  <div className="rounded-xl border border-brand-400/40 bg-ink-200 px-4 py-3 shadow-pop text-sm font-600 text-ink-900">
+                  <div className="rounded-xl bg-ink-200 px-4 py-3 shadow-pop text-sm font-600 text-ink-900">
                     {draggedActivity.title}
                   </div>
                 ) : null}
@@ -533,6 +535,15 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
         externalPrompt={copilotPrompt}
         onExternalPromptHandled={() => setCopilotPrompt(null)}
         aiGreeting={showDestinationTheming ? destinationCopy.aiGreeting : undefined}
+        loadingMessage={showDestinationTheming ? destinationCopy.loadingMessage : undefined}
+        destinationVoice={showDestinationTheming ? {
+          name: destinationCopy.name,
+          essence: destinationCopy.essence,
+          mood: destinationCopy.mood,
+          voiceTags: destinationCopy.voiceTags,
+          formality: destinationCopy.formality,
+          exuberance: destinationCopy.exuberance,
+        } : undefined}
       >
         {sectionContent}
       </WorkspaceShell>
@@ -576,7 +587,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
       {/* Move to day picker */}
       {moveActivityId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-ink-950/60 backdrop-blur-sm" onClick={() => setMoveActivityId(null)} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMoveActivityId(null)} />
           <div ref={moveDialogRef} className="relative w-full max-w-sm card p-5 animate-scale-in" role="dialog" aria-modal="true" aria-labelledby="move-dialog-title">
             <h3 id="move-dialog-title" className="font-display text-base font-700 text-ink-900 mb-3">Move activity to</h3>
             <div className="space-y-2">

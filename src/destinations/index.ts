@@ -43,12 +43,18 @@ export type {
 export { DESTINATION_REGISTRY } from './registry';
 export { matchRegisteredProfile } from './match';
 export { resolveDestinationExperience } from './resolve';
-export { APPLY_GENERATED_THEMES, shouldApplyDestinationExperience } from './policy';
+export { shouldApplyDestinationExperience } from './policy';
 export { MOTION_PRESETS, getMotionPreset } from './motionPresets';
 export type { MotionPresetDefinition } from './motionPresets';
 export { inferMetadataFromFreeText, keywordInferenceStrategy } from './inference';
 export type { MetadataInferenceStrategy } from './inference';
 export { synthesizeDestinationProfile } from './undiscoveredProtocol';
+
+export {
+  sanitizeAiInsights, synthesizeAiDestinationProfile, requestAiDestinationWorld,
+  normalizeDestinationKey, getCachedAiProfile, setCachedAiProfile,
+} from './aiWorld';
+export type { AiDestinationInsights } from './aiWorld';
 
 export { deriveExperienceCopy, DEFAULT_EXPERIENCE_COPY } from './copy';
 export type { ExperienceCopy } from './copy';

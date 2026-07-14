@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { CloudSun, Sun } from 'lucide-react';
 import type { ExperienceCopy, ExperienceTokens } from '../../destinations';
 import { getTextureBackgroundImage, getTextureOpacity } from '../../destinations';
+import { getDestinationPhotoUrl } from '../../services/destinationImages';
 import DestinationMotif from './DestinationMotif';
 
 interface DestinationHeroProps {
@@ -16,13 +18,16 @@ interface DestinationHeroProps {
  * meant to be the "you have already arrived" moment the brief asks for,
  * not a decorative accent.
  *
- * There are no photo assets anywhere in this app (confirmed by audit), so
- * "stunning destination imagery" is composed entirely from tokens: the
- * gradient scene, a large watermark of the destination's own motif, a
- * slow-drifting ambient glow whose pace comes from `tokens.motion` (so
- * Santorini's glow moves differently than Dubai's, without either being
- * hardcoded here), and a barely-there texture overlay. Every value drawn
- * from `tokens`/`copy` — this component has no idea Santorini exists.
+ * The base scene is composed entirely from tokens — a gradient, a large
+ * watermark of the destination's own motif, a slow-drifting ambient glow
+ * whose pace comes from `tokens.motion` (so Santorini's glow moves
+ * differently than Dubai's, without either being hardcoded here), and a
+ * barely-there texture overlay — and renders immediately with no loading
+ * flash. A real photo (see services/destinationImages.ts) is a progressive
+ * enhancement layered on top once/if one resolves; the gradient scene is the
+ * permanent fallback, never an error state. Every value drawn from
+ * `tokens`/`copy`/`destination` — this component has no idea Santorini
+ * exists.
  *
  * The destination *name* renders as a styled `<p>`, not an `<h1>` — the
  * page's one `<h1>` is the trip's own title in Workspace.tsx just below.
@@ -33,6 +38,18 @@ export default function DestinationHero({ tokens, copy, destination }: Destinati
   const textureImage = getTextureBackgroundImage(tokens.textureStyle);
   const textureOpacity = getTextureOpacity(tokens.glassIntensity);
   const prefersReducedMotion = useReducedMotion();
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setPhotoUrl(null);
+    getDestinationPhotoUrl(destination).then((url) => {
+      if (!cancelled) setPhotoUrl(url);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [destination]);
 
   // Motion tokens are tuned for one-shot UI transitions (0.3–0.8s); ambient
   // background drift needs to be much slower. Scaling the same preset's
@@ -44,8 +61,26 @@ export default function DestinationHero({ tokens, copy, destination }: Destinati
 
   return (
     <section className="relative overflow-hidden rounded-[28px] shadow-pop mb-6 animate-fade-in">
-      {/* Layer 1 — the gradient scene, standing in for a photograph */}
+      {/* Layer 1 — the gradient scene, standing in for a photograph. Always
+          rendered immediately, with no loading flash — this is the
+          permanent fallback, not a placeholder for Layer 1b below. */}
       <div className="absolute inset-0" style={{ backgroundImage: tokens.gradients.hero }} />
+
+      {/* Layer 1b — a real photo, cross-faded in on top once one resolves.
+          Progressive enhancement only: if it never resolves (no API keys,
+          no results, a network failure), the gradient above is all that
+          ever renders — never a broken image icon or an error state. */}
+      {photoUrl && (
+        <motion.div
+          aria-hidden="true"
+          className="absolute inset-0"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: prefersReducedMotion ? 0 : 0.9, ease: 'easeOut' }}
+        >
+          <img src={photoUrl} alt="" className="h-full w-full object-cover" />
+        </motion.div>
+      )}
 
       {/* Layer 2 — slow ambient glow, destination-paced. The app's global
           CSS reduced-motion rule only covers CSS animations/transitions —
@@ -73,6 +108,10 @@ export default function DestinationHero({ tokens, copy, destination }: Destinati
       {/* Layer 4 — large motif watermark, the destination's own line art */}
       <DestinationMotif
         strokes={tokens.iconTreatment.motif}
+        strokeWeight={tokens.iconTreatment.strokeWeight}
+        paletteBias={tokens.illustrationPaletteBias}
+        secondaryColor={tokens.colors.secondary}
+        title={`${copy.name} motif`}
         className="absolute right-0 bottom-0 h-2/3 w-2/3 sm:w-1/2 text-white/[0.16]"
       />
 

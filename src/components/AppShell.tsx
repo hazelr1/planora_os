@@ -23,7 +23,7 @@ function UserAvatar({ name }: { name: string }) {
     .slice(0, 2)
     .toUpperCase() || '?';
   return (
-    <div className="h-8 w-8 rounded-full bg-brand-500/20 text-brand-300 border border-brand-400/30 flex items-center justify-center text-xs font-700 shrink-0">
+    <div className="h-8 w-8 rounded-full bg-brand-500/20 text-brand-300 flex items-center justify-center text-xs font-700 shrink-0">
       {initials}
     </div>
   );
@@ -50,7 +50,7 @@ export default function AppShell({
             className="flex items-center gap-2.5 group shrink-0"
           >
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shadow-soft">
-              <Compass className="text-ink-950" size={18} strokeWidth={2.5} />
+              <Compass className="text-black" size={18} strokeWidth={2.5} />
             </div>
             <span className="font-display text-lg font-800 text-ink-900 group-hover:text-brand-300 transition-colors">
               Planora
@@ -85,7 +85,7 @@ export default function AppShell({
                       </span>
                       <button
                         onClick={onSignOut}
-                        className="btn-ghost text-ink-500 hover:text-rose-400 gap-1.5"
+                        className="btn-ghost text-ink-500 hover:text-rose-700 dark:text-rose-400 gap-1.5"
                         title="Sign out"
                       >
                         <LogOut size={15} />

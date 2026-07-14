@@ -25,5 +25,5 @@ export function resolveDestinationExperience(destinationText: string): ResolvedD
 
   const metadata = inferMetadataFromFreeText(trimmed);
   const profile = synthesizeDestinationProfile(trimmed || 'Undiscovered', metadata);
-  return { profile, origin: 'generated' };
+  return { profile, origin: 'undiscovered' };
 }

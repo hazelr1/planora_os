@@ -71,7 +71,7 @@ export default function MyTrips({
       {/* Load error */}
       {!isLoading && loadError && (
         <div className="card p-8 text-center">
-          <p className="text-sm font-medium text-rose-300 mb-1">{loadError}</p>
+          <p className="text-sm font-medium text-rose-700 dark:text-rose-300 mb-1">{loadError}</p>
           <button onClick={onRetryLoad} className="btn-primary mt-4">Retry</button>
         </div>
       )}
