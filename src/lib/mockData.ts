@@ -6,7 +6,16 @@ export const INTERESTS: Interest[] = [
 
 export const PACES: TravelPace[] = ['Relaxed', 'Balanced', 'Packed'];
 
-export const CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD'] as const;
+// Ordered with the original six first (most-used, and the pre-existing
+// default set), then the rest of what currencyDetection.ts can detect from a
+// free-text destination — every currency it can return must have a matching
+// option here or an auto-detected value would silently fail to select.
+export const CURRENCIES = [
+  'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD',
+  'CHF', 'CNY', 'HKD', 'KRW', 'INR', 'IDR', 'THB', 'VND', 'PHP', 'MYR', 'SGD',
+  'AED', 'NZD', 'MAD', 'EGP', 'ZAR', 'KES', 'TZS', 'BRL', 'ARS', 'PEN', 'CLP',
+  'COP', 'MXN', 'ISK', 'NOK', 'SEK', 'DKK', 'TRY',
+] as const;
 
 type ActivitySeed = Omit<Activity, 'id' | 'dayId' | 'tripId' | 'locked' | 'notes' | 'latitude' | 'longitude' | 'costConfidence' | 'updatedAt'>;
 

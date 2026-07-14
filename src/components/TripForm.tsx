@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PACES, INTERESTS, CURRENCIES } from '../lib/mockData';
+import { detectCurrencyFromDestination } from '../lib/currencyDetection';
 import type { Interest, TravelPace } from '../types';
 
 export interface TripFormValues {
@@ -26,6 +27,10 @@ export default function TripForm({ onSubmit, onCancel, submitLabel = 'Generate I
   const [endDate, setEndDate] = useState('');
   const [budget, setBudget] = useState('');
   const [currency, setCurrency] = useState<string>('USD');
+  // Once the user picks a currency themselves, their choice is final — auto-
+  // detection should never overwrite an explicit selection, only fill in a
+  // sensible default while they're still typing the destination.
+  const [currencyTouched, setCurrencyTouched] = useState(false);
   const [travelers, setTravelers] = useState('2');
   const [pace, setPace] = useState<TravelPace>('Balanced');
   const [interests, setInterests] = useState<Interest[]>([]);
@@ -36,6 +41,14 @@ export default function TripForm({ onSubmit, onCancel, submitLabel = 'Generate I
   const toggleInterest = (i: Interest) => {
     setInterests((prev) => (prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i]));
   };
+
+  // Auto-detect currency from the destination as the user types, unless
+  // they've already picked one themselves.
+  useEffect(() => {
+    if (currencyTouched) return;
+    const detected = detectCurrencyFromDestination(destination);
+    if (detected) setCurrency(detected);
+  }, [destination, currencyTouched]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +82,16 @@ export default function TripForm({ onSubmit, onCancel, submitLabel = 'Generate I
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <label htmlFor="destination" className="label">Destination</label>
-        <input id="destination" className={inputCls} value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="e.g. Tokyo, Japan" required autoFocus />
+        <input
+          id="destination" className={inputCls} value={destination}
+          onChange={(e) => setDestination(e.target.value)}
+          placeholder="e.g. Tokyo, Japan"
+          aria-describedby="destination-hint"
+          required autoFocus
+        />
+        <p id="destination-hint" className="mt-1.5 text-xs text-ink-500 leading-relaxed">
+          Be as specific as the place needs — city, plus state or country if there's more than one place with that name (e.g. "Portland, Oregon" or "Springfield, Illinois").
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -94,9 +116,15 @@ export default function TripForm({ onSubmit, onCancel, submitLabel = 'Generate I
         </div>
         <div>
           <label htmlFor="currency" className="label">Currency</label>
-          <select id="currency" className={inputCls} value={currency} onChange={(e) => setCurrency(e.target.value)}>
+          <select
+            id="currency" className={inputCls} value={currency}
+            onChange={(e) => { setCurrency(e.target.value); setCurrencyTouched(true); }}
+          >
             {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
+          {!currencyTouched && detectCurrencyFromDestination(destination) && (
+            <p className="mt-1.5 text-xs text-ink-500">Auto-detected from destination.</p>
+          )}
         </div>
       </div>
 

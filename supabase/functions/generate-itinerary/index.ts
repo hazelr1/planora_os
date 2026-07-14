@@ -242,13 +242,17 @@ async function persistItinerary(
   userId: string,
   req: GenerateRequest,
   itinerary: OpenAIItinerary,
-  expectedDays: number,
+  expectedDates: string[],
 ): Promise<{ tripId: string; warnings: string[] }> {
   const warnings: string[] = [];
-  if (itinerary.days.length < expectedDays) {
+  if (itinerary.days.length < expectedDates.length) {
     warnings.push(
-      `The AI generated ${itinerary.days.length} of ${expectedDays} requested days. ` +
-      `Ask the AI Copilot to add the missing days.`,
+      `The AI generated ${itinerary.days.length} of ${expectedDates.length} requested days — ` +
+      `the rest were added empty so your trip still covers its full date range. Ask the AI Copilot to fill them in.`,
+    );
+  } else if (itinerary.days.length > expectedDates.length) {
+    warnings.push(
+      `The AI generated ${itinerary.days.length} days for a ${expectedDates.length}-day trip. Extra days were dropped.`,
     );
   }
 
@@ -279,30 +283,41 @@ async function persistItinerary(
 
   const tripId: string = (tripData as { id: string }).id;
 
-  // 2. Insert days + activities
+  // 2. Insert days + activities — always exactly one row per requested date,
+  // in order, regardless of how many days the model actually returned. Its
+  // structured output isn't reliably following the "exactly N days" prompt
+  // instruction (this is what was causing trips of any length to persist as
+  // a single day), so day count and date now come entirely from the
+  // request's own date range; a day the model didn't produce is inserted
+  // empty rather than silently dropped, and the model's own `date` field is
+  // never trusted for what gets stored (matched positionally instead), so a
+  // date-formatting slip can't misalign a day from the calendar the user
+  // actually picked.
   try {
-    for (let i = 0; i < itinerary.days.length; i++) {
-      const daySpec = itinerary.days[i];
+    for (let i = 0; i < expectedDates.length; i++) {
+      const daySpec: OpenAIDay | undefined = itinerary.days[i];
+      const dayNumber = i + 1;
 
       const { data: dayData, error: dayErr } = await supabase
         .from("trip_days")
         .insert({
           trip_id: tripId,
-          label: `Day ${daySpec.day_number}`,
-          date: daySpec.date,
-          theme: daySpec.theme ?? "",
-          summary: daySpec.summary ?? "",
-          sort_order: i + 1,
+          label: `Day ${dayNumber}`,
+          date: expectedDates[i],
+          theme: daySpec?.theme ?? "",
+          summary: daySpec?.summary ?? "",
+          sort_order: dayNumber,
         })
         .select("id")
         .maybeSingle();
 
       if (dayErr || !dayData) {
-        warnings.push(`Day ${daySpec.day_number} could not be saved.`);
+        warnings.push(`Day ${dayNumber} could not be saved.`);
         continue;
       }
 
       const dayId: string = (dayData as { id: string }).id;
+      if (!daySpec) continue; // AI returned fewer days than requested — left empty, not fabricated
 
       for (let j = 0; j < daySpec.activities.length; j++) {
         const act = daySpec.activities[j];
@@ -340,7 +355,7 @@ async function persistItinerary(
         });
 
         if (actErr) {
-          warnings.push(`Activity "${act.title}" on Day ${daySpec.day_number} could not be saved.`);
+          warnings.push(`Activity "${act.title}" on Day ${dayNumber} could not be saved.`);
         }
       }
     }
@@ -410,10 +425,10 @@ Deno.serve(async (req: Request) => {
     }
 
     // Persist
-    const expectedDays = enumerateDates(input.start_date, input.end_date).length;
+    const expectedDates = enumerateDates(input.start_date, input.end_date);
     let result: { tripId: string; warnings: string[] };
     try {
-      result = await persistItinerary(supabase, user.id, input, itinerary, expectedDays);
+      result = await persistItinerary(supabase, user.id, input, itinerary, expectedDates);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "UNKNOWN";
       console.error("[generate-itinerary] DB error:", msg);
