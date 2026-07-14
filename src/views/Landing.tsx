@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { Sparkles, MapPin, Calendar, Wallet, Bot, ArrowRight, Check, Loader2 } from 'lucide-react';
 import type { Screen } from '../types';
 import StatTrio from '../components/StatTrio';
+import { pickDaily } from '../lib/dailyRotation';
 
 interface LandingProps {
   onNavigate: (screen: Screen) => void;
@@ -13,13 +14,17 @@ interface LandingProps {
  * Placeholder stock photography — see public/image/. Every filename here is
  * deliberately named for what it depicts, not where it's used, so dropping
  * in a real photo later is a straight file swap with no code changes.
+ *
+ * Each slot is a pool, not a single file — pickDaily rotates which one shows
+ * today, cycling back through the pool once every entry's had a turn rather
+ * than needing an ever-growing supply of new photos.
  */
-const HERO_IMAGE = '/image/landing-hero.jpg';
+const HERO_IMAGES = ['/image/landing-hero.jpg', '/image/landing-hero-2.jpg', '/image/landing-hero-3.jpg'];
 const SHOWCASE = [
-  { name: 'Santorini', region: 'Greece', essence: 'Whitewashed cliffs above a caldera sea.', image: '/image/destination-santorini.jpg' },
-  { name: 'Kyoto', region: 'Japan', essence: 'Temple bells and quiet backstreets.', image: '/image/destination-kyoto.jpg' },
-  { name: 'Marrakech', region: 'Morocco', essence: 'Zellige tile and saffron-lit souks.', image: '/image/destination-marrakech.jpg' },
-  { name: 'Reykjavik', region: 'Iceland', essence: 'Glacial light over volcanic coastline.', image: '/image/destination-iceland.jpg' },
+  { name: 'Santorini', region: 'Greece', essence: 'Whitewashed cliffs above a caldera sea.', images: ['/image/destination-santorini.jpg', '/image/destination-santorini-2.jpg'] },
+  { name: 'Kyoto', region: 'Japan', essence: 'Temple bells and quiet backstreets.', images: ['/image/destination-kyoto.jpg', '/image/destination-kyoto-2.jpg'] },
+  { name: 'Marrakech', region: 'Morocco', essence: 'Zellige tile and saffron-lit souks.', images: ['/image/destination-marrakech.jpg', '/image/destination-marrakech-2.jpg'] },
+  { name: 'Reykjavik', region: 'Iceland', essence: 'Glacial light over volcanic coastline.', images: ['/image/destination-iceland.jpg', '/image/destination-iceland-2.jpg'] },
 ];
 
 // Alternating tilt per card in the overlapping showcase cluster — a fixed,
@@ -42,6 +47,7 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
   const [demoLoading, setDemoLoading] = useState(false);
   const [demoError, setDemoError] = useState<string | null>(null);
   const prefersReducedMotion = useReducedMotion();
+  const heroImage = pickDaily(HERO_IMAGES, 'hero');
 
   const handleTryDemo = async () => {
     setDemoLoading(true);
@@ -63,7 +69,7 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
       {/* ─── Hero — full-bleed cinematic photography, editorial type over a scrim ─── */}
       <section className="relative -mx-4 -mt-6 overflow-hidden sm:-mx-6 sm:-mt-8">
         <div className="absolute inset-0">
-          <img src={HERO_IMAGE} alt="" className="h-full w-full object-cover" />
+          <img src={heroImage} alt="" className="h-full w-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-transparent" />
         </div>
@@ -160,7 +166,7 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
               className={`card group relative aspect-[4/5] w-48 shrink-0 overflow-hidden p-0 shadow-pop transition-all duration-300 ease-out hover:z-20 hover:-translate-y-3 hover:rotate-0 hover:shadow-glow-lg sm:w-56 ${i > 0 ? '-ml-12 sm:-ml-16' : ''} ${SHOWCASE_TILT[i % SHOWCASE_TILT.length]}`}
             >
               <img
-                src={d.image}
+                src={pickDaily(d.images, d.name)}
                 alt={`${d.name}, ${d.region}`}
                 className="absolute inset-0 h-full w-full object-cover transition-transform duration-[600ms] ease-out group-hover:scale-[1.06]"
               />
