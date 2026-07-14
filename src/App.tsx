@@ -75,8 +75,16 @@ export default function App() {
       setScreen({ name: 'signin' });
       return;
     }
+    // The trips list is fetched once by useTrips and otherwise only kept in
+    // sync by its own mutation methods (update/duplicate/delete) — creating
+    // a trip (CreateTrip's AI generation) and resetting the demo trip both
+    // insert/replace a trip through a different path entirely, so without
+    // this the list silently omitted whatever was just created until a full
+    // page reload. Refreshing on every arrival at "My Trips" guarantees it's
+    // always current regardless of which path changed it.
+    if (s.name === 'trips') void retryLoad();
     setScreen(s);
-  }, [status]);
+  }, [status, retryLoad]);
 
   // ── Auth callbacks ────────────────────────────────────────────────────────
   const handleAuthSuccess = useCallback(() => {

@@ -140,6 +140,9 @@ interface ProposalChange {
   destination_day_id: string;
   before: ActivitySnapshot;
   after: ActivitySnapshot;
+  day_theme: string;
+  day_summary: string;
+  day_activities: ActivitySnapshot[];
   reason: string;
 }
 
@@ -218,15 +221,21 @@ const copilotReplySchema = {
       items: {
         type: "object",
         properties: {
-          operation: { type: "string", enum: ["add", "remove", "replace", "move", "update"] },
+          operation: { type: "string", enum: ["add", "remove", "replace", "move", "update", "add_day", "remove_day"] },
           activity_id: { type: "string" },
           source_day_id: { type: "string" },
           destination_day_id: { type: "string" },
           before: activitySnapshotSchema,
           after: activitySnapshotSchema,
+          day_theme: { type: "string" },
+          day_summary: { type: "string" },
+          day_activities: { type: "array", items: activitySnapshotSchema },
           reason: { type: "string" },
         },
-        required: ["operation", "activity_id", "source_day_id", "destination_day_id", "before", "after", "reason"],
+        required: [
+          "operation", "activity_id", "source_day_id", "destination_day_id",
+          "before", "after", "day_theme", "day_summary", "day_activities", "reason",
+        ],
         additionalProperties: false,
       },
     },
@@ -278,13 +287,14 @@ RULES:
 - First decide reply_type. Use "answer" for general travel questions that do not require changing
   the itinerary (e.g. tipping norms, tap water safety, SIM cards, what to wear, scams to avoid,
   cash vs card). Use "proposal" whenever the user is asking to add, remove, move, replace, or
-  otherwise change activities, days, or budget.
+  otherwise change activities, days, or budget — including making the trip longer or shorter.
 - If reply_type = "answer": put your response in answer_text. Set summary="", constraints=[],
   changes=[], old_estimated_total=0, new_estimated_total=0, budget_difference=0, pace_effect="",
   warnings=[].
 - If reply_type = "proposal": set answer_text="" and propose the smallest necessary changes to
   fulfill the user's instruction, exactly as described below.
-- Activities marked [LOCKED] MUST NOT be edited, moved, removed, or replaced.
+- Activities marked [LOCKED] MUST NOT be edited, moved, removed, or replaced. A day containing a
+  [LOCKED] activity MUST NOT be removed via "remove_day".
 - Maximum 6 activities per day.
 - Estimated cost must be >= 0.
 - Use "" for activity_id/source_day_id/destination_day_id when not applicable to the operation.
@@ -295,6 +305,23 @@ RULES:
 - For "update": activity_id=<id>, source_day_id=<day id>, destination_day_id="", before=current values of changed fields (other fields empty/""), after=new values.
 - In before/after for "add"/"remove" where data is not applicable, use: title="", description="", location="", start_time="", duration_minutes=0, estimated_cost=0, cost_confidence="medium", category="Other", ai_reason="", latitude=0, longitude=0.
 - For "add"/"replace", set after.latitude/after.longitude to your best-effort real-world coordinates for after.location, and after.cost_confidence to how confident you are in after.estimated_cost.
+
+WHOLE-DAY CHANGES — use these when the user wants to make the trip longer or shorter (e.g.
+"add 2 more days", "shorten this trip by a day"), never by stuffing extra activities into an
+existing day or leaving a day empty as a substitute:
+- "add_day" appends exactly one new day immediately after the CURRENT LAST DAY of the trip — you
+  cannot insert a day anywhere else, and the actual calendar date is assigned by the app, not you.
+  Set activity_id="", source_day_id="", destination_day_id="", before/after to the empty-value
+  convention above. Set day_theme and day_summary for the new day, and day_activities to a full
+  day's worth of new activities (each using the same shape as an activity's "after" snapshot,
+  including your best-effort latitude/longitude and cost_confidence). To add N days, emit N
+  separate "add_day" changes.
+- "remove_day" removes exactly the CURRENT LAST DAY of the trip — you cannot remove a day from
+  the middle or start, and never a day containing a [LOCKED] activity. Set source_day_id to that
+  day's day_id from the itinerary above; leave activity_id/destination_day_id="" and
+  day_theme/day_summary=""/day_activities=[]. To remove N days, emit N separate "remove_day"
+  changes, ordered starting from the actual last day and working backward.
+- For both, before/after use the full empty-value convention (title="", description="", etc.).
 `.trim();
 }
 
@@ -303,6 +330,7 @@ RULES:
 function validateLockedActivities(
   changes: ProposalChange[],
   lockedIds: Set<string>,
+  daysWithLockedActivities: Set<string>,
 ): { clean: ProposalChange[]; violations: string[] } {
   const clean: ProposalChange[] = [];
   const violations: string[] = [];
@@ -315,6 +343,10 @@ function validateLockedActivities(
         );
         continue;
       }
+    }
+    if (change.operation === "remove_day" && daysWithLockedActivities.has(change.source_day_id)) {
+      violations.push("Removed invalid change: cannot remove a day that contains a locked activity.");
+      continue;
     }
     clean.push(change);
   }
@@ -482,8 +514,9 @@ Deno.serve(async (req: Request) => {
 
     const activities = actsData as DbActivity[];
 
-    // Build locked IDs set
+    // Build locked IDs set, and which days contain at least one locked activity
     const lockedIds = new Set(activities.filter((a) => a.is_locked).map((a) => a.id));
+    const daysWithLockedActivities = new Set(activities.filter((a) => a.is_locked).map((a) => a.trip_day_id));
 
     // Compute old estimated total
     const oldTotal = activities.reduce((sum, a) => sum + Number(a.estimated_cost), 0);
@@ -521,7 +554,7 @@ Deno.serve(async (req: Request) => {
     const proposal: Proposal = modelReply;
 
     // Validate locked activities
-    const { clean: validChanges, violations } = validateLockedActivities(proposal.changes, lockedIds);
+    const { clean: validChanges, violations } = validateLockedActivities(proposal.changes, lockedIds, daysWithLockedActivities);
     proposal.changes = validChanges;
     if (violations.length > 0) {
       proposal.warnings = [...(proposal.warnings ?? []), ...violations];

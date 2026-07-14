@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Loader2, RefreshCw, Save } from 'lucide-react';
 import type { Trip, TripStatus } from '../../types';
 import { CURRENCIES } from '../../lib/mockData';
@@ -20,10 +20,41 @@ export default function SettingsSection({ trip, onSave, onRequestResetDemo, rese
   const [titleError, setTitleError] = useState('');
   const [saved, setSaved] = useState(false);
 
+  // Snapshot of the trip values this form was last synced to (either on
+  // mount or right after a save this form made itself) — lets the effect
+  // below tell "the trip changed underneath us" (e.g. Reset demo trip, or an
+  // AI copilot revision, while this section stayed mounted) apart from "the
+  // user is still typing an edit," which must never be silently discarded.
+  const [syncedTrip, setSyncedTrip] = useState({
+    title: trip.title, budget: trip.budget, currency: trip.currency, status: trip.status,
+  });
+
+  useEffect(() => {
+    const externallyChanged =
+      trip.title !== syncedTrip.title || trip.budget !== syncedTrip.budget ||
+      trip.currency !== syncedTrip.currency || trip.status !== syncedTrip.status;
+    if (!externallyChanged) return;
+
+    const isDirty =
+      title !== syncedTrip.title || Number(budget) !== syncedTrip.budget ||
+      currency !== syncedTrip.currency || status !== syncedTrip.status;
+    if (isDirty) return;
+
+    setTitle(trip.title);
+    setBudget(String(trip.budget));
+    setCurrency(trip.currency);
+    setStatus(trip.status);
+    setSyncedTrip({ title: trip.title, budget: trip.budget, currency: trip.currency, status: trip.status });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trip.title, trip.budget, trip.currency, trip.status]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) { setTitleError('Trip name is required.'); return; }
-    onSave({ title: title.trim(), budget: Number(budget) || 0, currency, status });
+    const trimmedTitle = title.trim();
+    const numericBudget = Number(budget) || 0;
+    onSave({ title: trimmedTitle, budget: numericBudget, currency, status });
+    setSyncedTrip({ title: trimmedTitle, budget: numericBudget, currency, status });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  AlertTriangle, ArrowRight, CheckCircle2, CheckCircle, ChevronDown, ChevronUp,
+  AlertTriangle, ArrowRight, CalendarPlus, CalendarMinus, CheckCircle2, CheckCircle, ChevronDown, ChevronUp,
   Lock, Loader2, Minus, Plus, RefreshCw, Send, Sparkles, X, XCircle,
 } from 'lucide-react';
 import type { AIRevisionProposal, Day, RevisionChange, RevisionOperation } from '../types';
@@ -25,6 +25,8 @@ const opCfg: Record<RevisionOperation, { label: string; bg: string; text: string
   replace: { label: 'Replace', bg: 'bg-amber-500/10',   text: 'text-amber-700 dark:text-amber-300',   border: 'border-amber-500/20',   Icon: RefreshCw },
   move:    { label: 'Move',    bg: 'bg-sky-500/10',     text: 'text-sky-700 dark:text-sky-300',     border: 'border-sky-500/20',     Icon: ArrowRight },
   update:  { label: 'Update',  bg: 'bg-violet-500/10',  text: 'text-violet-300',  border: 'border-violet-500/20',  Icon: RefreshCw },
+  add_day:    { label: 'Add day',    bg: 'bg-emerald-500/10', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-500/20', Icon: CalendarPlus },
+  remove_day: { label: 'Remove day', bg: 'bg-rose-500/10',    text: 'text-rose-700 dark:text-rose-300',    border: 'border-rose-500/20',    Icon: CalendarMinus },
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -48,11 +50,16 @@ function ChangeCard({ change, days, currency }: { change: RevisionChange; days: 
   const srcLabel = dayLabel(change.source_day_id, days);
   const dstLabel = dayLabel(change.destination_day_id, days);
 
-  const actName = change.operation === 'add' ? change.after.title : (change.before.title || change.after.title);
+  const actName =
+    change.operation === 'add' ? change.after.title :
+    change.operation === 'add_day' ? (change.day_theme || 'New day') :
+    change.operation === 'remove_day' ? (srcLabel || 'Last day') :
+    (change.before.title || change.after.title);
   const hasDetail =
     (change.operation === 'replace' && change.before.title) ||
     (change.operation === 'update') ||
-    (change.operation === 'add' && (change.after.location || change.after.duration_minutes > 0));
+    (change.operation === 'add' && (change.after.location || change.after.duration_minutes > 0)) ||
+    (change.operation === 'add_day' && change.day_activities.length > 0);
 
   return (
     <div className={`rounded-xl border ${cfg.border} ${cfg.bg}`}>
@@ -74,7 +81,7 @@ function ChangeCard({ change, days, currency }: { change: RevisionChange; days: 
                 {srcLabel} <ArrowRight size={10} /> {dstLabel}
               </span>
             )}
-            {change.operation !== 'move' && srcLabel && (
+            {change.operation !== 'move' && change.operation !== 'remove_day' && srcLabel && (
               <span className={`text-xs opacity-60 ${cfg.text}`}>{srcLabel}</span>
             )}
             {change.operation === 'add' && dstLabel && (
@@ -151,6 +158,22 @@ function ChangeCard({ change, days, currency }: { change: RevisionChange; days: 
                 <p>{change.after.duration_minutes}min · {fmt(change.after.estimated_cost, currency)}</p>
               )}
               {change.after.description && <p className="text-ink-600 leading-relaxed">{change.after.description}</p>}
+            </div>
+          )}
+
+          {/* Add day: list the new day's starting activities */}
+          {change.operation === 'add_day' && (
+            <div className="text-xs space-y-1.5">
+              {change.day_summary && <p className="text-ink-600 leading-relaxed">{change.day_summary}</p>}
+              {change.day_activities.map((act, i) => (
+                <div key={i} className="flex items-center gap-2 text-ink-700">
+                  <span className="text-ink-600 shrink-0">{act.start_time || '—'}</span>
+                  <span className="truncate">{act.title}</span>
+                  {act.estimated_cost > 0 && (
+                    <span className="text-ink-600 shrink-0 ml-auto">{fmt(act.estimated_cost, currency)}</span>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>

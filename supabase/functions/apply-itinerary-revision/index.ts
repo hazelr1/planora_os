@@ -69,6 +69,9 @@ interface ProposalChange {
   destination_day_id: string;
   before: ActivitySnapshot;
   after: ActivitySnapshot;
+  day_theme?: string;
+  day_summary?: string;
+  day_activities?: ActivitySnapshot[];
   reason: string;
 }
 
@@ -177,14 +180,15 @@ Deno.serve(async (req: Request) => {
     // ── Verify trip ownership ─────────────────────────────────────────────────
     const { data: tripData, error: tripErr } = await userClient
       .from("trips")
-      .select("id, currency")
+      .select("id, currency, start_date, end_date")
       .eq("id", revision.trip_id)
       .maybeSingle();
 
     if (tripErr) { console.error("[apply] trip load:", tripErr.message); return jsonRes({ error: "Could not verify trip." }, 500); }
     if (!tripData) return jsonRes({ error: "Trip not found." }, 404);
 
-    const tripCurrency: string = (tripData as { id: string; currency: string }).currency || "USD";
+    const trip = tripData as { id: string; currency: string; start_date: string; end_date: string };
+    const tripCurrency: string = trip.currency || "USD";
 
     // ── Load current activities ───────────────────────────────────────────────
     const { data: actsData, error: actsErr } = await svcClient
@@ -200,12 +204,117 @@ Deno.serve(async (req: Request) => {
     // ── Load days ─────────────────────────────────────────────────────────────
     const { data: daysData, error: daysErr } = await svcClient
       .from("trip_days")
-      .select("id, sort_order")
+      .select("id, sort_order, date")
       .eq("trip_id", revision.trip_id)
       .order("sort_order", { ascending: true });
 
     if (daysErr || !daysData) { console.error("[apply] days load:", daysErr?.message); return jsonRes({ error: "Could not load trip days." }, 500); }
-    const dayIds = new Set((daysData as { id: string }[]).map((d) => d.id));
+    type DbTripDayRow = { id: string; sort_order: number; date: string };
+    const dayRows = daysData as DbTripDayRow[];
+    const dayIds = new Set(dayRows.map((d) => d.id));
+
+    // ── Whole-day changes (add_day / remove_day) ──────────────────────────────
+    // Processed first and separately from the activity-level passes below:
+    // these add or remove entire trip_days rows (never touched by the
+    // per-activity add/remove/move/replace/update operations), always at the
+    // trip's tail, keeping trip_days a contiguous run from start_date to
+    // end_date the same way generate-itinerary guarantees on creation. The
+    // model's own day IDs are trusted for *which* day to remove, but never
+    // for dates — those are always computed here, one calendar day at a time
+    // from whichever day is currently last.
+    function addOneDay(dateStr: string): string {
+      const d = new Date(dateStr + "T00:00:00");
+      d.setDate(d.getDate() + 1);
+      return d.toISOString().slice(0, 10);
+    }
+    function subOneDay(dateStr: string): string {
+      const d = new Date(dateStr + "T00:00:00");
+      d.setDate(d.getDate() - 1);
+      return d.toISOString().slice(0, 10);
+    }
+
+    const dayLevelChanges = proposal.changes.filter(
+      (c) => c.operation === "add_day" || c.operation === "remove_day",
+    );
+
+    let lastDay: DbTripDayRow | null = dayRows.length > 0 ? dayRows[dayRows.length - 1] : null;
+    let remainingDayCount = dayRows.length;
+    let tripEndDate = trip.end_date;
+    const dayLevelErrors: string[] = [];
+
+    for (const change of dayLevelChanges) {
+      if (change.operation === "add_day") {
+        const newDate = lastDay ? addOneDay(lastDay.date) : trip.start_date;
+        const newSortOrder = lastDay ? lastDay.sort_order + 1 : 1;
+
+        const { data: newDayData, error: insErr } = await svcClient
+          .from("trip_days")
+          .insert({
+            trip_id: revision.trip_id,
+            label: `Day ${newSortOrder}`,
+            date: newDate,
+            theme: change.day_theme || "",
+            summary: change.day_summary || "",
+            sort_order: newSortOrder,
+          })
+          .select("id, sort_order, date")
+          .maybeSingle();
+
+        if (insErr || !newDayData) {
+          dayLevelErrors.push("Could not add a new day.");
+          continue;
+        }
+
+        const newDay = newDayData as DbTripDayRow;
+        const dayActivities = change.day_activities ?? [];
+        for (let k = 0; k < dayActivities.length; k++) {
+          const row = snapshotToInsert(dayActivities[k], newDay.id, revision.trip_id, tripCurrency, k);
+          const { error: actInsErr } = await svcClient.from("activities").insert(row);
+          if (actInsErr) dayLevelErrors.push(`Could not add activity "${dayActivities[k].title}" to the new day.`);
+        }
+
+        dayIds.add(newDay.id);
+        lastDay = newDay;
+        remainingDayCount += 1;
+        tripEndDate = newDay.date;
+      } else if (change.operation === "remove_day") {
+        if (!lastDay || change.source_day_id !== lastDay.id) {
+          dayLevelErrors.push("Can only remove a trip's current last day — this proposal may be stale, please request a new one.");
+          continue;
+        }
+        if (remainingDayCount <= 1) {
+          dayLevelErrors.push("Cannot remove the only remaining day in a trip.");
+          continue;
+        }
+        if (activities.some((a) => a.trip_day_id === lastDay!.id && a.is_locked)) {
+          dayLevelErrors.push(`Cannot remove Day ${lastDay.sort_order} — it contains a locked activity. Unlock it first.`);
+          continue;
+        }
+
+        const { error: delErr } = await svcClient.from("trip_days").delete().eq("id", lastDay.id);
+        if (delErr) {
+          dayLevelErrors.push("Could not remove day.");
+          continue;
+        }
+
+        dayIds.delete(lastDay.id);
+        tripEndDate = subOneDay(lastDay.date);
+        remainingDayCount -= 1;
+        lastDay = dayRows.find((d) => d.sort_order === lastDay!.sort_order - 1) ?? null;
+      }
+    }
+
+    if (dayLevelErrors.length > 0) {
+      return jsonRes({ error: dayLevelErrors[0] }, 422);
+    }
+
+    if (tripEndDate !== trip.end_date) {
+      const { error: endDateErr } = await svcClient
+        .from("trips")
+        .update({ end_date: tripEndDate })
+        .eq("id", revision.trip_id);
+      if (endDateErr) console.error("[apply] trip end_date update:", endDateErr.message);
+    }
 
     // ── Validation pass ───────────────────────────────────────────────────────
     const activitiesPerDay = new Map<string, number>();

@@ -101,6 +101,15 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
   const [error, setError] = useState<string | null>(null);
   const [signUpSuccess, setSignUpSuccess] = useState(false);
   const signUpSuccessTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Supabase's own signup/email rate limit is strict and project-wide (the
+  // built-in email service on the free tier is quota'd to a handful of
+  // sends per hour) — a retry fired the instant the first attempt errors
+  // burns more of that same scarce quota for no benefit. This doesn't lift
+  // the underlying limit (only custom SMTP or the dashboard's rate-limit
+  // settings can), but it stops our own client from being the thing that
+  // trips it on an impatient double-submit for the same address.
+  const lastSignUpAttemptRef = useRef<{ email: string; at: number } | null>(null);
+  const SIGNUP_RETRY_COOLDOWN_MS = 20_000;
 
   // ── Forgot password ──────────────────────────────────────────────────────
   const [forgotMode, setForgotMode] = useState(false);
@@ -159,11 +168,23 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
     const err = validateSignUp(signUpForm);
     if (err) { setError(err); return; }
 
+    const email = signUpForm.email.trim();
+    const last = lastSignUpAttemptRef.current;
+    if (last && last.email.toLowerCase() === email.toLowerCase()) {
+      const waitedMs = Date.now() - last.at;
+      if (waitedMs < SIGNUP_RETRY_COOLDOWN_MS) {
+        const waitSeconds = Math.ceil((SIGNUP_RETRY_COOLDOWN_MS - waitedMs) / 1000);
+        setError(`Please wait ${waitSeconds}s before trying that email again — the confirmation email may already be on its way.`);
+        return;
+      }
+    }
+    lastSignUpAttemptRef.current = { email, at: Date.now() };
+
     setLoadingSignUp(true);
     onSignUpStart?.();
     try {
       const result = await authRepository.signUp({
-        email: signUpForm.email.trim(),
+        email,
         password: signUpForm.password,
         name: signUpForm.displayName.trim(),
       });

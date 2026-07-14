@@ -199,45 +199,56 @@ export function useActivityEditor(
     [trip.id, trip.days, optimistic],
   );
 
-  /** Optimistic — swap positions immediately; rollback on failure. */
-  const moveUp = useCallback(
-    (activityId: string) => {
+  /**
+   * Optimistic — swap positions immediately; rollback on failure.
+   *
+   * DaySection/ActivityCard render each day sorted by `time`, not by the
+   * activities array's own order (which mirrors DB `sort_order`) — so
+   * swapping `sort_order` alone (what reorderActivity does server-side)
+   * never changed what the user actually sees, since the visible order is
+   * still governed entirely by unchanged `time` values. Drag-and-drop
+   * (reorderDay) already recalculates and persists new times after
+   * reordering for exactly this reason; these need to do the same, swapping
+   * within the time-sorted order rather than the raw array order.
+   */
+  const swapAdjacent = useCallback(
+    (activityId: string, direction: 'up' | 'down') => {
+      const day = trip.days.find((d) => d.activities.some((a) => a.id === activityId));
+      if (!day) return;
+
+      const sorted = sortByTime(day.activities);
+      const idx = sorted.findIndex((a) => a.id === activityId);
+      const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+      if (idx < 0 || swapIdx < 0 || swapIdx >= sorted.length) return;
+
+      const reordered = [...sorted];
+      [reordered[idx], reordered[swapIdx]] = [reordered[swapIdx], reordered[idx]];
+
+      const timeUpdates = recalculateDaySchedule(reordered);
+      const timeById = new Map(timeUpdates.map((u) => [u.id, u.time]));
+      const rescheduled = reordered.map((a) => (timeById.has(a.id) ? { ...a, time: timeById.get(a.id)! } : a));
+
       optimistic(
         (t) => ({
           ...t,
-          days: t.days.map((d) => {
-            const idx = d.activities.findIndex((a) => a.id === activityId);
-            if (idx <= 0) return d;
-            const acts = [...d.activities];
-            [acts[idx - 1], acts[idx]] = [acts[idx], acts[idx - 1]];
-            return { ...d, activities: acts };
-          }),
+          days: t.days.map((d) => (d.id === day.id ? { ...d, activities: rescheduled } : d)),
         }),
-        () => activityRepository.reorderActivity(activityId, trip.id, { direction: 'up' }),
+        async () => {
+          const reorderResult = await activityRepository.reorderActivity(activityId, trip.id, { direction });
+          if (!reorderResult.ok) return reorderResult;
+          for (const update of timeUpdates) {
+            const timeResult = await activityRepository.setActivityTime(update.id, trip.id, update.time);
+            if (!timeResult.ok) return timeResult;
+          }
+          return { ok: true as const };
+        },
       );
     },
-    [trip.id, optimistic],
+    [trip.id, trip.days, optimistic],
   );
 
-  /** Optimistic — swap positions immediately; rollback on failure. */
-  const moveDown = useCallback(
-    (activityId: string) => {
-      optimistic(
-        (t) => ({
-          ...t,
-          days: t.days.map((d) => {
-            const idx = d.activities.findIndex((a) => a.id === activityId);
-            if (idx < 0 || idx >= d.activities.length - 1) return d;
-            const acts = [...d.activities];
-            [acts[idx], acts[idx + 1]] = [acts[idx + 1], acts[idx]];
-            return { ...d, activities: acts };
-          }),
-        }),
-        () => activityRepository.reorderActivity(activityId, trip.id, { direction: 'down' }),
-      );
-    },
-    [trip.id, optimistic],
-  );
+  const moveUp = useCallback((activityId: string) => swapAdjacent(activityId, 'up'), [swapAdjacent]);
+  const moveDown = useCallback((activityId: string) => swapAdjacent(activityId, 'down'), [swapAdjacent]);
 
   /** Optimistic — toggle boolean immediately; rollback on failure. */
   const toggleLock = useCallback(

@@ -80,7 +80,7 @@ export interface AIRevision {
 
 // ─── AI Revision Proposal ────────────────────────────────────────────────────
 
-export type RevisionOperation = 'add' | 'remove' | 'replace' | 'move' | 'update';
+export type RevisionOperation = 'add' | 'remove' | 'replace' | 'move' | 'update' | 'add_day' | 'remove_day';
 
 export interface ActivitySnapshot {
   title: string;
@@ -104,14 +104,20 @@ export interface RevisionConstraint {
 
 export interface RevisionChange {
   operation: RevisionOperation;
-  /** ID of existing activity being modified. Empty string for 'add'. */
+  /** ID of existing activity being modified. Empty string for 'add'/'add_day'/'remove_day'. */
   activity_id: string;
-  /** Day ID where the activity currently lives. Empty string when not applicable. */
+  /** Day ID where the activity currently lives. For 'remove_day', the day being removed. Empty string when not applicable. */
   source_day_id: string;
-  /** Target day ID for 'add' or 'move'. Empty string when not applicable. */
+  /** Target day ID for 'add' or 'move'. Empty string when not applicable — never set for 'add_day', which always appends after the trip's current last day. */
   destination_day_id: string;
   before: ActivitySnapshot;
   after: ActivitySnapshot;
+  /** 'add_day' only — the new day's theme. Empty string otherwise. */
+  day_theme: string;
+  /** 'add_day' only — the new day's summary. Empty string otherwise. */
+  day_summary: string;
+  /** 'add_day' only — the new day's starting activities. Empty array otherwise. */
+  day_activities: ActivitySnapshot[];
   reason: string;
 }
 

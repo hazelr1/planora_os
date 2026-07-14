@@ -20,7 +20,7 @@ function friendlyAuthError(message: string): string {
     return 'Please enter a valid email address.';
   }
   if (msg.includes('rate limit') || msg.includes('too many requests')) {
-    return 'Too many attempts. Please wait a moment and try again.';
+    return "We've hit a temporary limit on how many account emails can go out right now. This isn't caused by anything you did wrong — please try again in a few minutes.";
   }
   return message;
 }
