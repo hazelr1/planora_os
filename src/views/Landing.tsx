@@ -118,7 +118,7 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
               </button>
             </div>
             <div className="flex flex-col items-center gap-2 text-xs text-ink-500 sm:items-end">
-              {['No account required', 'Free to explore', 'Edit every detail'].map((text) => (
+              {['Free Demo', 'Free to explore', 'Edit every detail'].map((text) => (
                 <span key={text} className="flex items-center gap-1.5">
                   <Check size={12} className="text-brand-400 shrink-0" /> {text}
                 </span>
