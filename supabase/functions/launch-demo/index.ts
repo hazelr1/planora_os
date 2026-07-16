@@ -199,7 +199,7 @@ const SEED_DAYS: SeedDay[] = [
         time: "11:00",
         duration_minutes: 90,
         estimated_cost: 15,
-        category: "Hidden Gems",
+        category: "Culture",
         ai_reason: "Yanaka escaped wartime bombing and remains an authentic slice of pre-modern Tokyo — a genuine hidden gem with hand-crafted shops and local temples most tourists never reach.",
       },
     ],
@@ -286,7 +286,7 @@ async function seedDemoTrip(
           }])
         : "[]";
 
-      await svcClient.from("activities").insert({
+      const { error: actErr } = await svcClient.from("activities").insert({
         trip_day_id: dayId,
         trip_id: tripId,
         title: act.title,
@@ -302,6 +302,10 @@ async function seedDemoTrip(
         personal_note: noteJson,
         sort_order: actIdx,
       });
+
+      if (actErr) {
+        console.error(`[launch-demo] activity insert (${act.title}):`, actErr.message);
+      }
     }
   }
 

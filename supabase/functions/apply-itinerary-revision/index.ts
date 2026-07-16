@@ -459,16 +459,26 @@ Deno.serve(async (req: Request) => {
       const current = activitiesById.get(change.activity_id);
       if (!current) continue;
 
+      // "update" only ever carries the fields that actually changed — every
+      // other field arrives as revise-itinerary's EMPTY sentinel (""/0/
+      // "medium"/"Other", per buildContext's FIELD DEFAULTS), never as a
+      // real `undefined`, so `!== undefined`/`>= 0`/truthiness-on-a-fixed-
+      // string checks are never false and previously patched every field on
+      // every update — e.g. asking to change only an activity's start time
+      // silently zeroed its estimated_cost and reset its category to
+      // "Other" too. Compare against the actual sentinel value instead.
       const snap = change.after;
       const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
       if (snap.title) patch.title = snap.title;
-      if (snap.description !== undefined) patch.description = snap.description;
-      if (snap.location !== undefined) patch.location = snap.location;
-      if (snap.start_time !== undefined) patch.time = snap.start_time;
+      if (snap.description) patch.description = snap.description;
+      if (snap.location) patch.location = snap.location;
+      if (snap.start_time) patch.time = snap.start_time;
       if (snap.duration_minutes > 0) patch.duration_minutes = snap.duration_minutes;
-      if (snap.estimated_cost >= 0) patch.estimated_cost = snap.estimated_cost;
-      if (snap.cost_confidence) patch.cost_confidence = snap.cost_confidence;
-      if (snap.category) patch.category = normaliseCategory(snap.category);
+      if (snap.estimated_cost > 0) {
+        patch.estimated_cost = snap.estimated_cost;
+        if (snap.cost_confidence && snap.cost_confidence !== "medium") patch.cost_confidence = snap.cost_confidence;
+      }
+      if (snap.category && snap.category !== "Other") patch.category = normaliseCategory(snap.category);
       if (snap.ai_reason) patch.ai_reason = snap.ai_reason;
       if (typeof snap.latitude === "number" && typeof snap.longitude === "number"
         && (snap.latitude !== 0 || snap.longitude !== 0)) {
