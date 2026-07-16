@@ -69,9 +69,18 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
       {/* ─── Hero — full-bleed cinematic photography, editorial type over a scrim ─── */}
       <section className="relative -mx-4 -mt-6 overflow-hidden sm:-mx-6 sm:-mt-8">
         <div className="absolute inset-0">
-          <img src={heroImage} alt="" className="h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-transparent" />
+          <img
+            src={heroImage}
+            alt=""
+            className="h-full w-full object-cover"
+            style={{ filter: 'saturate(1.35) contrast(1.08) brightness(1.05)' }}
+          />
+          {/* Lighter than before so the photo's real color comes through in
+              the middle of the frame — the scrim now concentrates its
+              darkness at the very bottom, right behind the headline/CTA
+              text, instead of washing out the whole image. */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/5" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent" />
         </div>
 
         <div className="relative flex min-h-[78vh] flex-col items-center justify-end px-4 pb-28 pt-24 text-center sm:min-h-[85vh] sm:pb-36">

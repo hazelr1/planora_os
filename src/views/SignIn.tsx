@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { Mail, Lock, User, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Mail, Lock, User, ArrowRight, AlertCircle, CheckCircle2, X } from 'lucide-react';
 import type { Screen } from '../types';
 import { authRepository } from '../data';
 
@@ -100,7 +100,6 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
   const [loadingSignUp, setLoadingSignUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [signUpSuccess, setSignUpSuccess] = useState(false);
-  const signUpSuccessTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Supabase's own signup/email rate limit is strict and project-wide (the
   // built-in email service on the free tier is quota'd to a handful of
   // sends per hour) — a retry fired the instant the first attempt errors
@@ -118,19 +117,14 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
   const [forgotSent, setForgotSent] = useState(false);
   const [forgotError, setForgotError] = useState<string | null>(null);
 
-  // After a successful sign-up, show a confirmation card for a couple of
-  // seconds, then switch back to the Sign In tab. The user is never
-  // auto-signed-in and never navigated away from this page.
-  useEffect(() => {
-    if (!signUpSuccess) return;
-    signUpSuccessTimeout.current = setTimeout(() => {
-      setSignUpSuccess(false);
-      setTab('signin');
-    }, 2500);
-    return () => {
-      if (signUpSuccessTimeout.current) clearTimeout(signUpSuccessTimeout.current);
-    };
-  }, [signUpSuccess]);
+  // After a successful sign-up we show an "email verification" popup. The
+  // user is never auto-signed-in and never auto-navigated away from this
+  // page — they must explicitly dismiss the popup (click the X), at which
+  // point we drop them onto the Sign In tab of this same page.
+  const closeSignUpSuccess = () => {
+    setSignUpSuccess(false);
+    setTab('signin');
+  };
 
   const switchTab = (next: Tab) => {
     setTab(next);
@@ -191,8 +185,8 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
       if (!result.ok) { setError(result.error.message); return; }
       // Do NOT auto sign-in: the account may still need email verification,
       // and even when it doesn't, sign-up should never double as sign-in.
-      // Show a confirmation card instead; the effect above switches back to
-      // the Sign In tab a couple of seconds later.
+      // Show the email-verification popup instead; closeSignUpSuccess()
+      // moves the user to the Sign In tab once they dismiss it.
       setSignUpForm(emptySignUp);
       setSignUpSuccess(true);
     } finally {
@@ -233,6 +227,36 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
 
   return (
     <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center px-4 py-12">
+      {/* Email verification popup — shown after a successful sign-up. It sits
+          on top of the sign-in page and only goes away when the user clicks
+          the X in its top-left corner; there is no auto-dismiss and no
+          backdrop-click-to-close, so the message can't be missed. */}
+      {signUpSuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 animate-fade-in">
+          <div className="card relative w-full max-w-sm p-6 pt-8 shadow-pop animate-scale-in" role="dialog" aria-modal="true" aria-labelledby="verify-email-heading">
+            <button
+              type="button"
+              onClick={closeSignUpSuccess}
+              aria-label="Close"
+              className="absolute left-3 top-3 flex h-8 w-8 items-center justify-center rounded-full text-ink-500 transition hover:bg-ink-200/60 hover:text-ink-900"
+            >
+              <X size={16} />
+            </button>
+            <div className="flex flex-col items-center pt-2 text-center">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10">
+                <CheckCircle2 size={24} className="text-emerald-700 dark:text-emerald-400" />
+              </div>
+              <h2 id="verify-email-heading" className="font-display text-lg font-700 text-ink-900">
+                Account created successfully.
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed text-ink-600">
+                Please verify your email using the link sent to your inbox before signing in.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="w-full max-w-md">
 
         {/* Heading */}
@@ -305,16 +329,6 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
               >
                 Back to sign in
               </button>
-            </div>
-          ) : signUpSuccess ? (
-            <div className="rounded-xl bg-emerald-500/10 px-4 py-4 flex items-start gap-3 animate-scale-in" role="status">
-              <CheckCircle2 size={18} className="text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Account created successfully.</p>
-                <p className="text-sm text-emerald-700 dark:text-emerald-300/80 mt-1 leading-relaxed">
-                  Please verify your email using the link sent to your inbox before signing in.
-                </p>
-              </div>
             </div>
           ) : (
             <>
