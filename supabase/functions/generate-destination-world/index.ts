@@ -311,17 +311,21 @@ Deno.serve(async (req: Request) => {
     const insights = sanitizeInsights(raw, destination);
     if (!insights) return jsonResponse({ error: "Could not make sense of the generated destination world." }, 502);
 
-    // Best-effort cache write — a failed insert (e.g. a race with another
-    // concurrent request for the same destination) shouldn't fail the
-    // response; the client already has a usable result either way, and the
-    // unique constraint means only one row ever survives.
-    const { error: insertErr } = await svcClient
+    // Best-effort cache write. Upsert rather than plain insert: a row for
+    // this destination_key may already exist with only its photo columns
+    // populated (see resolve-destination-photo / 20260716140000), in which
+    // case this needs to fill in display_name/profile on that same row
+    // rather than conflict and silently no-op, leaving profile NULL forever.
+    const { error: upsertErr } = await svcClient
       .from("destination_worlds")
-      .insert({ destination_key: destinationKey, display_name: insights.destinationName as string, profile: insights })
+      .upsert(
+        { destination_key: destinationKey, display_name: insights.destinationName as string, profile: insights },
+        { onConflict: "destination_key" },
+      )
       .select("id")
       .maybeSingle();
-    if (insertErr && insertErr.code !== "23505") {
-      console.error("[generate-destination-world] cache insert failed:", insertErr.message);
+    if (upsertErr) {
+      console.error("[generate-destination-world] cache upsert failed:", upsertErr.message);
     }
 
     return jsonResponse({ insights, cached: false });

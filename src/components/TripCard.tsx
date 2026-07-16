@@ -3,7 +3,7 @@ import { MapPin, Calendar, Wallet, Users, Copy, Trash2, ArrowRight, Clock, Penci
 import type { Trip } from '../types';
 import { formatDateRange, formatLastUpdated } from '../utils/dates';
 import { useExperienceTokens } from '../destinations';
-import { getDestinationPhotoUrl } from '../services/destinationImages';
+import { getDestinationPhoto, type DestinationPhoto } from '../services/destinationImages';
 
 interface TripCardProps {
   trip: Trip;
@@ -21,13 +21,15 @@ const statusStyles: Record<string, string> = {
 
 export default function TripCard({ trip, onOpen, onEdit, onDuplicate, onDelete }: TripCardProps) {
   const { tokens } = useExperienceTokens(trip.destination);
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photo, setPhoto] = useState<DestinationPhoto | null>(null);
+  const [photoFailed, setPhotoFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    setPhotoUrl(null);
-    getDestinationPhotoUrl(trip.destination).then((url) => {
-      if (!cancelled) setPhotoUrl(url);
+    setPhoto(null);
+    setPhotoFailed(false);
+    getDestinationPhoto(trip.destination).then((resolved) => {
+      if (!cancelled) setPhoto(resolved);
     });
     return () => {
       cancelled = true;
@@ -40,11 +42,18 @@ export default function TripCard({ trip, onOpen, onEdit, onDuplicate, onDelete }
         {/* Procedural gradient — renders immediately, no loading flash. The
             permanent fallback if no photo ever resolves, not a placeholder. */}
         <div className="absolute inset-0" style={{ backgroundImage: tokens.gradients.hero }} />
-        {/* Real photo, cross-faded on top once/if one resolves. */}
-        {photoUrl && (
+        {/* Real photo, cross-faded on top once/if one resolves. width/height
+            hint the browser to the intrinsic aspect ratio before the image
+            loads, preventing layout shift; onError hides it again on a
+            broken/failed load, leaving the gradient above as the visible
+            result rather than a broken-image icon. */}
+        {photo && !photoFailed && (
           <img
-            src={photoUrl}
-            alt=""
+            src={photo.url}
+            alt={photo.alt}
+            width={1280}
+            height={720}
+            onError={() => setPhotoFailed(true)}
             className="absolute inset-0 h-full w-full object-cover animate-fade-in"
           />
         )}
@@ -56,6 +65,19 @@ export default function TripCard({ trip, onOpen, onEdit, onDuplicate, onDelete }
           <MapPin size={13} className="shrink-0 text-white" />
           <span className="text-sm font-medium text-white truncate">{trip.destination}</span>
         </div>
+        {/* Photo-source attribution — Pexels' API terms require a visible
+            credit/link; shown for Pixabay too for consistency. Never shown
+            for curated/fallback images, which aren't sourced from either API. */}
+        {photo && !photoFailed && (photo.source === 'pexels' || photo.source === 'pixabay') && (
+          <a
+            href={photo.photographerUrl ?? (photo.source === 'pexels' ? 'https://www.pexels.com' : 'https://pixabay.com')}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute bottom-1.5 right-2 text-[10px] text-white/60 hover:text-white/90 transition"
+          >
+            Photo{photo.photographer ? ` by ${photo.photographer}` : ''} via {photo.source === 'pexels' ? 'Pexels' : 'Pixabay'}
+          </a>
+        )}
       </div>
       <div className="p-5 flex flex-col flex-1">
         <div className="flex items-start justify-between gap-2">

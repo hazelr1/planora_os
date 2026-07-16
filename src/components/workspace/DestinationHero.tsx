@@ -3,7 +3,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { CloudSun, Sun } from 'lucide-react';
 import type { ExperienceCopy, ExperienceTokens } from '../../destinations';
 import { getTextureBackgroundImage, getTextureOpacity } from '../../destinations';
-import { getDestinationPhotoUrl } from '../../services/destinationImages';
+import { getDestinationPhoto, type DestinationPhoto } from '../../services/destinationImages';
 import DestinationMotif from './DestinationMotif';
 
 interface DestinationHeroProps {
@@ -38,13 +38,15 @@ export default function DestinationHero({ tokens, copy, destination }: Destinati
   const textureImage = getTextureBackgroundImage(tokens.textureStyle);
   const textureOpacity = getTextureOpacity(tokens.glassIntensity);
   const prefersReducedMotion = useReducedMotion();
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photo, setPhoto] = useState<DestinationPhoto | null>(null);
+  const [photoFailed, setPhotoFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    setPhotoUrl(null);
-    getDestinationPhotoUrl(destination).then((url) => {
-      if (!cancelled) setPhotoUrl(url);
+    setPhoto(null);
+    setPhotoFailed(false);
+    getDestinationPhoto(destination).then((resolved) => {
+      if (!cancelled) setPhoto(resolved);
     });
     return () => {
       cancelled = true;
@@ -68,9 +70,12 @@ export default function DestinationHero({ tokens, copy, destination }: Destinati
 
       {/* Layer 1b — a real photo, cross-faded in on top once one resolves.
           Progressive enhancement only: if it never resolves (no API keys,
-          no results, a network failure), the gradient above is all that
-          ever renders — never a broken image icon or an error state. */}
-      {photoUrl && (
+          no results, a network failure) or fails to load (onError), the
+          gradient above is all that ever renders — never a broken image
+          icon or an error state. width/height hint the browser to the
+          intrinsic aspect ratio before the image loads, preventing layout
+          shift. */}
+      {photo && !photoFailed && (
         <motion.div
           aria-hidden="true"
           className="absolute inset-0"
@@ -78,8 +83,28 @@ export default function DestinationHero({ tokens, copy, destination }: Destinati
           animate={{ opacity: 1 }}
           transition={{ duration: prefersReducedMotion ? 0 : 0.9, ease: 'easeOut' }}
         >
-          <img src={photoUrl} alt="" className="h-full w-full object-cover" />
+          <img
+            src={photo.url}
+            alt={photo.alt}
+            width={1600}
+            height={900}
+            onError={() => setPhotoFailed(true)}
+            className="h-full w-full object-cover"
+          />
         </motion.div>
+      )}
+      {/* Photo-source attribution — Pexels' API terms require a visible
+          credit/link; shown for Pixabay too for consistency. Never shown
+          for curated/fallback images, which aren't sourced from either API. */}
+      {photo && !photoFailed && (photo.source === 'pexels' || photo.source === 'pixabay') && (
+        <a
+          href={photo.photographerUrl ?? (photo.source === 'pexels' ? 'https://www.pexels.com' : 'https://pixabay.com')}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute bottom-2 right-3 z-10 text-[10px] text-white/50 hover:text-white/85 transition"
+        >
+          Photo{photo.photographer ? ` by ${photo.photographer}` : ''} via {photo.source === 'pexels' ? 'Pexels' : 'Pixabay'}
+        </a>
       )}
 
       {/* Layer 2 — slow ambient glow, destination-paced. The app's global
