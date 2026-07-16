@@ -15,37 +15,37 @@ function jsonRes(body: unknown, status = 200): Response {
 }
 
 // ─── DB row shapes ────────────────────────────────────────────────────────────
+//
+// Each interface lists only the columns this function actually selects (see
+// the .select() calls in the handler below) — deliberately narrower than the
+// full `activities`/`trip_days`/`trips` tables so there's no raw-record path
+// by which a column added for some other feature (storage paths, internal
+// timestamps, cost_confidence, description, ai_reason, lat/long, etc.) could
+// silently end up in what gets sent to the AI. See normalizeItinerary/
+// buildContext below for the actual AI-facing shape, which is narrower still.
 
 interface DbActivity {
   id: string;
   trip_day_id: string;
-  trip_id: string;
   title: string;
-  description: string;
   time: string;
   location: string;
   duration_minutes: number;
   estimated_cost: number;
-  cost_confidence: string;
   category: string;
-  ai_reason: string;
   is_locked: boolean;
+  personal_note: string;
   sort_order: number;
-  latitude: number | null;
-  longitude: number | null;
 }
 
 interface DbTripDay {
   id: string;
-  trip_id: string;
   label: string;
   date: string;
-  theme: string;
   sort_order: number;
 }
 
 interface DbTrip {
-  id: string;
   user_id: string;
   title: string;
   destination: string;
@@ -252,22 +252,194 @@ const copilotReplySchema = {
   additionalProperties: false,
 };
 
-// ─── Build itinerary context string ──────────────────────────────────────────
+// ─── Size limits & normalization ───────────────────────────────────────────────
+//
+// The AI never receives raw DB rows — normalizeItinerary is the one seam
+// every trip/day/activity passes through before reaching the prompt, and it
+// only carries: trip constraints, days, activity ids, titles, times,
+// durations, estimated costs, locations, lock states, and short
+// user-written notes. Explicitly excluded, deliberately: user email, auth
+// identifiers (trip.user_id never leaves the handler below), storage paths
+// (this function never touches trip_files), internal timestamps
+// (created_at/updated_at/note.createdAt — see DbActivity/DbTripDay above,
+// which don't even select them), rejected/past revision history (this
+// function never queries ai_revisions for history, only inserts new ones),
+// and DB metadata (sort_order, cost_confidence, description, ai_reason,
+// lat/long — the model produces its own for new/changed activities per the
+// RULES below, so it doesn't need the old values as input).
 
-function buildContext(trip: DbTrip, days: DbTripDay[], activities: DbActivity[]): string {
+/** Freeform user notes can be long; caps one chatty note from dominating
+ * the token budget. */
+const MAX_NOTE_LENGTH = 140;
+/** At most this many notes per activity are surfaced to the AI. */
+const MAX_NOTES_PER_ACTIVITY = 3;
+/** Days beyond this many (by sort_order) are condensed to a one-line
+ * summary instead of full per-activity detail (see normalizeItinerary).
+ * Only engages for unusually long trips — most trips are well under this
+ * and see no change in what the AI receives. */
+const FULL_DETAIL_DAY_LIMIT = 10;
+/** Hard limits on what a single revision request will process. Beyond
+ * these the itinerary is too large to safely fit in one AI context — the
+ * handler below returns a friendly error instead of calling the model. */
+const MAX_SUPPORTED_DAYS = 30;
+const MAX_SUPPORTED_ACTIVITIES = 150;
+
+interface NormalizedActivity {
+  id: string;
+  title: string;
+  time: string;
+  category: string;
+  durationMinutes: number;
+  estimatedCost: number;
+  location: string;
+  locked: boolean;
+  /** User-written note text only — id/createdAt stripped, each entry
+   * truncated to MAX_NOTE_LENGTH, capped at MAX_NOTES_PER_ACTIVITY. */
+  notes: string[];
+}
+
+interface NormalizedDay {
+  id: string;
+  label: string;
+  date: string;
+  /** Present for days within the full-detail window. */
+  activities?: NormalizedActivity[];
+  /** Present instead of `activities` for days beyond FULL_DETAIL_DAY_LIMIT. */
+  summary?: string;
+}
+
+interface TripConstraints {
+  title: string;
+  destination: string;
+  startDate: string;
+  endDate: string;
+  budget: number;
+  currency: string;
+  travelers: number;
+  pace: string;
+  interests: string[];
+  specialRequests: string;
+}
+
+interface NormalizedItineraryContext {
+  trip: TripConstraints;
+  days: NormalizedDay[];
+}
+
+/** Extracts up to MAX_NOTES_PER_ACTIVITY user-written note texts from the
+ * `personal_note` JSON column (an array of {id, text, createdAt}), each
+ * truncated to MAX_NOTE_LENGTH. Drops id/createdAt — internal metadata the
+ * AI doesn't need. */
+function parseNoteTexts(raw: string): string[] {
+  if (!raw) return [];
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(parsed)) return [];
+  return parsed
+    .map((n) => (n && typeof n === "object" && typeof (n as { text?: unknown }).text === "string" ? (n as { text: string }).text.trim() : ""))
+    .filter((t) => t.length > 0)
+    .slice(0, MAX_NOTES_PER_ACTIVITY)
+    .map((t) => (t.length > MAX_NOTE_LENGTH ? `${t.slice(0, MAX_NOTE_LENGTH)}…` : t));
+}
+
+/** The one seam raw DB rows pass through before reaching the AI — see the
+ * comment above this section for exactly what is and isn't carried across. */
+function normalizeItinerary(trip: DbTrip, days: DbTripDay[], activities: DbActivity[]): NormalizedItineraryContext {
   const actsByDay = new Map<string, DbActivity[]>();
   for (const a of activities) {
     if (!actsByDay.has(a.trip_day_id)) actsByDay.set(a.trip_day_id, []);
     actsByDay.get(a.trip_day_id)!.push(a);
   }
 
-  const dayLines = days
+  const normalizedDays: NormalizedDay[] = days
+    .slice()
     .sort((a, b) => a.sort_order - b.sort_order)
-    .map((d) => {
+    .map((d, index) => {
       const acts = (actsByDay.get(d.id) ?? []).sort((a, b) => a.sort_order - b.sort_order);
-      const actLines = acts.map((a) =>
-        `    - [id:${a.id}]${a.is_locked ? " [LOCKED]" : ""} ${a.time || "?"} | ${a.title} | ${a.category} | ${a.duration_minutes}min | ${trip.currency}${a.estimated_cost} | ${a.location}`
-      ).join("\n");
+
+      if (index >= FULL_DETAIL_DAY_LIMIT) {
+        const total = acts.reduce((sum, a) => sum + Number(a.estimated_cost), 0);
+        const lockedCount = acts.filter((a) => a.is_locked).length;
+        return {
+          id: d.id,
+          label: d.label,
+          date: d.date,
+          summary: acts.length === 0
+            ? "no activities"
+            : `${acts.length} activities, ~${trip.currency}${Math.round(total)} total` + (lockedCount > 0 ? `, ${lockedCount} locked` : ""),
+        };
+      }
+
+      return {
+        id: d.id,
+        label: d.label,
+        date: d.date,
+        activities: acts.map((a) => ({
+          id: a.id,
+          title: a.title,
+          time: a.time,
+          category: a.category,
+          durationMinutes: a.duration_minutes,
+          estimatedCost: a.estimated_cost,
+          location: a.location,
+          locked: a.is_locked,
+          notes: parseNoteTexts(a.personal_note),
+        })),
+      };
+    });
+
+  return {
+    trip: {
+      title: trip.title,
+      destination: trip.destination,
+      startDate: trip.start_date,
+      endDate: trip.end_date,
+      budget: trip.budget,
+      currency: trip.currency,
+      travelers: trip.travelers,
+      pace: trip.pace,
+      interests: trip.interests,
+      specialRequests: trip.special_requests,
+    },
+    days: normalizedDays,
+  };
+}
+
+/** Rough token estimate (chars/4) for logging only — see the handler's log
+ * line, which logs this number and structural counts, never the prompt. */
+function estimateTokens(text: string): number {
+  return Math.ceil(text.length / 4);
+}
+
+// ─── Build itinerary context string ──────────────────────────────────────────
+//
+// RULES/WHOLE-DAY CHANGES below were condensed (~900 -> ~725 tokens) to cut
+// per-request cost: every constraint is still present, just stated once.
+// - Introduced one EMPTY shorthand (defined a single time) instead of
+//   restating the same "" / 0 field list three separate times (once per
+//   add/remove, once for add_day, once for remove_day).
+// - The general "use "" for ids not applicable to the operation" rule
+//   replaced identical per-operation restatements of the same id defaults.
+// - Dropped the trailing "for both, use the full empty-value convention"
+//   line — pure restatement of what add_day/remove_day already said.
+// No rule, operation mapping, or constraint was removed — see the system
+// prompt below for the matching trim (duplicate phrasing only).
+function buildContext(context: NormalizedItineraryContext): string {
+  const { trip, days } = context;
+
+  const dayLines = days
+    .map((d) => {
+      if (d.summary) {
+        return `  ${d.label} (${d.date}) [day_id:${d.id}]: ${d.summary} — condensed; ask about this day directly for full detail.`;
+      }
+      const actLines = (d.activities ?? []).map((a) => {
+        const notesTag = a.notes.length ? ` | Notes: ${a.notes.map((n) => `"${n}"`).join("; ")}` : "";
+        return `    - [id:${a.id}]${a.locked ? " [LOCKED]" : ""} ${a.time || "?"} | ${a.title} | ${a.category} | ${a.durationMinutes}min | ${trip.currency}${a.estimatedCost} | ${a.location}${notesTag}`;
+      }).join("\n");
       return `  ${d.label} (${d.date}) [day_id:${d.id}]\n${actLines || "    (no activities)"}`;
     })
     .join("\n");
@@ -275,53 +447,55 @@ function buildContext(trip: DbTrip, days: DbTripDay[], activities: DbActivity[])
   return `
 Trip: ${trip.title}
 Destination: ${trip.destination}
-Dates: ${trip.start_date} to ${trip.end_date}
+Dates: ${trip.startDate} to ${trip.endDate}
 Budget: ${trip.budget} ${trip.currency} total | Travelers: ${trip.travelers} | Pace: ${trip.pace}
 Interests: ${trip.interests.join(", ")}
-${trip.special_requests ? `Special requests: ${trip.special_requests}` : ""}
+${trip.specialRequests ? `Special requests: ${trip.specialRequests}` : ""}
 
 CURRENT ITINERARY (use the exact IDs when referencing existing activities or days):
 ${dayLines}
 
 RULES:
-- First decide reply_type. Use "answer" for general travel questions that do not require changing
-  the itinerary (e.g. tipping norms, tap water safety, SIM cards, what to wear, scams to avoid,
-  cash vs card). Use "proposal" whenever the user is asking to add, remove, move, replace, or
-  otherwise change activities, days, or budget — including making the trip longer or shorter.
-- If reply_type = "answer": put your response in answer_text. Set summary="", constraints=[],
-  changes=[], old_estimated_total=0, new_estimated_total=0, budget_difference=0, pace_effect="",
-  warnings=[].
-- If reply_type = "proposal": set answer_text="" and propose the smallest necessary changes to
-  fulfill the user's instruction, exactly as described below.
-- Activities marked [LOCKED] MUST NOT be edited, moved, removed, or replaced. A day containing a
-  [LOCKED] activity MUST NOT be removed via "remove_day".
-- Maximum 6 activities per day.
-- Estimated cost must be >= 0.
-- Use "" for activity_id/source_day_id/destination_day_id when not applicable to the operation.
-- For "add": activity_id="", source_day_id="", destination_day_id=<target day id>, before=all empty strings/zeros, after=new activity details.
-- For "remove": activity_id=<id>, source_day_id=<day id>, destination_day_id="", after=all empty strings/zeros.
-- For "move": activity_id=<id>, source_day_id=<from day id>, destination_day_id=<to day id>, before/after = same activity details.
-- For "replace": activity_id=<existing id>, source_day_id=<day id>, destination_day_id="", before=existing activity, after=replacement.
-- For "update": activity_id=<id>, source_day_id=<day id>, destination_day_id="", before=current values of changed fields (other fields empty/""), after=new values.
-- In before/after for "add"/"remove" where data is not applicable, use: title="", description="", location="", start_time="", duration_minutes=0, estimated_cost=0, cost_confidence="medium", category="Other", ai_reason="", latitude=0, longitude=0.
-- For "add"/"replace", set after.latitude/after.longitude to your best-effort real-world coordinates for after.location, and after.cost_confidence to how confident you are in after.estimated_cost.
+- Set reply_type="answer" for general travel questions that don't require an itinerary change
+  (e.g. tipping, tap water, SIM cards, what to wear, scams, cash vs card, hidden gems). Set
+  reply_type="proposal" for any add/remove/move/replace/update of activities, days, or budget,
+  including making the trip longer or shorter.
+- reply_type="answer": answer_text=your reply; summary="", constraints=[], changes=[],
+  old_estimated_total=0, new_estimated_total=0, budget_difference=0, pace_effect="", warnings=[].
+- reply_type="proposal": answer_text=""; propose the smallest necessary changes to fulfill the
+  instruction.
+- [LOCKED] activities MUST NOT be edited, moved, removed, or replaced, and a day containing one
+  MUST NOT be removed via "remove_day".
+- Max 6 activities per day. Estimated cost must be >= 0.
+- EMPTY = title="", description="", location="", start_time="", duration_minutes=0,
+  estimated_cost=0, cost_confidence="medium", category="Other", ai_reason="", latitude=0,
+  longitude=0. Use "" for any activity_id/source_day_id/destination_day_id not applicable to the
+  operation.
+- "add": destination_day_id=<target day id>, before=EMPTY, after=new activity details.
+- "remove": activity_id=<id>, source_day_id=<day id>, after=EMPTY.
+- "move": activity_id=<id>, source_day_id=<from day id>, destination_day_id=<to day id>,
+  before/after = same activity details.
+- "replace": activity_id=<existing id>, source_day_id=<day id>, before=existing activity,
+  after=replacement.
+- "update": activity_id=<id>, source_day_id=<day id>, before=current values of changed fields
+  (other fields EMPTY), after=new values.
+- For "add"/"replace", set after.latitude/after.longitude to your best-effort real-world
+  coordinates for after.location, and after.cost_confidence to how confident you are in
+  after.estimated_cost.
 
 WHOLE-DAY CHANGES — use these when the user wants to make the trip longer or shorter (e.g.
 "add 2 more days", "shorten this trip by a day"), never by stuffing extra activities into an
 existing day or leaving a day empty as a substitute:
 - "add_day" appends exactly one new day immediately after the CURRENT LAST DAY of the trip — you
   cannot insert a day anywhere else, and the actual calendar date is assigned by the app, not you.
-  Set activity_id="", source_day_id="", destination_day_id="", before/after to the empty-value
-  convention above. Set day_theme and day_summary for the new day, and day_activities to a full
-  day's worth of new activities (each using the same shape as an activity's "after" snapshot,
-  including your best-effort latitude/longitude and cost_confidence). To add N days, emit N
-  separate "add_day" changes.
-- "remove_day" removes exactly the CURRENT LAST DAY of the trip — you cannot remove a day from
-  the middle or start, and never a day containing a [LOCKED] activity. Set source_day_id to that
-  day's day_id from the itinerary above; leave activity_id/destination_day_id="" and
-  day_theme/day_summary=""/day_activities=[]. To remove N days, emit N separate "remove_day"
-  changes, ordered starting from the actual last day and working backward.
-- For both, before/after use the full empty-value convention (title="", description="", etc.).
+  before/after=EMPTY. Set day_theme and day_summary for the new day, and day_activities to a full
+  day's worth of new activities (each shaped like an activity's "after" snapshot, including
+  best-effort latitude/longitude and cost_confidence). Emit N separate "add_day" changes to add N
+  days.
+- "remove_day" removes exactly the CURRENT LAST DAY of the trip — never a day from the middle or
+  start, and never a day containing a [LOCKED] activity. source_day_id=<that day's day_id>;
+  before/after=EMPTY; day_theme="", day_summary="", day_activities=[]. Emit N separate
+  "remove_day" changes, ordered from the actual last day backward, to remove N days.
 `.trim();
 }
 
@@ -337,12 +511,10 @@ function validateLockedActivities(
 
   for (const change of changes) {
     if (change.activity_id && lockedIds.has(change.activity_id)) {
-      if (change.operation !== "update") {
-        violations.push(
-          `Removed invalid change: cannot ${change.operation} locked activity "${change.before.title || change.activity_id}".`
-        );
-        continue;
-      }
+      violations.push(
+        `Removed invalid change: cannot ${change.operation} locked activity "${change.before.title || change.activity_id}".`
+      );
+      continue;
     }
     if (change.operation === "remove_day" && daysWithLockedActivities.has(change.source_day_id)) {
       violations.push("Removed invalid change: cannot remove a day that contains a locked activity.");
@@ -363,16 +535,20 @@ async function callOpenAI(
   apiKey: string,
   voice: DestinationVoice | null,
 ): Promise<CopilotModelReply> {
+  // System prompt trimmed: it used to restate the answer/proposal example
+  // list, "preserve locked activities", and "smallest necessary changes" —
+  // all already stated precisely in the RULES block below (see buildContext).
+  // Each constraint now appears exactly once, in the RULES block that
+  // defines it operationally, rather than twice in looser prose here.
   const messages = [
     {
       role: "system",
       content:
         "You are Planora Copilot, a conversational AI travel assistant embedded in a trip-planning app. " +
-        "For every user message, first decide whether it is a general travel question (e.g. tipping, tap water, SIM cards, what to wear, scams, cash vs card, hidden gems advice) or a request to modify the trip's itinerary. " +
-        "Answer questions helpfully and concisely using the trip's destination and dates for context. " +
-        "For itinerary modification requests, propose the smallest necessary changes. Preserve locked activities exactly. " +
-        "Do not claim confirmed availability, live prices, or opening hours. All costs are estimates. Explain every proposed change clearly. " +
-        "If a constraint cannot be satisfied, state it clearly in the constraints list. Return only structured data matching the required schema." +
+        "Answer general travel questions concisely, using the trip's destination and dates for context; classify and handle itinerary-change requests per the rules below. " +
+        "Never claim confirmed availability, live prices, or opening hours — all costs are estimates. " +
+        "Explain every proposed change clearly, and state any unsatisfiable constraint in the constraints list. " +
+        "Return only structured data matching the required schema." +
         (voice ? buildVoiceInstruction(voice) : ""),
     },
     { role: "user", content: `ITINERARY CONTEXT:\n${context}` },
@@ -466,10 +642,12 @@ Deno.serve(async (req: Request) => {
       ? body.conversation_history.slice(-10).filter((t) => t && (t.role === "user" || t.role === "assistant") && typeof t.content === "string")
       : [];
 
-    // Load trip (RLS verifies ownership, but we double-check explicitly)
+    // Load trip (RLS verifies ownership, but we double-check explicitly).
+    // Column list matches DbTrip exactly — no email, no other users' data,
+    // nothing beyond what a revision request needs.
     const { data: tripData, error: tripErr } = await supabase
       .from("trips")
-      .select("*")
+      .select("user_id, title, destination, start_date, end_date, budget, currency, travelers, pace, interests, special_requests")
       .eq("id", trip_id)
       .maybeSingle();
 
@@ -486,10 +664,11 @@ Deno.serve(async (req: Request) => {
       return jsonRes({ error: "Trip not found." }, 404);
     }
 
-    // Load days
+    // Load days — column list matches DbTripDay, no trip_id/theme/summary
+    // (unused by the AI context; theme/summary aren't part of it today).
     const { data: daysData, error: daysErr } = await supabase
       .from("trip_days")
-      .select("*")
+      .select("id, label, date, sort_order")
       .eq("trip_id", trip_id)
       .order("sort_order", { ascending: true });
 
@@ -500,10 +679,13 @@ Deno.serve(async (req: Request) => {
 
     const days = daysData as DbTripDay[];
 
-    // Load activities
+    // Load activities — column list matches DbActivity; notably excludes
+    // description, cost_confidence, ai_reason, latitude/longitude, and both
+    // timestamp columns, none of which the AI needs as input (see the
+    // comment above normalizeItinerary for the full explanation).
     const { data: actsData, error: actsErr } = await supabase
       .from("activities")
-      .select("*")
+      .select("id, trip_day_id, title, time, location, duration_minutes, estimated_cost, category, is_locked, personal_note, sort_order")
       .eq("trip_id", trip_id)
       .order("sort_order", { ascending: true });
 
@@ -514,6 +696,17 @@ Deno.serve(async (req: Request) => {
 
     const activities = actsData as DbActivity[];
 
+    // Too large for one AI revision request — fail fast with a friendly
+    // message rather than sending an oversized context to the model (or
+    // worse, silently truncating it and producing a confusing partial
+    // proposal). The user can still edit manually, or ask about a smaller
+    // part of the trip.
+    if (days.length > MAX_SUPPORTED_DAYS || activities.length > MAX_SUPPORTED_ACTIVITIES) {
+      return jsonRes({
+        error: "This trip is too large for the AI copilot to review in one go. Try asking about a specific day or a smaller part of the trip instead.",
+      }, 422);
+    }
+
     // Build locked IDs set, and which days contain at least one locked activity
     const lockedIds = new Set(activities.filter((a) => a.is_locked).map((a) => a.id));
     const daysWithLockedActivities = new Set(activities.filter((a) => a.is_locked).map((a) => a.trip_day_id));
@@ -521,7 +714,8 @@ Deno.serve(async (req: Request) => {
     // Compute old estimated total
     const oldTotal = activities.reduce((sum, a) => sum + Number(a.estimated_cost), 0);
 
-    // Build snapshot for before_json
+    // Build snapshot for before_json — an audit trail stored in ai_revisions,
+    // not sent to the AI (see buildContext below for what actually is).
     const beforeSnapshot = { days, activities };
 
     // Call OpenRouter
@@ -533,7 +727,12 @@ Deno.serve(async (req: Request) => {
       }, 503);
     }
 
-    const context = buildContext(trip, days, activities);
+    const normalized = normalizeItinerary(trip, days, activities);
+    const context = buildContext(normalized);
+
+    // Log a token estimate and structural counts only — never the prompt
+    // itself, which can contain user-written notes/special requests.
+    console.log(`[revise-itinerary] trip ${trip_id}: context ~${estimateTokens(context)} tokens (${days.length} days, ${activities.length} activities)`);
 
     let modelReply: CopilotModelReply;
     try {
