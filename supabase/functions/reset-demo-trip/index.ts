@@ -160,7 +160,7 @@ const SEED_DAYS: SeedDay[] = [
         title: "Yanaka Ginza — Tokyo's Hidden Time Capsule",
         description: "Stroll through one of the last intact pre-war shitamachi neighborhoods. Browse indie shops, artisan studios, and small temples in lanes unchanged since the 1930s.",
         location: "Yanaka Ginza, Yanaka, Taito City",
-        time: "11:00", duration_minutes: 90, estimated_cost: 15, category: "Hidden Gems",
+        time: "11:00", duration_minutes: 90, estimated_cost: 15, category: "Culture",
         ai_reason: "Yanaka escaped wartime bombing and remains an authentic slice of pre-modern Tokyo — a genuine hidden gem with hand-crafted shops and local temples most tourists never reach.",
       },
     ],
@@ -229,7 +229,7 @@ async function seedDemoTrip(
         ? JSON.stringify([{ id: crypto.randomUUID(), text: act.personal_note, createdAt: new Date().toISOString() }])
         : "[]";
 
-      await svcClient.from("activities").insert({
+      const { error: actErr } = await svcClient.from("activities").insert({
         trip_day_id: dayId, trip_id: tripId,
         title: act.title, description: act.description,
         time: act.time, location: act.location,
@@ -237,6 +237,10 @@ async function seedDemoTrip(
         currency: "USD", category: act.category, ai_reason: act.ai_reason,
         is_locked: act.is_locked ?? false, personal_note: noteJson, sort_order: actIdx,
       });
+
+      if (actErr) {
+        console.error(`[reset-demo-trip] activity insert (${act.title}):`, actErr.message);
+      }
     }
   }
 
