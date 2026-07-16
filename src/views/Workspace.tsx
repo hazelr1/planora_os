@@ -1,20 +1,17 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import {
   DndContext, DragOverlay, KeyboardSensor, PointerSensor, useSensor, useSensors, useDroppable,
   type DragEndEvent, type DragStartEvent,
 } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import {
-  AlertTriangle, Calendar, CheckCircle2, Clock, FlaskConical, Gauge, List as ListIcon,
+  AlertTriangle, Calendar, CheckCircle2, Clock, FlaskConical, Gauge, Info, List as ListIcon,
   Loader2, Map as MapIcon, MapPin, Pencil, RefreshCw, Save, CalendarDays, Users,
 } from 'lucide-react';
 import type { AIRevisionProposal, Activity, Screen, Trip, TripStatus } from '../types';
 import DaySection from '../components/DaySection';
-import CalendarView from '../components/CalendarView';
 import ListView from '../components/ListView';
-import MapView from '../components/MapView';
-import AIChangeReview from '../components/AIChangeReview';
-import ActivityModal, { type ActivityModalData } from '../components/ActivityModal';
+import { type ActivityModalData } from '../components/ActivityModal';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import EmptyState from '../components/EmptyState';
@@ -29,7 +26,6 @@ import HotelsSection from '../components/workspace/HotelsSection';
 import BudgetSection from '../components/workspace/BudgetSection';
 import PackingSection from '../components/workspace/PackingSection';
 import DocumentsSection from '../components/workspace/DocumentsSection';
-import GallerySection from '../components/workspace/GallerySection';
 import SettingsSection from '../components/workspace/SettingsSection';
 import type { WorkspaceSectionId } from '../components/workspace/types';
 import { useActivityEditor } from '../hooks/useActivityEditor';
@@ -38,6 +34,21 @@ import { tripRepository } from '../data';
 import { supabase } from '../lib/supabase';
 import { formatDateRange } from '../utils/dates';
 import { timeToMinutes } from '../utils/schedule';
+
+// Lazy-loaded: react-leaflet + leaflet only get fetched once the user
+// actually switches to the Map view, instead of shipping in the main bundle
+// for every visitor regardless of whether they ever open it.
+const MapView = lazy(() => import('../components/MapView'));
+// Lazy-loaded: one of four Days view tabs (default is Timeline) — deferred
+// like Map above so switching tabs is the trigger, not initial page load.
+const CalendarView = lazy(() => import('../components/CalendarView'));
+// Lazy-loaded: one of nine workspace sections, never the default (Overview).
+const GallerySection = lazy(() => import('../components/workspace/GallerySection'));
+// Lazy-loaded: the heaviest component in the app (500+ lines) and only ever
+// mounted once an AI revision proposal actually exists to review.
+const AIChangeReview = lazy(() => import('../components/AIChangeReview'));
+// Lazy-loaded: the add/edit activity modal, only mounted while open.
+const ActivityModal = lazy(() => import('../components/ActivityModal'));
 
 interface WorkspaceProps {
   tripId: string;
@@ -185,7 +196,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
     setResetError(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) { setResetError('Session expired. Please sign in again.'); return; }
 
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reset-demo-trip`,
@@ -200,14 +211,23 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
         },
       );
       const json = await res.json() as { trip_id?: string; error?: string };
-      if (res.ok && json.trip_id) {
-        onNavigate({ name: 'workspace', tripId: json.trip_id });
+      // Previously this branch only handled a thrown exception — a
+      // well-formed error response (res.ok false, no trip_id) fell through
+      // both the success check and the catch block, so the dialog just
+      // closed in `finally` with no error shown and no navigation: a silent
+      // failure. Now every non-success outcome sets resetError and leaves
+      // the dialog open (matching what it already renders resetError into),
+      // and only the confirmed-success path closes it.
+      if (!res.ok || !json.trip_id) {
+        setResetError(json.error ?? 'Could not reset demo trip. Please try again.');
+        return;
       }
+      setResetConfirm(false);
+      onNavigate({ name: 'workspace', tripId: json.trip_id });
     } catch {
       setResetError('Could not reset demo trip. Please try again.');
     } finally {
       setResetLoading(false);
-      setResetConfirm(false);
     }
   }, [onNavigate]);
 
@@ -389,6 +409,14 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
         </div>
       </div>
 
+      {/* Persists across every workspace section (Overview, Days, Flights, Budget, etc.)
+          since it lives in the shared header above `sectionContent`, not per-section —
+          one quiet line rather than a caveat repeated on every price/time/duration. */}
+      <p className="flex items-center gap-1.5 text-xs text-ink-500">
+        <Info size={12} className="shrink-0" />
+        Times, prices, durations, and availability are estimates — verify important details before booking.
+      </p>
+
       {showAppliedBanner && (
         <div className="rounded-xl bg-emerald-500/10 px-4 py-3 flex items-center gap-2.5" role="status">
           <CheckCircle2 size={16} className="text-emerald-700 dark:text-emerald-400 shrink-0" />
@@ -421,7 +449,20 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
       sectionContent = <DocumentsSection tripId={trip.id} />;
       break;
     case 'gallery':
-      sectionContent = <GallerySection tripId={trip.id} />;
+      sectionContent = (
+        <Suspense
+          fallback={
+            <div className="max-w-4xl space-y-5">
+              <div className="card p-6 space-y-3">
+                <div className="skeleton h-5 w-40" />
+                <div className="skeleton h-24 w-full" />
+              </div>
+            </div>
+          }
+        >
+          <GallerySection tripId={trip.id} />
+        </Suspense>
+      );
       break;
     case 'settings':
       sectionContent = (
@@ -490,24 +531,43 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
               </DragOverlay>
             </DndContext>
           ) : viewMode === 'calendar' ? (
-            <CalendarView
-              days={trip.days}
-              onEditActivity={openEdit}
-              onDeleteActivity={(id) => setConfirmDeleteId(id)}
-              onMoveToDayActivity={setMoveActivityId}
-              onMoveUpActivity={editor.moveUp}
-              onMoveDownActivity={editor.moveDown}
-              onToggleLock={editor.toggleLock}
-              selectedActivityId={selectedActivityId}
-              onSelectActivity={setSelectedActivityId}
-            />
+            <Suspense
+              fallback={
+                <div className="space-y-4">
+                  {[...Array(3)].map((_, i) => <div key={i} className="skeleton h-24 w-full" />)}
+                </div>
+              }
+            >
+              <CalendarView
+                days={trip.days}
+                onEditActivity={openEdit}
+                onDeleteActivity={(id) => setConfirmDeleteId(id)}
+                onMoveToDayActivity={setMoveActivityId}
+                onMoveUpActivity={editor.moveUp}
+                onMoveDownActivity={editor.moveDown}
+                onToggleLock={editor.toggleLock}
+                selectedActivityId={selectedActivityId}
+                onSelectActivity={setSelectedActivityId}
+              />
+            </Suspense>
           ) : viewMode === 'map' ? (
-            <MapView
-              days={trip.days}
-              currency={trip.currency}
-              selectedActivityId={selectedActivityId}
-              onSelectActivity={setSelectedActivityId}
-            />
+            <Suspense
+              fallback={
+                <div className="card overflow-hidden">
+                  <div className="px-5 py-3 border-b border-glass/10 bg-ink-200/30">
+                    <div className="skeleton h-4 w-32" />
+                  </div>
+                  <div className="skeleton h-[480px] w-full" />
+                </div>
+              }
+            >
+              <MapView
+                days={trip.days}
+                currency={trip.currency}
+                selectedActivityId={selectedActivityId}
+                onSelectActivity={setSelectedActivityId}
+              />
+            </Suspense>
           ) : (
             <ListView
               days={trip.days}
@@ -550,16 +610,25 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
 
       {/* Activity modal */}
       {modal && (
-        <ActivityModal
-          data={modal}
-          currency={trip.currency}
-          onClose={() => setModal(null)}
-          onAdd={editor.addActivity}
-          onEdit={editor.editActivity}
-          onAddNote={editor.addNote}
-          onEditNote={editor.editNote}
-          onDeleteNote={editor.deleteNote}
-        />
+        <Suspense
+          fallback={
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" aria-hidden="true" />
+              <Loader2 className="relative text-white animate-spin" size={28} />
+            </div>
+          }
+        >
+          <ActivityModal
+            data={modal}
+            currency={trip.currency}
+            onClose={() => setModal(null)}
+            onAdd={editor.addActivity}
+            onEdit={editor.editActivity}
+            onAddNote={editor.addNote}
+            onEditNote={editor.editNote}
+            onDeleteNote={editor.deleteNote}
+          />
+        </Suspense>
       )}
 
       {/* Confirm delete activity */}
@@ -612,14 +681,23 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
 
       {/* AI Change Review */}
       {reviewProposal && (
-        <AIChangeReview
-          proposal={reviewProposal}
-          tripId={tripId}
-          days={trip.days}
-          currency={trip.currency}
-          onApplied={handleRevisionApplied}
-          onClose={() => setReviewProposal(null)}
-        />
+        <Suspense
+          fallback={
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" aria-hidden="true" />
+              <Loader2 className="relative text-white animate-spin" size={28} />
+            </div>
+          }
+        >
+          <AIChangeReview
+            proposal={reviewProposal}
+            tripId={tripId}
+            days={trip.days}
+            currency={trip.currency}
+            onApplied={handleRevisionApplied}
+            onClose={() => setReviewProposal(null)}
+          />
+        </Suspense>
       )}
     </DestinationThemeScope>
   );
