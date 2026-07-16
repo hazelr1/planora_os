@@ -340,7 +340,7 @@ Deno.serve(async (req: Request) => {
             }, 409);
           }
           // Locked activity protection
-          if (current.is_locked && ["remove", "replace", "move"].includes(op)) {
+          if (current.is_locked && ["remove", "replace", "move", "update"].includes(op)) {
             return jsonRes({
               error: `Cannot ${op} locked activity "${current.title}". Unlock it first.`,
             }, 422);
