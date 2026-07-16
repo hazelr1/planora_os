@@ -67,7 +67,7 @@ function SaveBar({ status, errorMessage, retry }: { status: string; errorMessage
   if (status === 'idle') return null;
   return (
     <div className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-      status === 'saving' ? 'bg-brand-500/10 text-brand-300' :
+      status === 'saving' ? 'bg-brand-500/10 text-brand-700 dark:text-brand-300' :
       status === 'saved' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' :
       'bg-rose-500/10 text-rose-700 dark:text-rose-300'
     }`}>
@@ -105,7 +105,7 @@ function DayTabButton({
         isActive
           ? 'bg-brand-500 text-black shadow-soft'
           : isOver
-          ? 'bg-brand-500/20 border border-brand-400/40 text-brand-200'
+          ? 'bg-brand-500/20 border border-brand-400/40 text-brand-800 dark:text-brand-200'
           : 'bg-ink-200/60 text-ink-600 hover:bg-ink-300/60'
       }`}
     >

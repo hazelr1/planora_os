@@ -53,7 +53,7 @@ function ChangeCard({ change, days, currency }: { change: RevisionChange; days: 
   const actName =
     change.operation === 'add' ? change.after.title :
     change.operation === 'add_day' ? (change.day_theme || 'New day') :
-    change.operation === 'remove_day' ? (srcLabel || 'Last day') :
+    change.operation === 'remove_day' ? (srcLabel || 'This day') :
     (change.before.title || change.after.title);
   const hasDetail =
     (change.operation === 'replace' && change.before.title) ||

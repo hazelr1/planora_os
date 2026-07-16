@@ -10,15 +10,6 @@ interface LandingProps {
   onTryDemo: () => Promise<void>;
 }
 
-/**
- * Placeholder stock photography — see public/image/. Every filename here is
- * deliberately named for what it depicts, not where it's used, so dropping
- * in a real photo later is a straight file swap with no code changes.
- *
- * Each slot is a pool, not a single file — pickDaily rotates which one shows
- * today, cycling back through the pool once every entry's had a turn rather
- * than needing an ever-growing supply of new photos.
- */
 const HERO_IMAGES = ['/image/landing-hero.jpg', '/image/landing-hero-2.jpg', '/image/landing-hero-3.jpg'];
 const SHOWCASE = [
   { name: 'Santorini', region: 'Greece', essence: 'Whitewashed cliffs above a caldera sea.', images: ['/image/destination-santorini.jpg', '/image/destination-santorini-2.jpg'] },
@@ -27,9 +18,6 @@ const SHOWCASE = [
   { name: 'Reykjavik', region: 'Iceland', essence: 'Glacial light over volcanic coastline.', images: ['/image/destination-iceland.jpg', '/image/destination-iceland-2.jpg'] },
 ];
 
-// Alternating tilt per card in the overlapping showcase cluster — a fixed,
-// hand-tuned sequence (not randomized) so the fan reads as designed, not
-// accidental, and stays identical on every render/reload.
 const SHOWCASE_TILT = ['-rotate-2', 'rotate-3', '-rotate-3', 'rotate-2'];
 
 const HERO_STATS: [{ value: string; label: string }, { value: string; label: string }, { value: string; label: string }] = [
@@ -66,26 +54,26 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
 
   return (
     <div className="flex flex-col">
-      {/* ─── Hero — full-bleed cinematic photography, editorial type over a scrim ─── */}
+      {/* ─── Hero ─── */}
       <section className="relative -mx-4 -mt-6 overflow-hidden sm:-mx-6 sm:-mt-8">
         <div className="absolute inset-0">
           <img
             src={heroImage}
             alt=""
             className="h-full w-full object-cover"
-            style={{ filter: 'saturate(1.35) contrast(1.08) brightness(1.05)' }}
+            style={{ filter: 'saturate(1.85) contrast(1.12) brightness(0.78)' }}
           />
-          {/* Lighter than before so the photo's real color comes through in
-              the middle of the frame — the scrim now concentrates its
-              darkness at the very bottom, right behind the headline/CTA
-              text, instead of washing out the whole image. */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/5" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent" />
+          {/* Warm amber/sky atmospheric tint */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-amber-900/30 via-transparent to-sky-900/20" />
+          {/* Strong bottom scrim behind headline/CTA */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/25 to-transparent" />
+          {/* Subtle top darkening for nav */}
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/35 via-transparent to-transparent" />
         </div>
 
         <div className="relative flex min-h-[78vh] flex-col items-center justify-end px-4 pb-28 pt-24 text-center sm:min-h-[85vh] sm:pb-36">
           <div className="inline-flex items-center gap-2 chip bg-white/10 text-white mb-8 animate-fade-in backdrop-blur-sm">
-            <Sparkles size={13} className="text-violet-300" />
+            <Sparkles size={13} className="text-amber-300" />
             <span className="font-semibold">AI-powered travel planner</span>
           </div>
           <h1 className="font-display max-w-4xl text-5xl leading-[0.98] tracking-tight text-white animate-slide-up sm:text-7xl lg:text-8xl">
@@ -95,14 +83,11 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
             </span>
             <span className="block font-700 text-3xl sm:text-5xl">when you do.</span>
           </h1>
-          <p className="mx-auto mt-7 max-w-xl text-lg text-white/75 leading-relaxed animate-slide-up sm:text-xl" style={{ animationDelay: '80ms' }}>
+          <p className="mx-auto mt-7 max-w-xl text-lg text-white/80 leading-relaxed animate-slide-up sm:text-xl" style={{ animationDelay: '80ms' }}>
             Generate a personalized itinerary, edit every detail, and let AI adapt it around your budget, time, and travel style.
           </p>
         </div>
 
-        {/* Floating glass panel — bridges the hero photograph and the page
-            content below it, so the CTA reads as its own elevated surface
-            rather than another row of hero copy. */}
         <motion.div
           className="card relative z-10 mx-4 -mt-16 max-w-2xl p-6 shadow-pop animate-scale-in sm:mx-auto sm:p-8"
           style={{ animationDelay: '160ms' }}
@@ -129,7 +114,7 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
             <div className="flex flex-col items-center gap-2 text-xs text-ink-500 sm:items-end">
               {['Free Demo', 'Free to explore', 'Edit every detail'].map((text) => (
                 <span key={text} className="flex items-center gap-1.5">
-                  <Check size={12} className="text-brand-400 shrink-0" /> {text}
+                  <Check size={12} className="text-brand-500 dark:text-brand-400 shrink-0" /> {text}
                 </span>
               ))}
             </div>
@@ -221,7 +206,7 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
           <p className="font-display mx-auto max-w-xl text-2xl font-700 leading-snug text-ink-900 sm:text-3xl">
             &ldquo;The AI travel planner that adapts with you.&rdquo;
           </p>
-          <p className="mt-4 text-sm text-brand-300/80">
+          <p className="mt-4 text-sm text-brand-700 dark:text-brand-300">
             Build your perfect itinerary, then ask AI to make it better.
           </p>
           <button
@@ -242,7 +227,7 @@ function Feature({ icon, title, desc, offset }: { icon: React.ReactNode; title: 
       variants={revealUp}
       className={`card card-interactive p-6 ${offset ? 'sm:mt-6' : ''}`}
     >
-      <div className="h-11 w-11 rounded-xl bg-brand-500/10 text-brand-300 flex items-center justify-center mb-4">
+      <div className="h-11 w-11 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-300 flex items-center justify-center mb-4">
         {icon}
       </div>
       <h3 className="font-display text-sm font-700 text-ink-900">{title}</h3>

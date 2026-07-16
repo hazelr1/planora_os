@@ -4,22 +4,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Theme tokens ─────────────────────────────────────────────────────────
-   Planora's permanent visual identity — every future destination experience
-   layers on top of this, never replaces it (see src/destinations/). Every
-   color and shadow below resolves through a CSS variable, so switching the
-   `data-theme` attribute on <html> re-themes the entire app instantly — no
-   component classNames need to change between light and dark.
-
-   Light mode: soft warm ivory, an elegant (deliberately desaturated, not
-   neon) turquoise, gentle emerald in the deeper accent stops — closer to a
-   luxury travel magazine's paper stock and ink than a bright SaaS palette.
-   Dark mode: deep navy, rich blue, turquoise ambient glow — kept close to
-   the app's original identity, refined rather than replaced.
-
-   Destination themes (Workspace-only) override a small subset of the
-   --brand-* variables on a scoped wrapper further down the tree — see
-   DestinationThemeScope.tsx — which is why brand is variable-driven too. */
 :root {
   color-scheme: dark;
 
@@ -35,7 +19,6 @@
   --ink-900: 238 243 250;
   --ink-950: 255 255 255;
 
-  /* Rich, calm turquoise — deep enough to feel premium under a soft glow rather than neon-bright. */
   --brand-50: 224 250 250;
   --brand-100: 194 244 245;
   --brand-200: 140 231 234;
@@ -50,14 +33,10 @@
 
   --glass: 255 255 255;
 
-  /* Rich blue → turquoise, the "glow" gradient behind .btn-primary and hero surfaces. */
   --accent-from: 42 199 205;
   --accent-via: 45 130 235;
   --accent-to: 99 102 241;
 
-  /* Theme-aware elevation. Dark mode keeps depth via near-black shadows with
-     a whisper of cool light bouncing off the "glow" edge — see the glow
-     tokens below for the actual ambient-light color. */
   --shadow-soft: 0 1px 2px rgba(0,0,0,0.35), 0 0 1px rgba(148,197,255,0.06);
   --shadow-card: 0 4px 24px -4px rgba(0,0,0,0.45), 0 0 1px rgba(148,197,255,0.08);
   --shadow-card-hover: 0 16px 48px -12px rgba(0,0,0,0.55), 0 0 0 1px rgba(148,197,255,0.10);
@@ -65,9 +44,6 @@
   --shadow-glow: 0 0 34px -6px rgba(42,199,205,0.26);
   --shadow-glow-lg: 0 10px 44px -8px rgba(42,199,205,0.24), 0 0 64px -18px rgba(99,102,241,0.26);
 
-  /* AI-accent violet — matches Tailwind's default violet scale, since dark
-     is this app's original design and every existing violet-NNN class was
-     tuned against it. */
   --violet-50: 245 243 255;
   --violet-100: 237 233 254;
   --violet-200: 221 214 254;
@@ -84,9 +60,6 @@
 :root[data-theme='light'] {
   color-scheme: light;
 
-  /* A soft, barely-warm ivory — closer to a gallery wall than a cream latte,
-     so the warmth reads as considered rather than the "warm cream + serif"
-     template look. */
   --ink-50: 251 249 245;
   --ink-100: 255 255 255;
   --ink-200: 240 235 227;
@@ -99,9 +72,6 @@
   --ink-900: 24 21 18;
   --ink-950: 12 10 9;
 
-  /* Turquoise, deepened and desaturated from the dark-mode cyan so it reads
-     as elegant rather than bright — and a true emerald as the deep accent
-     stop, per the brief's "elegant turquoise, gentle emerald" pairing. */
   --brand-50: 232 250 246;
   --brand-100: 209 244 236;
   --brand-200: 168 227 211;
@@ -116,14 +86,10 @@
 
   --glass: 15 23 42;
 
-  /* Turquoise → deep teal → emerald. */
   --accent-from: 45 158 138;
   --accent-via: 34 132 105;
   --accent-to: 16 109 79;
 
-  /* Warm, low-contrast shadows rather than pure black — a shadow this soft
-     is what makes borders unnecessary; it reads as paper lifted off a
-     table, not a bounding box. */
   --shadow-soft: 0 1px 2px rgba(60,50,32,0.06), 0 1px 1px rgba(60,50,32,0.04);
   --shadow-card: 0 2px 16px -4px rgba(60,50,32,0.09), 0 1px 2px rgba(60,50,32,0.05);
   --shadow-card-hover: 0 12px 36px -10px rgba(60,50,32,0.14), 0 2px 6px rgba(60,50,32,0.06);
@@ -131,17 +97,6 @@
   --shadow-glow: 0 0 28px -8px rgba(45,158,138,0.20);
   --shadow-glow-lg: 0 8px 32px -8px rgba(45,158,138,0.22), 0 0 48px -16px rgba(16,109,79,0.20);
 
-  /* -100/-200/-300 are pulled from Tailwind's own -500/-600/-700 hues, not a
-     one-stop shift off the dark-mode scale — the previous one-stop shift
-     left them at 1.2–2.6:1 contrast against the light ivory background
-     (verified with the WCAG relative-luminance formula), i.e. still
-     effectively invisible, since every real usage of these three shades is
-     text (the AI Copilot's message bubbles, proposal summaries, "AI
-     reason" notes — see AIAssistantPanel.tsx/ActivityCard.tsx/
-     AIChangeReview.tsx), never a background wash. These three now measure
-     5.4–8.5:1. Translucent bg-/border- usages of the *other* shades are
-     unaffected and stay correct at either end since low-opacity tints are
-     forgiving of exact hue. */
   --violet-50: 245 240 255;
   --violet-100: 124 58 237;
   --violet-200: 109 40 217;
@@ -161,9 +116,6 @@
     @apply bg-ink-50 text-ink-800 font-sans;
     transition: background-color 0.4s ease, color 0.4s ease;
   }
-  /* Editorial polish for every heading already in the app — tighter,
-     considered spacing and no awkward mid-word wraps on large display
-     text. Affects no layout: line-height and wrapping only. */
   h1, h2, h3 {
     line-height: 1.15;
     text-wrap: balance;
@@ -171,9 +123,6 @@
 }
 
 @layer components {
-  /* Glass used sparingly: a light frost rather than the previous maximal
-     blur, and a soft shadow carries most of the elevation so the border can
-     stay close to invisible — "elegant shadows instead of harsh borders." */
   .card {
     @apply rounded-2xl bg-ink-100/60 backdrop-blur-md border border-glass/[0.06] shadow-card transition-all duration-[400ms] ease-out;
   }
@@ -213,10 +162,6 @@
   .label {
     @apply block text-xs font-semibold uppercase tracking-wide text-ink-500 mb-1.5;
   }
-  /* Semantic text roles — reach for one of these instead of picking an
-     ink-NNN shade by feel, so hierarchy stays the same decision everywhere:
-     heading (primary), body (readable prose), muted (secondary/meta),
-     faint (tertiary — timestamps, disabled hints, icon accents). */
   .text-heading {
     @apply text-ink-900;
   }
@@ -232,16 +177,9 @@
   .chip {
     @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium;
   }
-  /* Layers onto Tailwind's own .font-display utility (letter-spacing only —
-     never overrides font-family) so every heading already marked
-     font-display in the app gets a touch of editorial refinement for free. */
   .font-display {
     letter-spacing: -0.015em;
   }
-  /* Editorial section label — a small tracked-caps word beside a hairline
-     rule, the "ABOUT THE TOUR ———" convention from travel-magazine layouts.
-     Used sparingly, only to introduce a genuinely new section on the
-     Landing page — never inside the Workspace's denser, functional screens. */
   .section-eyebrow {
     @apply flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.2em] text-ink-500;
   }
@@ -251,20 +189,18 @@
   }
 }
 
-/* AI-accented surfaces (violet, used sparingly) — visually distinct from
-   user-generated content so "the AI did this" always reads at a glance. */
 .ai-surface {
   @apply rounded-2xl border border-violet-400/25 bg-violet-500/[0.06] backdrop-blur-xl shadow-card;
   animation: glow-pulse 3.2s ease-in-out infinite;
 }
 .ai-accent {
-  @apply text-violet-300;
+  @apply text-violet-600 dark:text-violet-300;
 }
 .ai-gradient {
   background-image: linear-gradient(135deg, #22d3ee 0%, #7c3aed 60%, #4f46e5 100%);
 }
 
-/* Subtle shimmer sweep for AI-authored text (reasoning callouts, copilot replies) */
+/* Dark mode: light lavender sweep. Light mode: deep violet sweep on ivory. */
 .ai-shimmer {
   background-image: linear-gradient(
     100deg,
@@ -279,7 +215,15 @@
   animation: shimmer 3s linear infinite;
 }
 
-/* Skeleton loading blocks — replaces plain spinners across the app */
+[data-theme='light'] .ai-shimmer {
+  background-image: linear-gradient(
+    100deg,
+    rgba(109,40,217,0.85) 0%,
+    rgba(124,58,237,1) 35%,
+    rgba(91,33,182,0.85) 60%
+  );
+}
+
 .skeleton {
   @apply relative overflow-hidden rounded-lg bg-glass/[0.06];
 }
@@ -299,7 +243,6 @@
   animation: shimmer 1.6s ease-in-out infinite;
 }
 
-/* Three-dot typing indicator for the AI copilot */
 .typing-dots {
   @apply inline-flex items-center gap-1;
 }
@@ -310,17 +253,10 @@
 .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
 .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
 
-/* ─── Destination theme scope overrides ────────────────────────────────────
-   DestinationThemeScope stamps `data-destination-theme` on a wrapper around
-   the entire Trip Workspace and projects the resolved ExperienceTokens onto
-   CSS custom properties there (see tokens/cssVariables.ts). Outside that
-   scope the --dest-* variables are simply unset, so every rule below falls
-   back to the app's normal, destination-agnostic values — Landing/MyTrips/
-   SignIn are untouched. Written outside any @layer so it always wins on
-   specificity regardless of Tailwind's own layer ordering, without needing
-   !important anywhere. This is deliberately the *only* place a destination
-   reaches into the app's base component styles — every other destination
-   surface (hero, divider, motif) is its own dedicated component. */
+[data-theme='light'] .typing-dots span {
+  background-color: rgb(var(--violet-500));
+}
+
 [data-destination-theme] .card {
   border-radius: var(--dest-radius, 1rem);
   border-color: rgb(var(--glass) / var(--dest-glass-opacity, 0.06));
@@ -343,11 +279,6 @@
   letter-spacing: var(--dest-heading-tracking, -0.015em);
 }
 
-/* Faint, full-bleed atmosphere behind the Workspace's content column — an
-   ambient wash of the destination's palette plus its texture pattern, both
-   already computed as CSS variables. Absolutely positioned so it can never
-   affect layout or scroll height; opacity is kept in the token system's
-   lowest range on purpose (see texturePattern.ts's own comment on this). */
 .dest-ambient-backdrop {
   position: absolute;
   inset: 0;
@@ -364,13 +295,11 @@
   opacity: var(--dest-texture-opacity, 0);
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgb(var(--glass) / 0.08); border-radius: 9999px; border: 2px solid transparent; background-clip: padding-box; }
 ::-webkit-scrollbar-thumb:hover { background: rgb(var(--glass) / 0.15); background-clip: padding-box; }
 
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

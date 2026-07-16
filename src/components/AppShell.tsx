@@ -23,7 +23,7 @@ function UserAvatar({ name }: { name: string }) {
     .slice(0, 2)
     .toUpperCase() || '?';
   return (
-    <div className="h-8 w-8 rounded-full bg-brand-500/20 text-brand-300 flex items-center justify-center text-xs font-700 shrink-0">
+    <div className="h-8 w-8 rounded-full bg-brand-500/20 text-brand-700 dark:text-brand-300 flex items-center justify-center text-xs font-700 shrink-0">
       {initials}
     </div>
   );
@@ -52,7 +52,7 @@ export default function AppShell({
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shadow-soft">
               <Compass className="text-black" size={18} strokeWidth={2.5} />
             </div>
-            <span className="font-display text-lg font-800 text-ink-900 group-hover:text-brand-300 transition-colors">
+            <span className="font-display text-lg font-800 text-ink-900 group-hover:text-brand-700 dark:group-hover:text-brand-300 transition-colors">
               Planora
             </span>
           </button>

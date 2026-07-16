@@ -19,7 +19,7 @@ export default function HotelsSection({ trip }: { trip: Trip }) {
     <div className="max-w-2xl grid grid-cols-1 sm:grid-cols-2 gap-5">
       <div className="card p-6">
         <div className="flex items-center gap-2.5 mb-4">
-          <div className="h-9 w-9 rounded-xl bg-brand-500/15 text-brand-300 flex items-center justify-center">
+          <div className="h-9 w-9 rounded-xl bg-brand-500/15 text-brand-700 dark:text-brand-300 flex items-center justify-center">
             <Building2 size={18} />
           </div>
           <h2 className="font-display text-lg font-700 text-ink-900">Where to stay</h2>
@@ -37,7 +37,7 @@ export default function HotelsSection({ trip }: { trip: Trip }) {
 
       <div className="card p-6">
         <div className="flex items-center gap-2.5 mb-4">
-          <div className="h-9 w-9 rounded-xl bg-brand-500/15 text-brand-300 flex items-center justify-center">
+          <div className="h-9 w-9 rounded-xl bg-brand-500/15 text-brand-700 dark:text-brand-300 flex items-center justify-center">
             <UtensilsCrossed size={18} />
           </div>
           <h2 className="font-display text-lg font-700 text-ink-900">Where to eat</h2>

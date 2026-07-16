@@ -38,7 +38,7 @@ export default function WorkspaceSidebar({ active, onSelect, tripTitle, destinat
             title={label}
             className={`w-full flex items-center justify-center lg:justify-start gap-2.5 rounded-xl px-2.5 lg:px-3 py-2 text-sm font-600 transition ${
               active === id
-                ? 'bg-brand-500/15 text-brand-300'
+                ? 'bg-brand-500/15 text-brand-700 dark:text-brand-300'
                 : 'text-ink-600 hover:bg-glass/5 hover:text-ink-800'
             }`}
           >

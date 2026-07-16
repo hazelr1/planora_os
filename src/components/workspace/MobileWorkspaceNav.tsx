@@ -33,7 +33,7 @@ export default function MobileWorkspaceNav({ active, onSelect }: MobileWorkspace
           key={id}
           onClick={() => onSelect(id)}
           className={`flex flex-col items-center gap-1 rounded-lg px-3 py-1.5 shrink-0 transition ${
-            active === id ? 'text-brand-300' : 'text-ink-500'
+            active === id ? 'text-brand-700 dark:text-brand-300' : 'text-ink-500'
           }`}
         >
           <Icon size={18} />

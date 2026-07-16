@@ -77,7 +77,7 @@ export default function DocumentsSection({ tripId }: { tripId: string }) {
                   transition={{ duration: 0.2 }}
                   className="flex items-center gap-3 rounded-xl bg-ink-200/40 px-4 py-3"
                 >
-                  <FileText size={16} className="text-brand-300 shrink-0" />
+                  <FileText size={16} className="text-brand-700 dark:text-brand-300 shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm text-ink-800 truncate">{displayName(f.name)}</p>
                     <p className="text-xs text-ink-500">{formatSize(f.size)}</p>

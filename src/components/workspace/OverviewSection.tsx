@@ -55,7 +55,7 @@ export default function OverviewSection({ trip, onAskCopilot, onNavigate }: Over
             transition={{ delay: i * 0.05, duration: 0.3 }}
             className="card p-4"
           >
-            <div className="h-8 w-8 rounded-lg bg-brand-500/15 text-brand-300 flex items-center justify-center mb-2.5">
+            <div className="h-8 w-8 rounded-lg bg-brand-500/15 text-brand-700 dark:text-brand-300 flex items-center justify-center mb-2.5">
               <Icon size={15} />
             </div>
             <p className="text-xs text-ink-600">{label}</p>
@@ -73,7 +73,7 @@ export default function OverviewSection({ trip, onAskCopilot, onNavigate }: Over
           className={`card card-interactive p-5 text-left ${over ? 'border-rose-500/25' : ''}`}
         >
           <div className="flex items-center gap-2.5 mb-3">
-            <div className={`h-9 w-9 rounded-xl flex items-center justify-center ${over ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400' : 'bg-brand-500/15 text-brand-300'}`}>
+            <div className={`h-9 w-9 rounded-xl flex items-center justify-center ${over ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400' : 'bg-brand-500/15 text-brand-700 dark:text-brand-300'}`}>
               <Wallet size={17} />
             </div>
             <h3 className="font-display text-base font-700 text-ink-900">Budget</h3>
@@ -93,7 +93,7 @@ export default function OverviewSection({ trip, onAskCopilot, onNavigate }: Over
           className="card card-interactive p-5 text-left"
         >
           <div className="flex items-center gap-2.5 mb-3">
-            <div className="h-9 w-9 rounded-xl bg-brand-500/15 text-brand-300 flex items-center justify-center">
+            <div className="h-9 w-9 rounded-xl bg-brand-500/15 text-brand-700 dark:text-brand-300 flex items-center justify-center">
               <ListChecks size={17} />
             </div>
             <h3 className="font-display text-base font-700 text-ink-900">Itinerary</h3>

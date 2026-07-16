@@ -376,7 +376,7 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
                 <button
                   type="button"
                   onClick={openForgotPassword}
-                  className="text-xs text-ink-500 hover:text-brand-300 transition"
+                  className="text-xs text-ink-500 hover:text-brand-700 dark:hover:text-brand-300 transition"
                 >
                   Forgot password?
                 </button>

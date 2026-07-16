@@ -64,7 +64,7 @@ export default function ThemeToggle() {
                 aria-checked={active}
                 onClick={() => { setMode(opt); setOpen(false); }}
                 className={`w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-600 transition ${
-                  active ? 'bg-brand-500/15 text-brand-300' : 'text-ink-600 hover:bg-glass/5 hover:text-ink-800'
+                  active ? 'bg-brand-500/15 text-brand-700 dark:text-brand-300' : 'text-ink-600 hover:bg-glass/5 hover:text-ink-800'
                 }`}
               >
                 <OptIcon size={15} className="shrink-0" />
@@ -72,7 +72,7 @@ export default function ThemeToggle() {
                   {LABELS[opt]}
                   {opt === 'system' && <span className="text-ink-500 font-normal"> ({resolvedTheme})</span>}
                 </span>
-                {active && <Check size={14} className="shrink-0 text-brand-300" />}
+                {active && <Check size={14} className="shrink-0 text-brand-700 dark:text-brand-300" />}
               </button>
             );
           })}

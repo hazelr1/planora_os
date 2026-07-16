@@ -216,20 +216,18 @@ Deno.serve(async (req: Request) => {
     // ── Whole-day changes (add_day / remove_day) ──────────────────────────────
     // Processed first and separately from the activity-level passes below:
     // these add or remove entire trip_days rows (never touched by the
-    // per-activity add/remove/move/replace/update operations), always at the
-    // trip's tail, keeping trip_days a contiguous run from start_date to
-    // end_date the same way generate-itinerary guarantees on creation. The
-    // model's own day IDs are trusted for *which* day to remove, but never
-    // for dates — those are always computed here, one calendar day at a time
-    // from whichever day is currently last.
+    // per-activity add/remove/move/replace/update operations). trip_days must
+    // stay a contiguous run from start_date to end_date, one calendar day
+    // apart, the same invariant generate-itinerary guarantees on creation —
+    // so start_date never moves, and any removal (wherever it happens in the
+    // trip) cascades every later day's date/sort_order/label back by one to
+    // close the gap, then shortens end_date by one day. add_day always
+    // appends after the current last day. The model's own day IDs are
+    // trusted for *which* day to remove, never for dates — those are always
+    // recomputed here.
     function addOneDay(dateStr: string): string {
       const d = new Date(dateStr + "T00:00:00");
       d.setDate(d.getDate() + 1);
-      return d.toISOString().slice(0, 10);
-    }
-    function subOneDay(dateStr: string): string {
-      const d = new Date(dateStr + "T00:00:00");
-      d.setDate(d.getDate() - 1);
       return d.toISOString().slice(0, 10);
     }
 
@@ -237,15 +235,16 @@ Deno.serve(async (req: Request) => {
       (c) => c.operation === "add_day" || c.operation === "remove_day",
     );
 
-    let lastDay: DbTripDayRow | null = dayRows.length > 0 ? dayRows[dayRows.length - 1] : null;
-    let remainingDayCount = dayRows.length;
-    let tripEndDate = trip.end_date;
+    // Mutable working copy of the day sequence — kept in sort_order order so
+    // add/remove within the same request compose correctly.
+    const currentDays: DbTripDayRow[] = [...dayRows];
     const dayLevelErrors: string[] = [];
 
     for (const change of dayLevelChanges) {
       if (change.operation === "add_day") {
-        const newDate = lastDay ? addOneDay(lastDay.date) : trip.start_date;
-        const newSortOrder = lastDay ? lastDay.sort_order + 1 : 1;
+        const last = currentDays[currentDays.length - 1] ?? null;
+        const newDate = last ? addOneDay(last.date) : trip.start_date;
+        const newSortOrder = last ? last.sort_order + 1 : 1;
 
         const { data: newDayData, error: insErr } = await svcClient
           .from("trip_days")
@@ -274,33 +273,46 @@ Deno.serve(async (req: Request) => {
         }
 
         dayIds.add(newDay.id);
-        lastDay = newDay;
-        remainingDayCount += 1;
-        tripEndDate = newDay.date;
+        currentDays.push(newDay);
       } else if (change.operation === "remove_day") {
-        if (!lastDay || change.source_day_id !== lastDay.id) {
-          dayLevelErrors.push("Can only remove a trip's current last day — this proposal may be stale, please request a new one.");
+        const idx = currentDays.findIndex((d) => d.id === change.source_day_id);
+        if (idx === -1) {
+          dayLevelErrors.push("Could not find the day to remove — this proposal may be stale, please request a new one.");
           continue;
         }
-        if (remainingDayCount <= 1) {
+        if (currentDays.length <= 1) {
           dayLevelErrors.push("Cannot remove the only remaining day in a trip.");
           continue;
         }
-        if (activities.some((a) => a.trip_day_id === lastDay!.id && a.is_locked)) {
-          dayLevelErrors.push(`Cannot remove Day ${lastDay.sort_order} — it contains a locked activity. Unlock it first.`);
+        const target = currentDays[idx];
+        if (activities.some((a) => a.trip_day_id === target.id && a.is_locked)) {
+          dayLevelErrors.push(`Cannot remove Day ${target.sort_order} — it contains a locked activity. Unlock it first.`);
           continue;
         }
 
-        const { error: delErr } = await svcClient.from("trip_days").delete().eq("id", lastDay.id);
+        const { error: delErr } = await svcClient.from("trip_days").delete().eq("id", target.id);
         if (delErr) {
           dayLevelErrors.push("Could not remove day.");
           continue;
         }
 
-        dayIds.delete(lastDay.id);
-        tripEndDate = subOneDay(lastDay.date);
-        remainingDayCount -= 1;
-        lastDay = dayRows.find((d) => d.sort_order === lastDay!.sort_order - 1) ?? null;
+        dayIds.delete(target.id);
+        currentDays.splice(idx, 1);
+
+        // Cascade every day from the removed slot onward back by one
+        // calendar day and renumber it, so the trip stays contiguous and
+        // "Day N" labels stay sequential with no gap left behind.
+        for (let k = idx; k < currentDays.length; k++) {
+          const day = currentDays[k];
+          const newDate = k === idx ? target.date : addOneDay(currentDays[k - 1].date);
+          const newSortOrder = k + 1;
+          const { error: shiftErr } = await svcClient
+            .from("trip_days")
+            .update({ date: newDate, sort_order: newSortOrder, label: `Day ${newSortOrder}` })
+            .eq("id", day.id);
+          if (shiftErr) dayLevelErrors.push(`Could not reflow Day ${day.sort_order} after removal.`);
+          currentDays[k] = { ...day, date: newDate, sort_order: newSortOrder };
+        }
       }
     }
 
@@ -308,6 +320,7 @@ Deno.serve(async (req: Request) => {
       return jsonRes({ error: dayLevelErrors[0] }, 422);
     }
 
+    const tripEndDate = currentDays.length > 0 ? currentDays[currentDays.length - 1].date : trip.end_date;
     if (tripEndDate !== trip.end_date) {
       const { error: endDateErr } = await svcClient
         .from("trips")

@@ -20,7 +20,7 @@ export default function PackingSection({ trip }: { trip: Trip }) {
       <div className="card p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-brand-500/15 text-brand-300 flex items-center justify-center">
+            <div className="h-9 w-9 rounded-xl bg-brand-500/15 text-brand-700 dark:text-brand-300 flex items-center justify-center">
               <Luggage size={18} />
             </div>
             <div>

@@ -105,7 +105,7 @@ export default function SettingsSection({ trip, onSave, onRequestResetDemo, rese
                 onClick={() => setStatus(s)}
                 className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${
                   status === s
-                    ? 'border-brand-500/60 bg-brand-500/15 text-brand-300'
+                    ? 'border-brand-500/60 bg-brand-500/15 text-brand-700 dark:text-brand-300'
                     : 'border-glass/10 bg-ink-200/40 text-ink-600 hover:bg-ink-300/60'
                 }`}
               >

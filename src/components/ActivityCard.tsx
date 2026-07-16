@@ -18,11 +18,8 @@ interface ActivityCardProps {
   onMoveUp: () => void;
   onMoveDown: () => void;
   onToggleLock: () => void;
-  /** Highlights the card (e.g. when its map marker is clicked). */
   highlighted?: boolean;
-  /** Selects the card, typically to highlight its map marker in return. */
   onSelect?: () => void;
-  /** True when this activity's time overlaps a neighboring activity the same day. */
   hasConflict?: boolean;
 }
 
@@ -33,7 +30,7 @@ const categoryColors: Record<ActivityCategory, string> = {
   Adventure: 'bg-orange-500/15 text-orange-700 dark:text-orange-300',
   History: 'bg-stone-500/15 text-stone-700 dark:text-stone-300',
   Shopping: 'bg-pink-500/15 text-pink-700 dark:text-pink-300',
-  Nightlife: 'bg-violet-500/15 text-violet-300',
+  Nightlife: 'bg-violet-500/15 text-violet-700 dark:text-violet-300',
   Transport: 'bg-slate-500/15 text-slate-700 dark:text-slate-300',
   Accommodation: 'bg-teal-500/15 text-teal-700 dark:text-teal-300',
   Other: 'bg-glass/5 text-ink-600',
@@ -97,7 +94,7 @@ export default function ActivityCard({
                 {activity.category}
               </span>
               {activity.locked && (
-                <span className="chip bg-brand-500/15 text-brand-300 font-600">
+                <span className="chip bg-brand-500/15 text-brand-700 dark:text-brand-300 font-600">
                   <Lock size={10} /> Locked
                 </span>
               )}
@@ -108,7 +105,6 @@ export default function ActivityCard({
             )}
           </div>
 
-          {/* Up / Down reorder (kept alongside drag for keyboard/no-JS-drag accessibility) */}
           <div className="flex flex-col gap-0.5 shrink-0">
             <button
               onClick={onMoveUp}
@@ -147,7 +143,7 @@ export default function ActivityCard({
           </span>
         </div>
 
-        {/* Intelligence row: conflicts, estimate quality, weather, last updated */}
+        {/* Intelligence row */}
         <div className="mt-2.5 flex flex-wrap items-center gap-2">
           {hasConflict && (
             <span
@@ -177,8 +173,8 @@ export default function ActivityCard({
         {/* AI reason */}
         {activity.aiReason && (
           <div className="mt-3.5 rounded-lg bg-violet-500/10 px-3.5 py-2.5 flex items-start gap-2">
-            <Sparkles size={13} className="text-violet-300 mt-0.5 shrink-0" />
-            <p className="text-xs text-violet-200 leading-relaxed">{activity.aiReason}</p>
+            <Sparkles size={13} className="text-violet-600 dark:text-violet-300 mt-0.5 shrink-0" />
+            <p className="text-xs text-violet-700 dark:text-violet-200 leading-relaxed">{activity.aiReason}</p>
           </div>
         )}
 
