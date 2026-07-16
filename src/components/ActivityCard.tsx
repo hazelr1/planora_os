@@ -39,7 +39,7 @@ const categoryColors: Record<ActivityCategory, string> = {
   Other: 'bg-glass/5 text-ink-600',
 };
 
-const confidenceColors: Record<CostConfidence, string> = {
+const estimateQualityColors: Record<CostConfidence, string> = {
   high: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
   medium: 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
   low: 'bg-rose-500/15 text-rose-700 dark:text-rose-300',
@@ -147,7 +147,7 @@ export default function ActivityCard({
           </span>
         </div>
 
-        {/* Intelligence row: conflicts, cost confidence, weather, last updated */}
+        {/* Intelligence row: conflicts, estimate quality, weather, last updated */}
         <div className="mt-2.5 flex flex-wrap items-center gap-2">
           {hasConflict && (
             <span
@@ -158,10 +158,10 @@ export default function ActivityCard({
             </span>
           )}
           <span
-            className={`chip ${confidenceColors[activity.costConfidence]}`}
-            title={`AI cost estimate confidence: ${activity.costConfidence}`}
+            className={`chip ${estimateQualityColors[activity.costConfidence]}`}
+            title={`Estimate quality: ${activity.costConfidence} — based on typical travel prices, not a guaranteed cost.`}
           >
-            {activity.costConfidence} confidence
+            {activity.costConfidence} estimate quality
           </span>
           <span
             className="chip bg-glass/5 text-ink-500"
