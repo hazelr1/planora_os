@@ -10,7 +10,12 @@ interface LandingProps {
   onTryDemo: () => Promise<void>;
 }
 
-const HERO_IMAGES = ['/image/landing-hero.jpg', '/image/landing-hero-2.jpg', '/image/landing-hero-3.jpg'];
+// landing-hero.jpg (sail against pale sky) was dropped from this pool — it's
+// an almost entirely white/gray/pale-blue photo, so no CSS filter can make
+// it read as colorful; there's essentially no color in the source pixels to
+// amplify. The remaining two are both genuinely vivid (teal glacial lake,
+// golden-hour Rio de Janeiro).
+const HERO_IMAGES = ['/image/landing-hero-2.jpg', '/image/landing-hero-3.jpg'];
 const SHOWCASE = [
   { name: 'Santorini', region: 'Greece', essence: 'Whitewashed cliffs above a caldera sea.', images: ['/image/destination-santorini.jpg', '/image/destination-santorini-2.jpg'] },
   { name: 'Kyoto', region: 'Japan', essence: 'Temple bells and quiet backstreets.', images: ['/image/destination-kyoto.jpg', '/image/destination-kyoto-2.jpg'] },
@@ -61,10 +66,22 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
             src={heroImage}
             alt=""
             className="h-full w-full object-cover"
-            style={{ filter: 'saturate(1.85) contrast(1.12) brightness(0.78)' }}
+            style={{ filter: 'saturate(2.2) contrast(1.15) brightness(0.82)' }}
           />
-          {/* Warm amber/sky atmospheric tint */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-amber-900/30 via-transparent to-sky-900/20" />
+          {/* Duotone color wash — a real blend (not a flat alpha overlay), so
+              it actually shifts the photo's own highlights/midtones/shadows
+              toward amber/teal instead of just darkening them. Far more
+              reliable "make it colorful" than pushing saturate() alone,
+              which can only amplify color that's already in the source. */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: 'linear-gradient(135deg, rgba(217,119,6,0.55) 0%, transparent 45%, transparent 55%, rgba(8,145,178,0.55) 100%)',
+              mixBlendMode: 'color',
+            }}
+          />
+          {/* Warm amber/sky atmospheric tint (subtle, adds depth on top of the duotone) */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-amber-900/25 via-transparent to-sky-900/20" />
           {/* Strong bottom scrim behind headline/CTA */}
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/25 to-transparent" />
           {/* Subtle top darkening for nav */}
