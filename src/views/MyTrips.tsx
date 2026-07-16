@@ -81,8 +81,8 @@ export default function MyTrips({
         <div className="card">
           <EmptyState
             icon={<Map size={24} />}
-            title="No trips yet"
-            description="Create your first trip to start building an itinerary."
+            title="Your next adventure starts here"
+            description="Create your first itinerary with AI."
             action={
               <button onClick={() => onNavigate({ name: 'create' })} className="btn-primary">
                 <Plus size={15} /> Create a trip

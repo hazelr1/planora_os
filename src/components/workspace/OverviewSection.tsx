@@ -1,12 +1,14 @@
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
-  MapPin, Calendar, Users, Gauge, Wallet, ListChecks, Sparkles, ArrowRight, FlaskConical,
+  MapPin, Calendar, Users, Gauge, Wallet, ListChecks, Sparkles, ArrowRight, FlaskConical, AlertTriangle,
 } from 'lucide-react';
 import type { Trip } from '../../types';
 import type { WorkspaceSectionId } from './types';
 import ProactiveSuggestionBanner from '../ProactiveSuggestionBanner';
 import { getTripTotal, getRemainingBudget, isOverBudget } from '../../utils/budget';
 import { formatDateRange } from '../../utils/dates';
+import { detectTripIssues } from '../../utils/insights';
 
 interface OverviewSectionProps {
   trip: Trip;
@@ -24,6 +26,7 @@ export default function OverviewSection({ trip, onAskCopilot, onNavigate }: Over
   const total = getTripTotal(trip);
   const remaining = getRemainingBudget(trip);
   const over = isOverBudget(trip);
+  const issues = useMemo(() => detectTripIssues(trip), [trip]);
 
   const today = new Date().toISOString().slice(0, 10);
   const nextDay = trip.days.find((d) => d.date >= today) ?? trip.days[0];
@@ -45,6 +48,25 @@ export default function OverviewSection({ trip, onAskCopilot, onNavigate }: Over
       )}
 
       <ProactiveSuggestionBanner trip={trip} onAskCopilot={onAskCopilot} />
+
+      {issues.length > 0 && (
+        <motion.div {...cardMotion} transition={{ duration: 0.3 }} className="card p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="h-7 w-7 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-400 flex items-center justify-center">
+              <AlertTriangle size={14} />
+            </div>
+            <h3 className="font-display text-base font-700 text-ink-900">Potential issues</h3>
+          </div>
+          <ul className="space-y-2">
+            {issues.map((issue) => (
+              <li key={issue.id} className="flex items-start gap-2 text-sm text-ink-700">
+                <span className="mt-1.5 h-1 w-1 rounded-full bg-amber-500 shrink-0" />
+                <span className="leading-relaxed">{issue.message}</span>
+              </li>
+            ))}
+          </ul>
+        </motion.div>
+      )}
 
       {/* Quick facts */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

@@ -145,6 +145,42 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
         </motion.div>
       </section>
 
+      {/* ─── Why Planora, not just a chatbot ─── */}
+      <section className="pt-16 pb-20 sm:pt-20 sm:pb-24">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+          <div>
+            <div className="section-eyebrow mb-6">Why not just ask a chatbot?</div>
+            <motion.h2
+              {...revealProps}
+              variants={revealUp}
+              className="font-display max-w-lg text-3xl font-700 leading-[1.1] tracking-tight text-ink-900 sm:text-4xl"
+            >
+              Every recommendation comes with its reasoning.
+            </motion.h2>
+            <motion.p
+              {...revealProps}
+              variants={revealUp}
+              transition={{ delay: 0.05 }}
+              className="mt-4 max-w-md text-ink-600 leading-relaxed"
+            >
+              A chatbot gives you a list. Planora tells you why each place made the cut — how it fits your budget, your pace, and what's nearby — so you can trust the plan instead of re-Googling every stop.
+            </motion.p>
+          </div>
+
+          <motion.div {...revealProps} variants={revealUp} transition={{ delay: 0.1 }} className="card p-5 sm:p-6">
+            <span className="chip bg-brand-500/10 text-brand-700 dark:text-brand-300 font-600">14:00 · Culture</span>
+            <p className="font-display text-base font-700 text-ink-900 mt-3">Tokyo National Museum</p>
+            <p className="text-xs text-ink-600 mt-1">13-9 Uenokoen, Taito City</p>
+            <div className="mt-3.5 rounded-lg bg-violet-500/10 px-3.5 py-2.5 flex items-start gap-2">
+              <Sparkles size={13} className="text-violet-600 dark:text-violet-300 mt-0.5 shrink-0" />
+              <p className="text-xs text-violet-700 dark:text-violet-200 leading-relaxed">
+                The world's largest collection of Japanese art at a modest entry fee — placed after lunch so you're not rushing through 10,000 years of history on an empty stomach.
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ─── Destination showcase ─── */}
       <section className="pt-20 pb-24 sm:pt-24">
         <div className="section-eyebrow mb-8">A world of destinations</div>

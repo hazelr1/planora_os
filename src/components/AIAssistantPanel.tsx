@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, Bot, Loader2, Send, Sparkles, User, Zap } from 'lucide-react';
+import { AlertTriangle, Bot, Check, Loader2, Send, Sparkles, User, Zap } from 'lucide-react';
 import type { AIRevisionProposal, CopilotMessage, CopilotReply, Trip } from '../types';
 import { supabase } from '../lib/supabase';
 
@@ -41,6 +41,18 @@ const DEMO_CHIPS = [
   'What scams should I avoid?',
 ];
 
+/** Shown one at a time while a revise-itinerary request is in flight — makes
+ * the wait read as the assistant actively verifying real constraints rather
+ * than a generic spinner. */
+const CONSTRAINT_CHECKS = [
+  'Keep locked activities',
+  'Stay below budget',
+  'Preserve travel pace',
+  'Avoid schedule conflicts',
+  'Keep nearby attractions together',
+];
+const CONSTRAINT_STEP_MS = 550;
+
 type PanelStatus = 'idle' | 'analyzing' | 'error';
 
 function historyKey(tripId: string): string {
@@ -77,7 +89,16 @@ export default function AIAssistantPanel({
   const [input, setInput] = useState('');
   const [status, setStatus] = useState<PanelStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [constraintStep, setConstraintStep] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const constraintTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const stopConstraintTimer = () => {
+    if (constraintTimerRef.current) {
+      clearInterval(constraintTimerRef.current);
+      constraintTimerRef.current = null;
+    }
+  };
 
   // Reload history if the user navigates to a different trip's workspace
   useEffect(() => {
@@ -108,6 +129,11 @@ export default function AIAssistantPanel({
     setInput('');
     setStatus('analyzing');
     setErrorMessage(null);
+    setConstraintStep(0);
+    stopConstraintTimer();
+    constraintTimerRef.current = setInterval(() => {
+      setConstraintStep((s) => Math.min(s + 1, CONSTRAINT_CHECKS.length));
+    }, CONSTRAINT_STEP_MS);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -175,8 +201,14 @@ export default function AIAssistantPanel({
           : 'Something went wrong. Please check your connection.',
       );
       setStatus('error');
+    } finally {
+      stopConstraintTimer();
     }
   };
+
+  // Interval is per-component, not per-request — stop it on unmount so a
+  // panel switch mid-analysis doesn't leak a timer.
+  useEffect(() => stopConstraintTimer, []);
 
   // Triggered by the proactive suggestion banner — submits on the user's
   // behalf but still only ever produces a reviewable proposal, never an
@@ -267,13 +299,30 @@ export default function AIAssistantPanel({
         </div>
       )}
 
-      {/* Analyzing state */}
+      {/* Analyzing state — a checklist of real constraints the apply step
+          actually enforces (see apply-itinerary-revision), revealed one at a
+          time so the wait reads as active verification, not a blind spinner. */}
       {status === 'analyzing' && (
-        <div className="rounded-xl bg-violet-500/10 px-3.5 py-3 flex items-center gap-2.5 mb-4 shrink-0">
-          <span className="typing-dots"><span /><span /><span /></span>
-          <p className="text-xs text-violet-200 leading-relaxed font-medium">
-            {loadingMessage || 'Thinking…'}
-          </p>
+        <div className="rounded-xl bg-violet-500/10 px-3.5 py-3 mb-4 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <span className="typing-dots"><span /><span /><span /></span>
+            <p className="text-xs text-violet-200 leading-relaxed font-medium">
+              {loadingMessage || 'Understanding your request…'}
+            </p>
+          </div>
+          <ul className="mt-2.5 space-y-1.5">
+            {CONSTRAINT_CHECKS.map((label, i) => (
+              <li
+                key={label}
+                className={`flex items-center gap-1.5 text-[11px] transition-opacity duration-300 ${i < constraintStep ? 'opacity-100' : 'opacity-35'}`}
+              >
+                {i < constraintStep
+                  ? <Check size={11} className="text-violet-600 dark:text-violet-300 shrink-0" />
+                  : <span className="h-[11px] w-[11px] rounded-full border border-current shrink-0" />}
+                <span className="text-violet-700 dark:text-violet-200">{label}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

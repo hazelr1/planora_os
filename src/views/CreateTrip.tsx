@@ -12,12 +12,12 @@ interface CreateTripProps {
 type GenerateStatus = 'idle' | 'generating' | 'error';
 
 const PROGRESS_MESSAGES = [
-  'Studying your destination…',
-  'Finding hidden gems…',
-  'Optimizing your travel route…',
+  'Understanding your preferences…',
+  'Planning each day…',
   'Balancing your budget…',
-  'Checking local recommendations…',
-  'Putting the finishing touches on your itinerary…',
+  'Grouping nearby places…',
+  'Checking schedule conflicts…',
+  'Preparing your itinerary…',
 ];
 
 export default function CreateTrip({ onNavigate, onCreate }: CreateTripProps) {
