@@ -60,30 +60,26 @@
 :root[data-theme='light'] {
   color-scheme: light;
 
-  /* Warm cream/beige neutrals — replaces the previous near-white scale for
-     light mode only (dark mode's own --ink-* above is untouched). No stop
-     in this scale is pure/near-white: --ink-50 (page background) is a
-     genuine soft beige, --ink-100 (.card surfaces) a lighter warm ivory
-     that still reads as a distinct, lighter surface against it — the same
-     relationship the old scale had (100 lighter than 50), just no longer
-     literally rgb(255,255,255). Every text stop re-verified against both
-     background stops: ink-900 ~14:1, ink-600 (the app's default "muted"
-     text color, used everywhere) ~7:1, even ink-500 ~4.6:1 — all clear of
-     WCAG AA 4.5:1, matching or beating the original scale's own numbers.
-     (ink-50's exact depth is also capped by a harder constraint: Tailwind's
-     own amber-700/emerald-700 — hardcoded hex this app doesn't control,
-     used all over for warnings/success — need a background lighter than
-     ~0.81 relative luminance to clear 4.5:1 themselves; the two remaining
-     borderline spots that used those exact shades were bumped to -800,
-     see ActivityCard.tsx/AIChangeReview.tsx.) */
-  --ink-50: 244 238 230;
-  --ink-100: 247 245 242;
-  --ink-200: 229 218 205;
-  --ink-300: 206 186 161;
-  --ink-400: 166 141 110;
-  --ink-500: 122 104 82;
-  --ink-600: 90 78 63;
-  --ink-700: 67 59 50;
+  /* Warm tan/beige neutrals — a deeper, more visibly-tan second pass on the
+     previous cream scale (which still read a bit close to white). No stop
+     is pure/near-white; --ink-50 (page bg) is a genuine tan (lum ~0.77,
+     not ~0.86 like the first pass), --ink-100 (.card surfaces) a lighter
+     warm ivory lift above it. Every text stop re-verified against both
+     background stops: ink-900 ~13:1, ink-600 ~6.9:1, ink-500 ~4.7:1 — all
+     clear of WCAG AA 4.5:1. This is also as deep as the background can go
+     without failing Tailwind's own rose-700/sky-700 (hardcoded hex this
+     app doesn't control, used for delete/move-operation text) — at ~4.9:1
+     and ~4.65:1 here, they're already the tightest-margin colors on the
+     page; any darker/more-saturated and they'd need the same -800 bump
+     amber/emerald got in the previous pass. */
+  --ink-50: 238 226 211;
+  --ink-100: 242 237 230;
+  --ink-200: 220 204 183;
+  --ink-300: 197 172 140;
+  --ink-400: 159 132 96;
+  --ink-500: 113 97 75;
+  --ink-600: 84 73 59;
+  --ink-700: 64 57 48;
   --ink-800: 48 44 39;
   --ink-900: 33 31 28;
   --ink-950: 19 18 16;
