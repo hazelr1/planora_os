@@ -142,7 +142,9 @@ export type Screen =
   | { name: 'reset-password' }
   | { name: 'trips' }
   | { name: 'create' }
-  | { name: 'workspace'; tripId: string };
+  | { name: 'workspace'; tripId: string }
+  | { name: 'settings' }
+  | { name: 'contact' };
 
 // ─── AI Copilot (conversational assistant) ───────────────────────────────────
 

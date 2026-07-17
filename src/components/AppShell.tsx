@@ -1,6 +1,6 @@
-import { Compass, ArrowLeft, LogOut, Map } from 'lucide-react';
+import { Compass, ArrowLeft, Map } from 'lucide-react';
 import type { Screen, User as AppUser } from '../types';
-import ThemeToggle from './ThemeToggle';
+import UserMenu from './UserMenu';
 
 interface AppShellProps {
   screen: Screen;
@@ -13,20 +13,6 @@ interface AppShellProps {
   fullBleed?: boolean;
   user?: AppUser | null;
   onSignOut?: () => void;
-}
-
-function UserAvatar({ name }: { name: string }) {
-  const initials = name
-    .split(' ')
-    .map((w) => w[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase() || '?';
-  return (
-    <div className="h-8 w-8 rounded-full bg-brand-500/20 text-brand-700 dark:text-brand-300 flex items-center justify-center text-xs font-700 shrink-0">
-      {initials}
-    </div>
-  );
 }
 
 export default function AppShell({
@@ -57,62 +43,28 @@ export default function AppShell({
             </span>
           </button>
 
-          {/* Nav */}
+          {/* Nav — "My Trips" plus, when signed in, a single avatar menu
+              (Settings/Contact us/Sign out) instead of a separate theme
+              toggle + name + Sign out row. Theme now lives in Settings. */}
           <nav className="flex items-center gap-1 sm:gap-2">
-            <ThemeToggle />
             {isWorkspace ? (
               <button onClick={() => onNavigate({ name: 'trips' })} className="btn-ghost">
                 <ArrowLeft size={16} />
                 <span className="hidden sm:inline">My Trips</span>
               </button>
             ) : (
-              <>
-                {user ? (
-                  // ── Signed-in state ──
-                  <>
-                    <button
-                      onClick={() => onNavigate({ name: 'trips' })}
-                      className="btn-ghost"
-                    >
-                      <Map size={16} />
-                      <span className="hidden sm:inline">My Trips</span>
-                    </button>
+              <button onClick={() => onNavigate({ name: 'trips' })} className="btn-ghost">
+                <Map size={16} />
+                <span className="hidden sm:inline">My Trips</span>
+              </button>
+            )}
 
-                    {/* User chip */}
-                    <div className="flex items-center gap-2 pl-1">
-                      <UserAvatar name={displayName} />
-                      <span className="hidden sm:block text-sm font-medium text-ink-700 max-w-[140px] truncate">
-                        {displayName}
-                      </span>
-                      <button
-                        onClick={onSignOut}
-                        className="btn-ghost text-ink-500 hover:text-rose-700 dark:text-rose-400 gap-1.5"
-                        title="Sign out"
-                      >
-                        <LogOut size={15} />
-                        <span className="hidden sm:inline text-sm">Sign out</span>
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  // ── Signed-out state ──
-                  <>
-                    <button
-                      onClick={() => onNavigate({ name: 'trips' })}
-                      className="btn-ghost"
-                    >
-                      <Map size={16} />
-                      <span className="hidden sm:inline">My Trips</span>
-                    </button>
-                    <button
-                      onClick={() => onNavigate({ name: 'signin' })}
-                      className="btn-outline"
-                    >
-                      Sign in
-                    </button>
-                  </>
-                )}
-              </>
+            {user ? (
+              <UserMenu name={displayName} onNavigate={onNavigate} onSignOut={() => onSignOut?.()} />
+            ) : (
+              <button onClick={() => onNavigate({ name: 'signin' })} className="btn-outline">
+                Sign in
+              </button>
             )}
           </nav>
         </div>

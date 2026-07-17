@@ -7,6 +7,8 @@ import ResetPassword from './views/ResetPassword';
 import MyTrips from './views/MyTrips';
 import CreateTrip from './views/CreateTrip';
 import Workspace from './views/Workspace';
+import Settings from './views/Settings';
+import ContactUs from './views/ContactUs';
 import { useTrips } from './hooks/useTrips';
 import { useAuth } from './hooks/useAuth';
 import type { Screen } from './types';
@@ -14,7 +16,7 @@ import { supabase } from './lib/supabase';
 import { authRepository } from './data';
 
 // Screens that require an authenticated session
-const PROTECTED: Screen['name'][] = ['trips', 'create', 'workspace'];
+const PROTECTED: Screen['name'][] = ['trips', 'create', 'workspace', 'settings'];
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'landing' });
@@ -214,6 +216,12 @@ export default function App() {
           onUpdateTripFields={updateTripFields}
         />
       )}
+
+      {screen.name === 'settings' && user && (
+        <Settings user={user} onSignOut={handleSignOut} />
+      )}
+
+      {screen.name === 'contact' && <ContactUs />}
     </AppShell>
     </>
   );

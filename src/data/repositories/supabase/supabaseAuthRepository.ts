@@ -131,6 +131,60 @@ class SupabaseAuthRepository implements IAuthRepository {
     return ok(undefined);
   }
 
+  async updateName(name: string): Promise<Result<User>> {
+    const trimmed = name.trim();
+    if (!trimmed) return { ok: false, error: internal('Name cannot be empty.') };
+
+    // Auth metadata is the source useAuth/getCurrentUser reads `name` from
+    // (see mapSupabaseUser) — update it first so the returned User is
+    // correct even if the profiles-table mirror below fails.
+    const { data, error } = await supabase.auth.updateUser({ data: { name: trimmed } });
+    if (error) return { ok: false, error: internal(friendlyAuthError(error.message)) };
+    if (!data.user) return { ok: false, error: internal('Name update succeeded but no user was returned.') };
+
+    // Best-effort mirror onto the profiles table (used for display elsewhere,
+    // e.g. anything that reads profiles directly rather than auth metadata).
+    // Non-fatal: the auth update above already succeeded and is the value
+    // this app actually reads back, so a failure here shouldn't surface as
+    // an error to a user who just successfully changed their name.
+    const { error: profileErr } = await supabase
+      .from('profiles')
+      .update({ full_name: trimmed, updated_at: new Date().toISOString() })
+      .eq('id', data.user.id);
+    if (profileErr) {
+      console.warn('Profile name mirror failed:', profileErr.message);
+    }
+
+    return ok(mapSupabaseUser(data.user));
+  }
+
+  async deleteAccount(): Promise<Result<void>> {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return { ok: false, error: internal('Session expired. Please sign in again.') };
+
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-account`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+            'Apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          signal: AbortSignal.timeout(30_000),
+        },
+      );
+      const json = await res.json().catch(() => ({}) as { error?: string });
+      if (!res.ok) {
+        return { ok: false, error: internal(json.error ?? 'Could not delete your account. Please try again.') };
+      }
+      return ok(undefined);
+    } catch {
+      return { ok: false, error: internal('Could not delete your account. Please check your connection and try again.') };
+    }
+  }
+
   onAuthStateChange(callback: AuthStateChangeCallback): () => void {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       (async () => {

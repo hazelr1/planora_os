@@ -46,6 +46,16 @@ export interface IAuthRepository {
   /** Sets a new password for the user completing a password-reset flow. */
   updatePassword(newPassword: string): Promise<Result<void>>;
 
+  /** Updates the current user's display name. */
+  updateName(name: string): Promise<Result<User>>;
+
+  /**
+   * Permanently deletes the current user's account and all owned data
+   * (trips, days, activities, revisions cascade via the DB's own foreign
+   * keys). Irreversible — callers must confirm with the user first.
+   */
+  deleteAccount(): Promise<Result<void>>;
+
   /**
    * Registers a listener that fires whenever auth state changes.
    * Returns an unsubscribe function.
