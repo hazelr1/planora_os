@@ -9,13 +9,13 @@ interface Blob {
   duration: number;
 }
 
-// Light mode: gentle, slowly drifting turquoise/emerald blobs over the
-// ivory base — subtle ambient movement, not a prominent decorative layer.
-// Colors match the refined --brand scale in index.css.
+// Light mode: gentle, slowly drifting terracotta/travel-blue/sage blobs
+// over the warm cream base — subtle ambient movement, not a prominent
+// decorative layer. Colors match the --brand/--accent scale in index.css.
 const LIGHT_BLOBS: Blob[] = [
-  { color: 'rgba(45,158,138,0.12)', size: 620, start: { x: '5%', y: '-10%' }, drift: { x: ['5%', '18%', '5%'], y: ['-10%', '5%', '-10%'] }, duration: 26 },
-  { color: 'rgba(16,109,79,0.10)', size: 560, start: { x: '70%', y: '10%' }, drift: { x: ['70%', '55%', '70%'], y: ['10%', '28%', '10%'] }, duration: 32 },
-  { color: 'rgba(108,199,178,0.12)', size: 480, start: { x: '30%', y: '65%' }, drift: { x: ['30%', '45%', '30%'], y: ['65%', '48%', '65%'] }, duration: 22 },
+  { color: 'rgba(206,89,28,0.10)', size: 620, start: { x: '5%', y: '-10%' }, drift: { x: ['5%', '18%', '5%'], y: ['-10%', '5%', '-10%'] }, duration: 26 },
+  { color: 'rgba(30,47,68,0.08)', size: 560, start: { x: '70%', y: '10%' }, drift: { x: ['70%', '55%', '70%'], y: ['10%', '28%', '10%'] }, duration: 32 },
+  { color: 'rgba(141,149,126,0.12)', size: 480, start: { x: '30%', y: '65%' }, drift: { x: ['30%', '45%', '30%'], y: ['65%', '48%', '65%'] }, duration: 22 },
 ];
 
 // Dark mode: deep navy with rich blue and turquoise ambient glow — kept

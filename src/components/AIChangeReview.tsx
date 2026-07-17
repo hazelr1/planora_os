@@ -20,12 +20,12 @@ interface AIChangeReviewProps {
 // ─── Operation display config ─────────────────────────────────────────────────
 
 const opCfg: Record<RevisionOperation, { label: string; bg: string; text: string; border: string; Icon: React.ElementType }> = {
-  add:     { label: 'Add',     bg: 'bg-emerald-500/10', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-500/20', Icon: Plus },
+  add:     { label: 'Add',     bg: 'bg-emerald-500/10', text: 'text-emerald-800 dark:text-emerald-300', border: 'border-emerald-500/20', Icon: Plus },
   remove:  { label: 'Remove',  bg: 'bg-rose-500/10',    text: 'text-rose-700 dark:text-rose-300',    border: 'border-rose-500/20',    Icon: Minus },
-  replace: { label: 'Replace', bg: 'bg-amber-500/10',   text: 'text-amber-700 dark:text-amber-300',   border: 'border-amber-500/20',   Icon: RefreshCw },
+  replace: { label: 'Replace', bg: 'bg-amber-500/10',   text: 'text-amber-800 dark:text-amber-300',   border: 'border-amber-500/20',   Icon: RefreshCw },
   move:    { label: 'Move',    bg: 'bg-sky-500/10',     text: 'text-sky-700 dark:text-sky-300',     border: 'border-sky-500/20',     Icon: ArrowRight },
   update:  { label: 'Update',  bg: 'bg-violet-500/10',  text: 'text-violet-300',  border: 'border-violet-500/20',  Icon: RefreshCw },
-  add_day:    { label: 'Add day',    bg: 'bg-emerald-500/10', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-500/20', Icon: CalendarPlus },
+  add_day:    { label: 'Add day',    bg: 'bg-emerald-500/10', text: 'text-emerald-800 dark:text-emerald-300', border: 'border-emerald-500/20', Icon: CalendarPlus },
   remove_day: { label: 'Remove day', bg: 'bg-rose-500/10',    text: 'text-rose-700 dark:text-rose-300',    border: 'border-rose-500/20',    Icon: CalendarMinus },
 };
 
@@ -218,7 +218,7 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
   const p = currentProposal;
   const lockedCount = days.reduce((n, d) => n + d.activities.filter((a) => a.locked).length, 0);
   const budgetDiff = p.budget_difference;
-  const budgetColor = budgetDiff < 0 ? 'text-emerald-700 dark:text-emerald-300' : budgetDiff > 0 ? 'text-rose-700 dark:text-rose-400' : 'text-ink-600';
+  const budgetColor = budgetDiff < 0 ? 'text-emerald-800 dark:text-emerald-300' : budgetDiff > 0 ? 'text-rose-700 dark:text-rose-400' : 'text-ink-600';
   const budgetSign = budgetDiff > 0 ? '+' : budgetDiff < 0 ? '' : '';
 
   // ── Cancel (reject + close) ─────────────────────────────────────────────────
@@ -379,7 +379,7 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
                 {p.constraints.map((c, i) => (
                   <div key={i} className="flex items-start gap-2.5" role="listitem">
                     {c.satisfied
-                      ? <CheckCircle2 size={15} className="text-emerald-700 dark:text-emerald-400 mt-0.5 shrink-0" aria-label="Satisfied" />
+                      ? <CheckCircle2 size={15} className="text-emerald-800 dark:text-emerald-400 mt-0.5 shrink-0" aria-label="Satisfied" />
                       : <XCircle size={15} className="text-rose-700 dark:text-rose-400 mt-0.5 shrink-0" aria-label="Not satisfied" />
                     }
                     <div className="min-w-0">
@@ -440,8 +440,8 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
 
           {/* Locked activities preserved */}
           <div className="flex items-center gap-2.5 rounded-xl bg-emerald-500/10 px-4 py-3">
-            <Lock size={14} className="text-emerald-700 dark:text-emerald-400 shrink-0" />
-            <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">
+            <Lock size={14} className="text-emerald-800 dark:text-emerald-400 shrink-0" />
+            <p className="text-xs text-emerald-800 dark:text-emerald-300 font-medium">
               {lockedCount > 0
                 ? `${lockedCount} locked ${lockedCount === 1 ? 'activity' : 'activities'} preserved — they were not edited, moved, or removed.`
                 : 'No locked activities in this trip. Lock important activities to protect them from future AI changes.'}
@@ -451,10 +451,10 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
           {/* Warnings */}
           {p.warnings.length > 0 && (
             <div className="rounded-xl bg-amber-500/10 px-4 py-3 flex items-start gap-2.5" role="alert">
-              <AlertTriangle size={15} className="text-amber-700 dark:text-amber-400 mt-0.5 shrink-0" />
+              <AlertTriangle size={15} className="text-amber-800 dark:text-amber-400 mt-0.5 shrink-0" />
               <ul className="space-y-1">
                 {p.warnings.map((w, i) => (
-                  <li key={i} className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">{w}</li>
+                  <li key={i} className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">{w}</li>
                 ))}
               </ul>
             </div>

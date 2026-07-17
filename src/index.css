@@ -60,17 +60,33 @@
 :root[data-theme='light'] {
   color-scheme: light;
 
-  --ink-50: 251 249 245;
-  --ink-100: 255 255 255;
-  --ink-200: 240 235 227;
-  --ink-300: 226 218 204;
-  --ink-400: 162 152 136;
-  --ink-500: 120 111 97;
-  --ink-600: 82 75 65;
-  --ink-700: 58 53 46;
-  --ink-800: 38 34 29;
-  --ink-900: 24 21 18;
-  --ink-950: 12 10 9;
+  /* Warm cream/beige neutrals — replaces the previous near-white scale for
+     light mode only (dark mode's own --ink-* above is untouched). No stop
+     in this scale is pure/near-white: --ink-50 (page background) is a
+     genuine soft beige, --ink-100 (.card surfaces) a lighter warm ivory
+     that still reads as a distinct, lighter surface against it — the same
+     relationship the old scale had (100 lighter than 50), just no longer
+     literally rgb(255,255,255). Every text stop re-verified against both
+     background stops: ink-900 ~14:1, ink-600 (the app's default "muted"
+     text color, used everywhere) ~7:1, even ink-500 ~4.6:1 — all clear of
+     WCAG AA 4.5:1, matching or beating the original scale's own numbers.
+     (ink-50's exact depth is also capped by a harder constraint: Tailwind's
+     own amber-700/emerald-700 — hardcoded hex this app doesn't control,
+     used all over for warnings/success — need a background lighter than
+     ~0.81 relative luminance to clear 4.5:1 themselves; the two remaining
+     borderline spots that used those exact shades were bumped to -800,
+     see ActivityCard.tsx/AIChangeReview.tsx.) */
+  --ink-50: 244 238 230;
+  --ink-100: 247 245 242;
+  --ink-200: 229 218 205;
+  --ink-300: 206 186 161;
+  --ink-400: 166 141 110;
+  --ink-500: 122 104 82;
+  --ink-600: 90 78 63;
+  --ink-700: 67 59 50;
+  --ink-800: 48 44 39;
+  --ink-900: 33 31 28;
+  --ink-950: 19 18 16;
 
   /* Warm terracotta/sienna — replaces the previous teal for light mode only
      (dark mode's own --brand-* above is untouched). Drawn from a travel
@@ -78,7 +94,8 @@
      green) that already sits close in warmth to this theme's ivory
      background, so the accent reads as part of the same scene rather than
      a bolted-on SaaS color. --brand-500 is the palette's actual "Burnt
-     Sienna" (#984216). */
+     Sienna" (#984216). Used for chips/badges/icons/active nav — the app's
+     general accent color, distinct from the primary-button gradient below. */
   --brand-50: 250 243 239;
   --brand-100: 246 228 218;
   --brand-200: 239 193 169;
@@ -91,23 +108,27 @@
   --brand-900: 59 32 17;
   --brand-950: 33 20 13;
 
-  --glass: 15 23 42;
+  /* Warm dark brown (was a cool slate blue) — the low-opacity border/hover
+     overlay tint, now consistent with the rest of the warm palette. */
+  --glass: 42 34 26;
 
-  /* Sienna → golden amber → deep olive-sage — the same palette's warm-to-
-     earth gradient, used behind .btn-primary and hero glow shadows. Each
-     stop individually checked against white button text (>=5.8:1 — the
-     original teal->emerald gradient's own "from" stop only ever managed
-     ~3.3:1, so this is a genuine improvement, not just a hue swap). */
-  --accent-from: 152 66 22;
-  --accent-via: 145 88 24;
+  /* Deep travel-blue → soft sage — .btn-primary's own gradient (literally
+     "primary buttons" in the brief), kept a distinct hue from the
+     terracotta brand accent above so the two read as a considered pair,
+     not a clash. --accent-from is Midnight Harbor (#1E2F44). Every stop
+     checked against white button text: 13.6:1 / 9.2:1 / 7.5:1 — all far
+     clear of AA, and better than the original teal gradient's own weakest
+     stop (~3.3:1). */
+  --accent-from: 30 47 68;
+  --accent-via: 46 75 96;
   --accent-to: 77 89 54;
 
-  --shadow-soft: 0 1px 2px rgba(60,50,32,0.06), 0 1px 1px rgba(60,50,32,0.04);
-  --shadow-card: 0 2px 16px -4px rgba(60,50,32,0.09), 0 1px 2px rgba(60,50,32,0.05);
-  --shadow-card-hover: 0 12px 36px -10px rgba(60,50,32,0.14), 0 2px 6px rgba(60,50,32,0.06);
-  --shadow-pop: 0 20px 60px -16px rgba(60,50,32,0.18), 0 4px 10px rgba(60,50,32,0.06);
-  --shadow-glow: 0 0 28px -8px rgba(206,89,28,0.20);
-  --shadow-glow-lg: 0 8px 32px -8px rgba(206,89,28,0.22), 0 0 48px -16px rgba(141,149,126,0.22);
+  --shadow-soft: 0 1px 2px rgba(48,44,39,0.07), 0 1px 1px rgba(48,44,39,0.05);
+  --shadow-card: 0 2px 16px -4px rgba(48,44,39,0.10), 0 1px 2px rgba(48,44,39,0.06);
+  --shadow-card-hover: 0 12px 36px -10px rgba(48,44,39,0.16), 0 2px 6px rgba(48,44,39,0.07);
+  --shadow-pop: 0 20px 60px -16px rgba(48,44,39,0.20), 0 4px 10px rgba(48,44,39,0.07);
+  --shadow-glow: 0 0 28px -8px rgba(46,75,96,0.24);
+  --shadow-glow-lg: 0 8px 32px -8px rgba(46,75,96,0.26), 0 0 48px -16px rgba(141,149,126,0.22);
 
   --violet-50: 245 240 255;
   --violet-100: 124 58 237;

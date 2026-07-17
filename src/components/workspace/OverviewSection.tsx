@@ -42,7 +42,7 @@ export default function OverviewSection({ trip, onAskCopilot, onNavigate }: Over
   return (
     <div className="space-y-5 max-w-4xl">
       {trip.isDemo && (
-        <div className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-300 px-2.5 py-1 text-xs font-700">
+        <div className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500/15 text-amber-800 dark:text-amber-300 px-2.5 py-1 text-xs font-700">
           <FlaskConical size={12} /> Demo Data
         </div>
       )}
@@ -52,7 +52,7 @@ export default function OverviewSection({ trip, onAskCopilot, onNavigate }: Over
       {issues.length > 0 && (
         <motion.div {...cardMotion} transition={{ duration: 0.3 }} className="card p-5">
           <div className="flex items-center gap-2 mb-3">
-            <div className="h-7 w-7 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-400 flex items-center justify-center">
+            <div className="h-7 w-7 rounded-lg bg-amber-500/15 text-amber-800 dark:text-amber-400 flex items-center justify-center">
               <AlertTriangle size={14} />
             </div>
             <h3 className="font-display text-base font-700 text-ink-900">Potential issues</h3>

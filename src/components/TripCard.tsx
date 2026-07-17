@@ -14,7 +14,7 @@ interface TripCardProps {
 }
 
 const statusStyles: Record<string, string> = {
-  Planning: 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
+  Planning: 'bg-amber-500/15 text-amber-800 dark:text-amber-300',
   Confirmed: 'bg-brand-500/15 text-brand-700 dark:text-brand-300',
   Completed: 'bg-glass/5 text-ink-600',
 };

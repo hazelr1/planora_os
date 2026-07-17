@@ -279,7 +279,7 @@ export default function AIAssistantPanel({
                   <p className="text-violet-100 leading-relaxed">{m.proposal.summary}</p>
                   <div className="flex items-center justify-between text-[10px] text-violet-200/80">
                     <span>{m.proposal.changes.length} change{m.proposal.changes.length === 1 ? '' : 's'} proposed</span>
-                    <span className={m.proposal.budget_difference > 0 ? 'text-rose-700 dark:text-rose-300' : m.proposal.budget_difference < 0 ? 'text-emerald-700 dark:text-emerald-300' : ''}>
+                    <span className={m.proposal.budget_difference > 0 ? 'text-rose-700 dark:text-rose-300' : m.proposal.budget_difference < 0 ? 'text-emerald-800 dark:text-emerald-300' : ''}>
                       {m.proposal.budget_difference === 0
                         ? 'No budget change'
                         : `${m.proposal.budget_difference > 0 ? '+' : ''}${trip.currency} ${Math.round(m.proposal.budget_difference).toLocaleString()}`}
@@ -355,7 +355,7 @@ export default function AIAssistantPanel({
         <div className="mb-3 shrink-0">
           <p className="text-xs font-semibold text-ink-600 uppercase tracking-wide mb-2">
             {trip.isDemo
-              ? <span className="flex items-center gap-1"><Zap size={11} className="text-amber-700 dark:text-amber-400" /> Quick requests</span>
+              ? <span className="flex items-center gap-1"><Zap size={11} className="text-amber-800 dark:text-amber-400" /> Quick requests</span>
               : 'Try asking'
             }
           </p>
@@ -367,7 +367,7 @@ export default function AIAssistantPanel({
                 onClick={() => handleChipClick(chip)}
                 className={`chip transition-colors ${
                   trip.isDemo
-                    ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20'
+                    ? 'bg-amber-500/10 text-amber-800 dark:text-amber-300 hover:bg-amber-500/20'
                     : 'bg-ink-200/40 text-ink-600 hover:bg-violet-500/10 hover:text-violet-200'
                 }`}
               >

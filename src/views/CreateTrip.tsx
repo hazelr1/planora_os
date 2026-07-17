@@ -159,8 +159,8 @@ export default function CreateTrip({ onNavigate, onCreate }: CreateTripProps) {
       {/* Partial-save warnings (non-blocking) */}
       {warnings.length > 0 && (
         <div className="rounded-xl bg-amber-500/10 px-4 py-3 mb-5">
-          <p className="text-sm text-amber-700 dark:text-amber-300 font-medium mb-1">Some items could not be saved:</p>
-          <ul className="text-sm text-amber-700 dark:text-amber-300/80 space-y-0.5 list-disc list-inside">
+          <p className="text-sm text-amber-800 dark:text-amber-300 font-medium mb-1">Some items could not be saved:</p>
+          <ul className="text-sm text-amber-800 dark:text-amber-300/80 space-y-0.5 list-disc list-inside">
             {warnings.map((w, i) => <li key={i}>{w}</li>)}
           </ul>
         </div>

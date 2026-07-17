@@ -68,7 +68,7 @@ function SaveBar({ status, errorMessage, retry }: { status: string; errorMessage
   return (
     <div className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
       status === 'saving' ? 'bg-brand-500/10 text-brand-700 dark:text-brand-300' :
-      status === 'saved' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' :
+      status === 'saved' ? 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300' :
       'bg-rose-500/10 text-rose-700 dark:text-rose-300'
     }`}>
       {status === 'saving' && <Loader2 size={12} className="animate-spin" />}
@@ -373,7 +373,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="font-display text-2xl font-800 text-ink-900">{trip.title}</h1>
             {trip.isDemo && (
-              <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-300 px-2 py-0.5 text-xs font-700">
+              <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500/15 text-amber-800 dark:text-amber-300 px-2 py-0.5 text-xs font-700">
                 <FlaskConical size={11} /> Demo Data
               </span>
             )}
@@ -419,8 +419,8 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
 
       {showAppliedBanner && (
         <div className="rounded-xl bg-emerald-500/10 px-4 py-3 flex items-center gap-2.5" role="status">
-          <CheckCircle2 size={16} className="text-emerald-700 dark:text-emerald-400 shrink-0" />
-          <p className="text-sm text-emerald-700 dark:text-emerald-300 font-medium">Changes applied. Your itinerary has been updated.</p>
+          <CheckCircle2 size={16} className="text-emerald-800 dark:text-emerald-400 shrink-0" />
+          <p className="text-sm text-emerald-800 dark:text-emerald-300 font-medium">Changes applied. Your itinerary has been updated.</p>
         </div>
       )}
 

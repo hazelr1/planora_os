@@ -24,9 +24,9 @@ interface ActivityCardProps {
 }
 
 const categoryColors: Record<ActivityCategory, string> = {
-  Food: 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
+  Food: 'bg-amber-500/15 text-amber-800 dark:text-amber-300',
   Culture: 'bg-sky-500/15 text-sky-700 dark:text-sky-300',
-  Nature: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
+  Nature: 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300',
   Adventure: 'bg-orange-500/15 text-orange-700 dark:text-orange-300',
   History: 'bg-stone-500/15 text-stone-700 dark:text-stone-300',
   Shopping: 'bg-pink-500/15 text-pink-700 dark:text-pink-300',
@@ -37,8 +37,8 @@ const categoryColors: Record<ActivityCategory, string> = {
 };
 
 const estimateQualityColors: Record<CostConfidence, string> = {
-  high: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
-  medium: 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
+  high: 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300',
+  medium: 'bg-amber-500/15 text-amber-800 dark:text-amber-300',
   low: 'bg-rose-500/15 text-rose-700 dark:text-rose-300',
 };
 

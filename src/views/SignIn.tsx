@@ -244,7 +244,7 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
             </button>
             <div className="flex flex-col items-center pt-2 text-center">
               <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10">
-                <CheckCircle2 size={24} className="text-emerald-700 dark:text-emerald-400" />
+                <CheckCircle2 size={24} className="text-emerald-800 dark:text-emerald-400" />
               </div>
               <h2 id="verify-email-heading" className="font-display text-lg font-700 text-ink-900">
                 Account created successfully.
@@ -283,10 +283,10 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
 
               {forgotSent ? (
                 <div className="rounded-xl bg-emerald-500/10 px-4 py-4 flex items-start gap-3 animate-scale-in" role="status">
-                  <CheckCircle2 size={18} className="text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
+                  <CheckCircle2 size={18} className="text-emerald-800 dark:text-emerald-400 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Check your inbox.</p>
-                    <p className="text-sm text-emerald-700 dark:text-emerald-300/80 mt-1 leading-relaxed">
+                    <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">Check your inbox.</p>
+                    <p className="text-sm text-emerald-800 dark:text-emerald-300/80 mt-1 leading-relaxed">
                       If an account exists for {forgotEmail.trim()}, we've sent a link to reset your password.
                     </p>
                   </div>
@@ -439,7 +439,7 @@ export default function SignIn({ onNavigate, onAuthSuccess, onSignUpStart, onSig
                     disabled={loadingSignUp}
                   />
                   {signUpForm.confirmPassword && signUpForm.confirmPassword === signUpForm.password && (
-                    <CheckCircle2 size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-700 dark:text-emerald-400" />
+                    <CheckCircle2 size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-800 dark:text-emerald-400" />
                   )}
                 </div>
                 {signUpForm.confirmPassword && signUpForm.confirmPassword !== signUpForm.password && (
