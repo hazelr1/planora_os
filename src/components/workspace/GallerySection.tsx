@@ -72,7 +72,7 @@ export default function GallerySection({ tripId }: { tripId: string }) {
                 <img src={f.url} alt="" className="h-full w-full object-cover" loading="lazy" />
                 <button
                   onClick={(e) => { e.stopPropagation(); void remove(f.path); }}
-                  className="absolute top-1.5 right-1.5 rounded-lg p-1.5 bg-black/70 text-white opacity-0 group-hover:opacity-100 transition hover:bg-rose-500/80"
+                  className="absolute top-1.5 right-1.5 rounded-lg p-1.5 bg-black/70 text-white opacity-80 transition hover:bg-rose-500/80 hover:opacity-100"
                   aria-label="Delete photo"
                 >
                   <Trash2 size={13} />

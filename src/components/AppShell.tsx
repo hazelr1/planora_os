@@ -1,4 +1,4 @@
-import { Compass, ArrowLeft, LogOut } from 'lucide-react';
+import { Compass, ArrowLeft, LogOut, Map } from 'lucide-react';
 import type { Screen, User as AppUser } from '../types';
 import ThemeToggle from './ThemeToggle';
 
@@ -74,7 +74,8 @@ export default function AppShell({
                       onClick={() => onNavigate({ name: 'trips' })}
                       className="btn-ghost"
                     >
-                      My Trips
+                      <Map size={16} />
+                      <span className="hidden sm:inline">My Trips</span>
                     </button>
 
                     {/* User chip */}
@@ -100,7 +101,8 @@ export default function AppShell({
                       onClick={() => onNavigate({ name: 'trips' })}
                       className="btn-ghost"
                     >
-                      My Trips
+                      <Map size={16} />
+                      <span className="hidden sm:inline">My Trips</span>
                     </button>
                     <button
                       onClick={() => onNavigate({ name: 'signin' })}
