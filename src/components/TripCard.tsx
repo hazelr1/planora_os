@@ -133,7 +133,7 @@ export default function TripCard({ trip, onOpen, onEdit, onDuplicate, onDelete }
           </button>
           <button
             onClick={onDelete}
-            className="btn-outline px-3 text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/30"
+            className="btn-outline px-3 text-rose-800 dark:text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/30"
             aria-label={`Delete ${trip.title}`}
           >
             <Trash2 size={15} />

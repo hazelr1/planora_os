@@ -95,14 +95,14 @@ export default function OverviewSection({ trip, onAskCopilot, onNavigate }: Over
           className={`card card-interactive p-5 text-left ${over ? 'border-rose-500/25' : ''}`}
         >
           <div className="flex items-center gap-2.5 mb-3">
-            <div className={`h-9 w-9 rounded-xl flex items-center justify-center ${over ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400' : 'bg-brand-500/15 text-brand-700 dark:text-brand-300'}`}>
+            <div className={`h-9 w-9 rounded-xl flex items-center justify-center ${over ? 'bg-rose-500/15 text-rose-800 dark:text-rose-400' : 'bg-brand-500/15 text-brand-700 dark:text-brand-300'}`}>
               <Wallet size={17} />
             </div>
             <h3 className="font-display text-base font-700 text-ink-900">Budget</h3>
             <ArrowRight size={14} className="text-ink-500 ml-auto" />
           </div>
           <p className="text-2xl font-800 font-display text-ink-900">{trip.currency} {total.toLocaleString()}</p>
-          <p className={`text-xs mt-1 ${over ? 'text-rose-700 dark:text-rose-400' : 'text-ink-600'}`}>
+          <p className={`text-xs mt-1 ${over ? 'text-rose-800 dark:text-rose-400' : 'text-ink-600'}`}>
             {over ? `${trip.currency} ${Math.abs(remaining).toLocaleString()} over budget` : `${trip.currency} ${remaining.toLocaleString()} remaining`}
           </p>
         </motion.button>

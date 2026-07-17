@@ -122,7 +122,7 @@ function AccountTab({ user, onSignOut }: SettingsProps) {
           </div>
 
           {saveStatus === 'error' && saveError && (
-            <p className="text-xs text-rose-700 dark:text-rose-400">{saveError}</p>
+            <p className="text-xs text-rose-800 dark:text-rose-400">{saveError}</p>
           )}
 
           <button

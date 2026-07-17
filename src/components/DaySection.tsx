@@ -80,7 +80,7 @@ export default function DaySection({
                   </p>
                 )}
                 {conflicts.size > 0 && (
-                  <span className="chip bg-rose-500/15 text-rose-700 dark:text-rose-300 text-[10px]">
+                  <span className="chip bg-rose-500/15 text-rose-800 dark:text-rose-300 text-[10px]">
                     {conflicts.size} time conflict{conflicts.size === 1 ? '' : 's'}
                   </span>
                 )}

@@ -30,7 +30,7 @@ export default function ListView({
                 <span className="text-xs text-ink-600">{formatDate(day.date, { month: 'short', day: 'numeric' })}</span>
                 {day.theme && <span className="text-xs text-ink-600">— {day.theme}</span>}
                 {conflicts.size > 0 && (
-                  <span className="chip bg-rose-500/15 text-rose-700 dark:text-rose-300 text-[10px]">
+                  <span className="chip bg-rose-500/15 text-rose-800 dark:text-rose-300 text-[10px]">
                     {conflicts.size} time conflict{conflicts.size === 1 ? '' : 's'}
                   </span>
                 )}
@@ -52,7 +52,7 @@ export default function ListView({
                       <p className="text-sm font-600 text-ink-900 truncate flex items-center gap-1.5">
                         {a.locked && <Lock size={11} className="text-brand-400 shrink-0" />}
                         {conflicts.has(a.id) && (
-                          <AlertTriangle size={11} className="text-rose-700 dark:text-rose-400 shrink-0" aria-label="Time conflict" />
+                          <AlertTriangle size={11} className="text-rose-800 dark:text-rose-400 shrink-0" aria-label="Time conflict" />
                         )}
                         {a.title}
                       </p>
@@ -75,7 +75,7 @@ export default function ListView({
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); onDeleteActivity(a.id); }}
-                        className="rounded-lg p-1.5 text-ink-500 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 transition"
+                        className="rounded-lg p-1.5 text-ink-500 hover:text-rose-800 dark:text-rose-400 hover:bg-rose-500/10 transition"
                         aria-label="Delete"
                       >
                         <Trash2 size={13} />

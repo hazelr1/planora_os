@@ -54,7 +54,7 @@ export default function ConfirmDialog({
           <X size={16} />
         </button>
         <div className="flex items-start gap-3">
-          <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${destructive ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400' : 'bg-amber-500/15 text-amber-800 dark:text-amber-400'}`}>
+          <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${destructive ? 'bg-rose-500/15 text-rose-800 dark:text-rose-400' : 'bg-amber-500/15 text-amber-800 dark:text-amber-400'}`}>
             <AlertTriangle size={18} />
           </div>
           <div className="min-w-0">

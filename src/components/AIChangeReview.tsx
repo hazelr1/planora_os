@@ -21,12 +21,12 @@ interface AIChangeReviewProps {
 
 const opCfg: Record<RevisionOperation, { label: string; bg: string; text: string; border: string; Icon: React.ElementType }> = {
   add:     { label: 'Add',     bg: 'bg-emerald-500/10', text: 'text-emerald-800 dark:text-emerald-300', border: 'border-emerald-500/20', Icon: Plus },
-  remove:  { label: 'Remove',  bg: 'bg-rose-500/10',    text: 'text-rose-700 dark:text-rose-300',    border: 'border-rose-500/20',    Icon: Minus },
+  remove:  { label: 'Remove',  bg: 'bg-rose-500/10',    text: 'text-rose-800 dark:text-rose-300',    border: 'border-rose-500/20',    Icon: Minus },
   replace: { label: 'Replace', bg: 'bg-amber-500/10',   text: 'text-amber-800 dark:text-amber-300',   border: 'border-amber-500/20',   Icon: RefreshCw },
-  move:    { label: 'Move',    bg: 'bg-sky-500/10',     text: 'text-sky-700 dark:text-sky-300',     border: 'border-sky-500/20',     Icon: ArrowRight },
+  move:    { label: 'Move',    bg: 'bg-sky-500/10',     text: 'text-sky-800 dark:text-sky-300',     border: 'border-sky-500/20',     Icon: ArrowRight },
   update:  { label: 'Update',  bg: 'bg-violet-500/10',  text: 'text-violet-300',  border: 'border-violet-500/20',  Icon: RefreshCw },
   add_day:    { label: 'Add day',    bg: 'bg-emerald-500/10', text: 'text-emerald-800 dark:text-emerald-300', border: 'border-emerald-500/20', Icon: CalendarPlus },
-  remove_day: { label: 'Remove day', bg: 'bg-rose-500/10',    text: 'text-rose-700 dark:text-rose-300',    border: 'border-rose-500/20',    Icon: CalendarMinus },
+  remove_day: { label: 'Remove day', bg: 'bg-rose-500/10',    text: 'text-rose-800 dark:text-rose-300',    border: 'border-rose-500/20',    Icon: CalendarMinus },
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -218,7 +218,7 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
   const p = currentProposal;
   const lockedCount = days.reduce((n, d) => n + d.activities.filter((a) => a.locked).length, 0);
   const budgetDiff = p.budget_difference;
-  const budgetColor = budgetDiff < 0 ? 'text-emerald-800 dark:text-emerald-300' : budgetDiff > 0 ? 'text-rose-700 dark:text-rose-400' : 'text-ink-600';
+  const budgetColor = budgetDiff < 0 ? 'text-emerald-800 dark:text-emerald-300' : budgetDiff > 0 ? 'text-rose-800 dark:text-rose-400' : 'text-ink-600';
   const budgetSign = budgetDiff > 0 ? '+' : budgetDiff < 0 ? '' : '';
 
   // ── Cancel (reject + close) ─────────────────────────────────────────────────
@@ -380,7 +380,7 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
                   <div key={i} className="flex items-start gap-2.5" role="listitem">
                     {c.satisfied
                       ? <CheckCircle2 size={15} className="text-emerald-800 dark:text-emerald-400 mt-0.5 shrink-0" aria-label="Satisfied" />
-                      : <XCircle size={15} className="text-rose-700 dark:text-rose-400 mt-0.5 shrink-0" aria-label="Not satisfied" />
+                      : <XCircle size={15} className="text-rose-800 dark:text-rose-400 mt-0.5 shrink-0" aria-label="Not satisfied" />
                     }
                     <div className="min-w-0">
                       <p className="text-sm font-600 text-ink-800">{c.constraint}</p>
@@ -463,8 +463,8 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
           {/* Apply error */}
           {applyStatus === 'error' && applyError && (
             <div className="rounded-xl bg-rose-500/10 px-4 py-3 flex items-start gap-2.5" role="alert">
-              <AlertTriangle size={15} className="text-rose-700 dark:text-rose-400 mt-0.5 shrink-0" />
-              <p className="text-xs text-rose-700 dark:text-rose-300 leading-relaxed">{applyError}</p>
+              <AlertTriangle size={15} className="text-rose-800 dark:text-rose-400 mt-0.5 shrink-0" />
+              <p className="text-xs text-rose-800 dark:text-rose-300 leading-relaxed">{applyError}</p>
             </div>
           )}
 
@@ -474,8 +474,8 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
               <p className="text-sm font-600 text-ink-800 mb-3">Describe what you'd like instead</p>
               {tryStatus === 'error' && tryError && (
                 <div className="rounded-lg bg-rose-500/10 px-3 py-2 mb-3 flex items-start gap-2" role="alert">
-                  <AlertTriangle size={13} className="text-rose-700 dark:text-rose-400 mt-0.5 shrink-0" />
-                  <p className="text-xs text-rose-700 dark:text-rose-300">{tryError}</p>
+                  <AlertTriangle size={13} className="text-rose-800 dark:text-rose-400 mt-0.5 shrink-0" />
+                  <p className="text-xs text-rose-800 dark:text-rose-300">{tryError}</p>
                 </div>
               )}
               <form onSubmit={handleTryAnother} className="space-y-3">

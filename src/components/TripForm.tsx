@@ -106,7 +106,7 @@ export default function TripForm({ onSubmit, onCancel, submitLabel = 'Generate I
       </div>
 
       {dateError && (
-        <p className="text-xs text-rose-700 dark:text-rose-400 -mt-4">{dateError}</p>
+        <p className="text-xs text-rose-800 dark:text-rose-400 -mt-4">{dateError}</p>
       )}
 
       <div className="grid grid-cols-2 gap-4">

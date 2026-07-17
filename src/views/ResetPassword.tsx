@@ -59,8 +59,8 @@ export default function ResetPassword({ onDone }: ResetPasswordProps) {
             <form onSubmit={handleSubmit} className="space-y-4" noValidate>
               {error && (
                 <div className="rounded-xl bg-rose-500/10 px-4 py-3 flex items-start gap-2.5 animate-scale-in">
-                  <AlertCircle size={15} className="text-rose-700 dark:text-rose-400 shrink-0 mt-0.5" />
-                  <p className="text-sm text-rose-700 dark:text-rose-300">{error}</p>
+                  <AlertCircle size={15} className="text-rose-800 dark:text-rose-400 shrink-0 mt-0.5" />
+                  <p className="text-sm text-rose-800 dark:text-rose-300">{error}</p>
                 </div>
               )}
 
@@ -102,7 +102,7 @@ export default function ResetPassword({ onDone }: ResetPasswordProps) {
                   )}
                 </div>
                 {confirmPassword && confirmPassword !== password && (
-                  <p className="mt-1 text-xs text-rose-700 dark:text-rose-400">Passwords do not match.</p>
+                  <p className="mt-1 text-xs text-rose-800 dark:text-rose-400">Passwords do not match.</p>
                 )}
               </div>
 

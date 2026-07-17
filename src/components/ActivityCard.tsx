@@ -25,7 +25,7 @@ interface ActivityCardProps {
 
 const categoryColors: Record<ActivityCategory, string> = {
   Food: 'bg-amber-500/15 text-amber-800 dark:text-amber-300',
-  Culture: 'bg-sky-500/15 text-sky-700 dark:text-sky-300',
+  Culture: 'bg-sky-500/15 text-sky-800 dark:text-sky-300',
   Nature: 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300',
   Adventure: 'bg-orange-500/15 text-orange-700 dark:text-orange-300',
   History: 'bg-stone-500/15 text-stone-700 dark:text-stone-300',
@@ -39,7 +39,7 @@ const categoryColors: Record<ActivityCategory, string> = {
 const estimateQualityColors: Record<CostConfidence, string> = {
   high: 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300',
   medium: 'bg-amber-500/15 text-amber-800 dark:text-amber-300',
-  low: 'bg-rose-500/15 text-rose-700 dark:text-rose-300',
+  low: 'bg-rose-500/15 text-rose-800 dark:text-rose-300',
 };
 
 export default function ActivityCard({
@@ -147,7 +147,7 @@ export default function ActivityCard({
         <div className="mt-2.5 flex flex-wrap items-center gap-2">
           {hasConflict && (
             <span
-              className="chip bg-rose-500/15 text-rose-700 dark:text-rose-300 font-600"
+              className="chip bg-rose-500/15 text-rose-800 dark:text-rose-300 font-600"
               title="This activity's time overlaps a neighboring activity — adjust the time or duration to resolve it."
             >
               <AlertTriangle size={11} /> Time conflict
@@ -215,7 +215,7 @@ export default function ActivityCard({
           )}
           <button
             onClick={onDelete}
-            className="btn-ghost px-2.5 py-1.5 text-xs text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 ml-auto"
+            className="btn-ghost px-2.5 py-1.5 text-xs text-rose-800 dark:text-rose-400 hover:bg-rose-500/10 ml-auto"
           >
             <Trash2 size={12} /> Delete
           </button>

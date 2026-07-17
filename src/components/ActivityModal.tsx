@@ -167,7 +167,7 @@ export default function ActivityModal({
                 autoFocus={!focusNotes}
                 required
               />
-              {errors.title && <p className="text-xs text-rose-700 dark:text-rose-400 mt-1">{errors.title}</p>}
+              {errors.title && <p className="text-xs text-rose-800 dark:text-rose-400 mt-1">{errors.title}</p>}
             </div>
 
             {/* Description */}
@@ -282,7 +282,7 @@ export default function ActivityModal({
                             <button type="button" onClick={() => startEditNote(note)} className="rounded p-1 text-ink-500 hover:text-ink-800 hover:bg-glass/5 transition" aria-label="Edit note">
                               <Pencil size={11} />
                             </button>
-                            <button type="button" onClick={() => handleDeleteNote(note.id)} className="rounded p-1 text-ink-500 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 transition" aria-label="Delete note">
+                            <button type="button" onClick={() => handleDeleteNote(note.id)} className="rounded p-1 text-ink-500 hover:text-rose-800 dark:text-rose-400 hover:bg-rose-500/10 transition" aria-label="Delete note">
                               <Trash2 size={11} />
                             </button>
                           </div>

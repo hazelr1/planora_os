@@ -137,7 +137,7 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
             </div>
           </div>
           {demoError && (
-            <p className="mt-4 text-center text-sm text-rose-700 dark:text-rose-400">{demoError}</p>
+            <p className="mt-4 text-center text-sm text-rose-800 dark:text-rose-400">{demoError}</p>
           )}
           <div className="mt-6 flex justify-center border-t border-glass/10 pt-5 sm:justify-start">
             <StatTrio stats={HERO_STATS} />

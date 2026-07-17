@@ -52,8 +52,8 @@ export default function DocumentsSection({ tripId }: { tripId: string }) {
 
         {error && (
           <div className="mt-3 rounded-lg bg-rose-500/10 px-3 py-2 flex items-start gap-2">
-            <AlertTriangle size={13} className="text-rose-700 dark:text-rose-400 mt-0.5 shrink-0" />
-            <p className="text-xs text-rose-700 dark:text-rose-300">{error}</p>
+            <AlertTriangle size={13} className="text-rose-800 dark:text-rose-400 mt-0.5 shrink-0" />
+            <p className="text-xs text-rose-800 dark:text-rose-300">{error}</p>
           </div>
         )}
       </div>
@@ -93,7 +93,7 @@ export default function DocumentsSection({ tripId }: { tripId: string }) {
                   </a>
                   <button
                     onClick={() => void remove(f.path)}
-                    className="rounded-lg p-2 text-ink-500 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 transition shrink-0"
+                    className="rounded-lg p-2 text-ink-500 hover:text-rose-800 dark:text-rose-400 hover:bg-rose-500/10 transition shrink-0"
                     aria-label={`Delete ${displayName(f.name)}`}
                   >
                     <Trash2 size={15} />

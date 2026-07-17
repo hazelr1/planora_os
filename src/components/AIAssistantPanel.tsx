@@ -279,7 +279,7 @@ export default function AIAssistantPanel({
                   <p className="text-violet-100 leading-relaxed">{m.proposal.summary}</p>
                   <div className="flex items-center justify-between text-[10px] text-violet-200/80">
                     <span>{m.proposal.changes.length} change{m.proposal.changes.length === 1 ? '' : 's'} proposed</span>
-                    <span className={m.proposal.budget_difference > 0 ? 'text-rose-700 dark:text-rose-300' : m.proposal.budget_difference < 0 ? 'text-emerald-800 dark:text-emerald-300' : ''}>
+                    <span className={m.proposal.budget_difference > 0 ? 'text-rose-800 dark:text-rose-300' : m.proposal.budget_difference < 0 ? 'text-emerald-800 dark:text-emerald-300' : ''}>
                       {m.proposal.budget_difference === 0
                         ? 'No budget change'
                         : `${m.proposal.budget_difference > 0 ? '+' : ''}${trip.currency} ${Math.round(m.proposal.budget_difference).toLocaleString()}`}
@@ -329,8 +329,8 @@ export default function AIAssistantPanel({
       {/* Error state */}
       {status === 'error' && errorMessage && (
         <div className="rounded-xl bg-rose-500/10 px-3.5 py-3 flex items-start gap-2 mb-4 shrink-0">
-          <AlertTriangle size={14} className="text-rose-700 dark:text-rose-400 mt-0.5 shrink-0" />
-          <p className="text-xs text-rose-700 dark:text-rose-300 leading-relaxed whitespace-pre-line">{errorMessage}</p>
+          <AlertTriangle size={14} className="text-rose-800 dark:text-rose-400 mt-0.5 shrink-0" />
+          <p className="text-xs text-rose-800 dark:text-rose-300 leading-relaxed whitespace-pre-line">{errorMessage}</p>
         </div>
       )}
 

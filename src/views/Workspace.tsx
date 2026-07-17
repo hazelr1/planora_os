@@ -69,7 +69,7 @@ function SaveBar({ status, errorMessage, retry }: { status: string; errorMessage
     <div className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
       status === 'saving' ? 'bg-brand-500/10 text-brand-700 dark:text-brand-300' :
       status === 'saved' ? 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300' :
-      'bg-rose-500/10 text-rose-700 dark:text-rose-300'
+      'bg-rose-500/10 text-rose-800 dark:text-rose-300'
     }`}>
       {status === 'saving' && <Loader2 size={12} className="animate-spin" />}
       {status === 'saved' && <Save size={12} />}
@@ -310,7 +310,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
     return (
       <div className="p-6">
         <div className="card p-12 text-center">
-          <AlertTriangle size={24} className="text-rose-700 dark:text-rose-400 mx-auto mb-3" />
+          <AlertTriangle size={24} className="text-rose-800 dark:text-rose-400 mx-auto mb-3" />
           <p className="text-base font-600 text-ink-800 mb-1">Could not load this trip</p>
           <p className="text-sm text-ink-600 mb-6">Please check your connection and try again.</p>
           <button onClick={load} className="btn-primary">Retry</button>

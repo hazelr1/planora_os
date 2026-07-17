@@ -56,7 +56,7 @@ export default function TripEditModal({ trip, onSave, onClose }: TripEditModalPr
               autoFocus
               required
             />
-            {titleError && <p className="text-xs text-rose-700 dark:text-rose-400 mt-1">{titleError}</p>}
+            {titleError && <p className="text-xs text-rose-800 dark:text-rose-400 mt-1">{titleError}</p>}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>

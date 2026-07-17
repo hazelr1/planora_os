@@ -89,7 +89,7 @@ export default function UserMenu({ name, onNavigate, onSignOut }: UserMenuProps)
           <button
             role="menuitem"
             onClick={() => { setOpen(false); onSignOut(); }}
-            className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-600 text-ink-600 hover:bg-rose-500/10 hover:text-rose-700 dark:hover:text-rose-400 transition"
+            className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-600 text-ink-600 hover:bg-rose-500/10 hover:text-rose-800 dark:hover:text-rose-400 transition"
           >
             <LogOut size={15} className="shrink-0" /> Sign out
           </button>
