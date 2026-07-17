@@ -72,30 +72,42 @@
   --ink-900: 24 21 18;
   --ink-950: 12 10 9;
 
-  --brand-50: 232 250 246;
-  --brand-100: 209 244 236;
-  --brand-200: 168 227 211;
-  --brand-300: 108 199 178;
-  --brand-400: 45 158 138;
-  --brand-500: 27 128 111;
-  --brand-600: 20 102 89;
-  --brand-700: 18 82 72;
-  --brand-800: 19 67 60;
-  --brand-900: 17 56 50;
-  --brand-950: 8 32 28;
+  /* Warm terracotta/sienna — replaces the previous teal for light mode only
+     (dark mode's own --brand-* above is untouched). Drawn from a travel
+     photography palette (burnt sienna / ivory sand / stormy sky / sage
+     green) that already sits close in warmth to this theme's ivory
+     background, so the accent reads as part of the same scene rather than
+     a bolted-on SaaS color. --brand-500 is the palette's actual "Burnt
+     Sienna" (#984216). */
+  --brand-50: 250 243 239;
+  --brand-100: 246 228 218;
+  --brand-200: 239 193 169;
+  --brand-300: 230 138 91;
+  --brand-400: 206 89 28;
+  --brand-500: 152 66 22;
+  --brand-600: 118 53 19;
+  --brand-700: 94 44 18;
+  --brand-800: 74 37 17;
+  --brand-900: 59 32 17;
+  --brand-950: 33 20 13;
 
   --glass: 15 23 42;
 
-  --accent-from: 45 158 138;
-  --accent-via: 34 132 105;
-  --accent-to: 16 109 79;
+  /* Sienna → golden amber → deep olive-sage — the same palette's warm-to-
+     earth gradient, used behind .btn-primary and hero glow shadows. Each
+     stop individually checked against white button text (>=5.8:1 — the
+     original teal->emerald gradient's own "from" stop only ever managed
+     ~3.3:1, so this is a genuine improvement, not just a hue swap). */
+  --accent-from: 152 66 22;
+  --accent-via: 145 88 24;
+  --accent-to: 77 89 54;
 
   --shadow-soft: 0 1px 2px rgba(60,50,32,0.06), 0 1px 1px rgba(60,50,32,0.04);
   --shadow-card: 0 2px 16px -4px rgba(60,50,32,0.09), 0 1px 2px rgba(60,50,32,0.05);
   --shadow-card-hover: 0 12px 36px -10px rgba(60,50,32,0.14), 0 2px 6px rgba(60,50,32,0.06);
   --shadow-pop: 0 20px 60px -16px rgba(60,50,32,0.18), 0 4px 10px rgba(60,50,32,0.06);
-  --shadow-glow: 0 0 28px -8px rgba(45,158,138,0.20);
-  --shadow-glow-lg: 0 8px 32px -8px rgba(45,158,138,0.22), 0 0 48px -16px rgba(16,109,79,0.20);
+  --shadow-glow: 0 0 28px -8px rgba(206,89,28,0.20);
+  --shadow-glow-lg: 0 8px 32px -8px rgba(206,89,28,0.22), 0 0 48px -16px rgba(141,149,126,0.22);
 
   --violet-50: 245 240 255;
   --violet-100: 124 58 237;

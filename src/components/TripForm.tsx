@@ -143,7 +143,7 @@ export default function TripForm({ onSubmit, onCancel, submitLabel = 'Generate I
               onClick={() => setPace(p)}
               className={`chip border px-4 py-2 text-sm font-semibold transition ${
                 pace === p
-                  ? 'bg-brand-500 text-black border-brand-500'
+                  ? 'bg-brand-500 text-white dark:text-black border-brand-500'
                   : 'bg-ink-200/40 text-ink-600 border-glass/10 hover:bg-ink-300/60'
               }`}
             >
@@ -165,7 +165,7 @@ export default function TripForm({ onSubmit, onCancel, submitLabel = 'Generate I
                 onClick={() => toggleInterest(i)}
                 className={`chip border transition ${
                   active
-                    ? 'bg-brand-500 text-black border-brand-500'
+                    ? 'bg-brand-500 text-white dark:text-black border-brand-500'
                     : 'bg-ink-200/40 text-ink-600 border-glass/10 hover:bg-ink-300/60'
                 }`}
               >

@@ -55,7 +55,7 @@ export default function DaySection({
         {/* Day marker */}
         <div className="relative flex items-start justify-between gap-3 pb-6">
           <div className="flex items-start gap-3.5">
-            <div className="relative z-10 h-9 w-9 rounded-full bg-brand-500 text-black flex items-center justify-center font-display font-700 text-sm shrink-0">
+            <div className="relative z-10 h-9 w-9 rounded-full bg-brand-500 text-white dark:text-black flex items-center justify-center font-display font-700 text-sm shrink-0">
               {day.label.replace('Day ', '')}
             </div>
             <div className="min-w-0 pt-0.5">

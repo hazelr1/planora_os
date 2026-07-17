@@ -145,11 +145,11 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
         </motion.div>
       </section>
 
-      {/* ─── Why Planora, not just a chatbot ─── */}
+      {/* ─── Why Planora: reasoning, not just results ─── */}
       <section className="pt-16 pb-20 sm:pt-20 sm:pb-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           <div>
-            <div className="section-eyebrow mb-6">Why not just ask a chatbot?</div>
+            <div className="section-eyebrow mb-6">Reasoning, not just results</div>
             <motion.h2
               {...revealProps}
               variants={revealUp}
@@ -163,7 +163,7 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
               transition={{ delay: 0.05 }}
               className="mt-4 max-w-md text-ink-600 leading-relaxed"
             >
-              A chatbot gives you a list. Planora tells you why each place made the cut — how it fits your budget, your pace, and what's nearby — so you can trust the plan instead of re-Googling every stop.
+              A list of places doesn't tell you why they belong together. Planora shows its work — how each stop fits your budget, your pace, and what's nearby — so you can trust the plan instead of re-Googling every stop.
             </motion.p>
           </div>
 

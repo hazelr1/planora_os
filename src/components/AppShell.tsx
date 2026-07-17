@@ -50,7 +50,7 @@ export default function AppShell({
             className="flex items-center gap-2.5 group shrink-0"
           >
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shadow-soft">
-              <Compass className="text-black" size={18} strokeWidth={2.5} />
+              <Compass className="text-white dark:text-black" size={18} strokeWidth={2.5} />
             </div>
             <span className="font-display text-lg font-800 text-ink-900 group-hover:text-brand-700 dark:group-hover:text-brand-300 transition-colors">
               Planora

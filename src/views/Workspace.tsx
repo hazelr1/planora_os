@@ -103,7 +103,7 @@ function DayTabButton({
       onClick={onClick}
       className={`shrink-0 rounded-full px-4 py-2 text-sm font-600 transition ${
         isActive
-          ? 'bg-brand-500 text-black shadow-soft'
+          ? 'bg-brand-500 text-white dark:text-black shadow-soft'
           : isOver
           ? 'bg-brand-500/20 border border-brand-400/40 text-brand-800 dark:text-brand-200'
           : 'bg-ink-200/60 text-ink-600 hover:bg-ink-300/60'
