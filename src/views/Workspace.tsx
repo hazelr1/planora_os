@@ -346,6 +346,17 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
     if (idx >= 0) setActiveDay(idx);
   };
 
+  // The day the activity being moved already lives in — excluded from its
+  // own picker list below. Dragging an activity onto a day tab already
+  // guarded against this exact no-op (see handleDragEnd's
+  // `sourceDay.id === targetDayId` check); the button-triggered picker
+  // hadn't, so picking the activity's current day silently reassigned its
+  // sort order and reloaded the trip for no visible change.
+  const moveSourceDayId = moveActivityId
+    ? trip.days.find((d) => d.activities.some((a) => a.id === moveActivityId))?.id
+    : undefined;
+  const moveTargetDays = trip.days.filter((d) => d.id !== moveSourceDayId);
+
   const handleTripSettingsSave = (fields: { title: string; budget: number; currency: string; status: TripStatus }) => {
     const prev = trip;
     setTrip({ ...trip, ...fields });
@@ -574,6 +585,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
               currency={trip.currency}
               onEditActivity={openEdit}
               onDeleteActivity={(id) => setConfirmDeleteId(id)}
+              onMoveToDayActivity={setMoveActivityId}
               onToggleLock={editor.toggleLock}
               selectedActivityId={selectedActivityId}
               onSelectActivity={setSelectedActivityId}
@@ -659,21 +671,25 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMoveActivityId(null)} />
           <div ref={moveDialogRef} className="relative w-full max-w-sm card p-5 animate-scale-in" role="dialog" aria-modal="true" aria-labelledby="move-dialog-title">
             <h3 id="move-dialog-title" className="font-display text-base font-700 text-ink-900 mb-3">Move activity to</h3>
-            <div className="space-y-2">
-              {trip.days.map((d) => (
-                <button
-                  key={d.id}
-                  onClick={() => executeMoveToDay(d.id)}
-                  className="w-full rounded-xl border border-glass/10 bg-ink-200/40 px-4 py-2.5 text-left text-sm font-600 text-ink-700 hover:bg-ink-300/60 hover:border-glass/20 transition"
-                >
-                  {d.label}
-                  {d.theme ? ` — ${d.theme}` : ''}
-                  <span className="float-right text-ink-500 font-normal">
-                    {new Date(d.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                  </span>
-                </button>
-              ))}
-            </div>
+            {moveTargetDays.length > 0 ? (
+              <div className="space-y-2">
+                {moveTargetDays.map((d) => (
+                  <button
+                    key={d.id}
+                    onClick={() => executeMoveToDay(d.id)}
+                    className="w-full rounded-xl border border-glass/10 bg-ink-200/40 px-4 py-2.5 text-left text-sm font-600 text-ink-700 hover:bg-ink-300/60 hover:border-glass/20 transition"
+                  >
+                    {d.label}
+                    {d.theme ? ` — ${d.theme}` : ''}
+                    <span className="float-right text-ink-500 font-normal">
+                      {new Date(d.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-ink-600">This trip only has one day, so there's nowhere else to move it.</p>
+            )}
             <button onClick={() => setMoveActivityId(null)} className="btn-ghost w-full mt-3">Cancel</button>
           </div>
         </div>

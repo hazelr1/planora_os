@@ -1,4 +1,4 @@
-import { Lock, Pencil, Trash2, AlertTriangle } from 'lucide-react';
+import { Lock, Pencil, Trash2, AlertTriangle, MoveRight } from 'lucide-react';
 import type { Day } from '../types';
 import { formatDate } from '../utils/dates';
 import { formatDuration } from '../utils/budget';
@@ -9,13 +9,14 @@ interface ListViewProps {
   currency: string;
   onEditActivity: (activityId: string) => void;
   onDeleteActivity: (activityId: string) => void;
+  onMoveToDayActivity: (activityId: string) => void;
   onToggleLock: (activityId: string) => void;
   selectedActivityId?: string | null;
   onSelectActivity?: (activityId: string) => void;
 }
 
 export default function ListView({
-  days, currency, onEditActivity, onDeleteActivity, onToggleLock, selectedActivityId, onSelectActivity,
+  days, currency, onEditActivity, onDeleteActivity, onMoveToDayActivity, onToggleLock, selectedActivityId, onSelectActivity,
 }: ListViewProps) {
   return (
     <div className="card overflow-hidden">
@@ -72,6 +73,13 @@ export default function ListView({
                         aria-label="Edit"
                       >
                         <Pencil size={13} />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onMoveToDayActivity(a.id); }}
+                        className="rounded-lg p-1.5 text-ink-500 hover:text-ink-800 hover:bg-glass/5 transition"
+                        aria-label="Move to day"
+                      >
+                        <MoveRight size={13} />
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); onDeleteActivity(a.id); }}
