@@ -21,6 +21,8 @@ import DestinationHero from '../components/workspace/DestinationHero';
 import DestinationDivider from '../components/workspace/DestinationDivider';
 import { useExperienceTokens } from '../destinations';
 import OverviewSection from '../components/workspace/OverviewSection';
+import ProactiveSuggestionBanner from '../components/ProactiveSuggestionBanner';
+import { detectTripIssues } from '../utils/insights';
 import FlightsSection from '../components/workspace/FlightsSection';
 import HotelsSection from '../components/workspace/HotelsSection';
 import BudgetSection from '../components/workspace/BudgetSection';
@@ -125,7 +127,11 @@ const VIEW_TABS: { id: ViewMode; label: string; Icon: typeof Clock }[] = [
 export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: WorkspaceProps) {
   const [trip, setTrip] = useState<Trip | null>(null);
   const [loadStatus, setLoadStatus] = useState<LoadStatus>('loading');
-  const [activeSection, setActiveSection] = useState<WorkspaceSectionId>('overview');
+  // Itinerary is the landing section — a user opening a trip should see their
+  // days and activities first, not a dashboard of summary cards. Overview
+  // still exists as one tab among others in the sidebar/mobile nav for
+  // anyone who wants the at-a-glance summary.
+  const [activeSection, setActiveSection] = useState<WorkspaceSectionId>('days');
   const [activeDay, setActiveDay] = useState(0);
   const [viewMode, setViewMode] = useState<ViewMode>('timeline');
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
@@ -267,27 +273,23 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
   };
 
   // ── Loading ────────────────────────────────────────────────────────────────
+  // Shaped to preview Days specifically (title, meta line, view-switcher bar,
+  // day-tab pills, one large itinerary card) since that's the section every
+  // fresh load now lands on.
   if (loadStatus === 'loading') {
     return (
-      <div className="p-6 space-y-5">
+      <div className="p-6 space-y-5 max-w-4xl">
         <div>
           <div className="skeleton h-7 w-64 mb-2.5" />
           <div className="skeleton h-4 w-96 max-w-full" />
         </div>
+        <div className="skeleton h-4 w-72 max-w-full" />
+        <div className="skeleton h-9 w-64 max-w-full rounded-xl" style={{ animationDelay: '60ms' }} />
         <div className="flex gap-2">
-          {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-8 w-20" />)}
+          <div className="skeleton h-8 w-20 rounded-full" style={{ animationDelay: '100ms' }} />
+          <div className="skeleton h-8 w-20 rounded-full" style={{ animationDelay: '140ms' }} />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <div className="lg:col-span-2 card p-4 space-y-3">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="skeleton h-28" style={{ animationDelay: `${i * 80}ms` }} />
-            ))}
-          </div>
-          <div className="space-y-5">
-            <div className="skeleton h-40" />
-            <div className="skeleton h-64" />
-          </div>
-        </div>
+        <div className="skeleton h-64 rounded-card" style={{ animationDelay: '180ms' }} />
       </div>
     );
   }
@@ -323,6 +325,10 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
 
   const showDestinationTheming = destinationOrigin !== 'default';
   const dateRange = formatDateRange(trip.startDate, trip.endDate);
+  // Proactive suggestions/issues are about the itinerary specifically, so
+  // they render on the Days screen itself now (see the 'days' case below)
+  // rather than only in the separate Overview summary.
+  const tripIssues = detectTripIssues(trip);
 
   const openAdd = (dayId: string) => setModal({ mode: 'add', activity: null, dayId });
 
@@ -442,7 +448,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
   let sectionContent: React.ReactNode;
   switch (activeSection) {
     case 'overview':
-      sectionContent = <OverviewSection trip={trip} onAskCopilot={setCopilotPrompt} onNavigate={setActiveSection} />;
+      sectionContent = <OverviewSection trip={trip} onNavigate={setActiveSection} />;
       break;
     case 'flights':
       sectionContent = <FlightsSection trip={trip} />;
@@ -590,6 +596,30 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
               selectedActivityId={selectedActivityId}
               onSelectActivity={setSelectedActivityId}
             />
+          )}
+
+          {/* Contextual AI suggestions — rendered below the itinerary itself
+              (not above it) so the day's actual plan is the first thing seen;
+              these stay secondary, reactive commentary on it. Same components,
+              same detection logic as before, just lower in the stack. */}
+          <ProactiveSuggestionBanner trip={trip} onAskCopilot={setCopilotPrompt} />
+          {tripIssues.length > 0 && (
+            <div className="card p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-7 w-7 rounded-lg bg-amber-500/15 text-amber-800 dark:text-amber-400 flex items-center justify-center">
+                  <AlertTriangle size={14} />
+                </div>
+                <h3 className="font-display text-base font-700 text-ink-900">Potential issues</h3>
+              </div>
+              <ul className="space-y-2">
+                {tripIssues.map((issue) => (
+                  <li key={issue.id} className="flex items-start gap-2 text-sm text-ink-700">
+                    <span className="mt-1.5 h-1 w-1 rounded-full bg-amber-500 shrink-0" />
+                    <span className="leading-relaxed">{issue.message}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
       );

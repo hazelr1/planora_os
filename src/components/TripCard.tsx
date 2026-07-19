@@ -37,7 +37,7 @@ export default function TripCard({ trip, onOpen, onEdit, onDuplicate, onDelete }
   }, [trip.destination]);
 
   return (
-    <div className="card card-interactive overflow-hidden rounded-[28px] flex flex-col">
+    <div className="card card-interactive overflow-hidden rounded-card-lg flex flex-col">
       <div className="relative aspect-[16/9] shrink-0 overflow-hidden">
         {/* Procedural gradient — renders immediately, no loading flash. The
             permanent fallback if no photo ever resolves, not a placeholder. */}

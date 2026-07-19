@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bot, PanelRightClose } from 'lucide-react';
+import { Sparkles, PanelRightClose } from 'lucide-react';
 import type { AIRevisionProposal, Trip } from '../../types';
 import AIAssistantPanel, { type DestinationVoiceBrief } from '../AIAssistantPanel';
 
@@ -95,7 +95,7 @@ export default function CopilotDock({
           className="absolute left-0 top-0 bottom-0 w-1.5 -ml-0.5 cursor-col-resize hover:bg-brand-400/40 active:bg-brand-400/50 transition-colors z-10"
           role="separator"
           aria-orientation="vertical"
-          aria-label="Resize AI Copilot panel"
+          aria-label="Resize Ask Planora panel"
         />
       )}
 
@@ -104,10 +104,10 @@ export default function CopilotDock({
         <button
           onClick={() => setCollapsed(false)}
           className="rounded-xl p-2.5 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20 transition"
-          aria-label="Expand AI Copilot"
-          title="Expand AI Copilot"
+          aria-label="Expand Ask Planora"
+          title="Expand Ask Planora"
         >
-          <Bot size={18} />
+          <Sparkles size={18} />
         </button>
       </div>
 
@@ -116,8 +116,8 @@ export default function CopilotDock({
         <button
           onClick={() => setCollapsed(true)}
           className="self-end shrink-0 mb-1 rounded-lg p-1.5 text-ink-500 hover:text-ink-800 hover:bg-glass/5 transition"
-          aria-label="Collapse AI Copilot"
-          title="Collapse AI Copilot"
+          aria-label="Collapse Ask Planora"
+          title="Collapse Ask Planora"
         >
           <PanelRightClose size={16} />
         </button>

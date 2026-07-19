@@ -334,7 +334,7 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleCancel} aria-hidden="true" />
 
-      <div ref={containerRef} className="relative w-full sm:max-w-xl max-h-[92dvh] flex flex-col rounded-t-2xl sm:rounded-2xl ai-surface shadow-pop animate-scale-in overflow-hidden">
+      <div ref={containerRef} className="relative w-full sm:max-w-xl max-h-[92dvh] flex flex-col rounded-t-card sm:rounded-card ai-surface shadow-pop animate-scale-in overflow-hidden">
 
         {/* ── Header ── */}
         <div className="flex items-start gap-3 px-5 py-4 border-b border-violet-400/15 shrink-0">
@@ -342,7 +342,7 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
             <Sparkles className="text-white" size={17} />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 id="review-title" className="font-display text-base font-700 text-ink-900">AI Change Review</h2>
+            <h2 id="review-title" className="font-display text-base font-700 text-ink-900">Review changes</h2>
             <p className="text-xs text-ink-600 mt-0.5">Nothing is applied until you click Apply Changes</p>
           </div>
           <button

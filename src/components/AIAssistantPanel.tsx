@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, Bot, Check, Loader2, Send, Sparkles, User, Zap } from 'lucide-react';
+import { AlertTriangle, Loader2, Send, Sparkles, User, Zap } from 'lucide-react';
 import type { AIRevisionProposal, CopilotMessage, CopilotReply, Trip } from '../types';
 import { supabase } from '../lib/supabase';
 
@@ -21,7 +21,7 @@ interface AIAssistantPanelProps {
   onExternalPromptHandled?: () => void;
   /** The destination's authored concierge opener (see ExperienceCopy.aiGreeting) — shown once, before the first real message, only for a themed destination. */
   aiGreeting?: string;
-  /** Destination-flavored line shown while the model is thinking (see ExperienceCopy.loadingMessage). Falls back to a generic "Thinking…" when absent. */
+  /** Destination-flavored line shown while a request is in flight (see ExperienceCopy.loadingMessage). Falls back to a generic "Understanding your request…" when absent. */
   loadingMessage?: string;
   /** Forwarded to revise-itinerary so the concierge's actual replies carry the destination's voice, not just its greeting. */
   destinationVoice?: DestinationVoiceBrief;
@@ -40,18 +40,6 @@ const DEMO_CHIPS = [
   'Make Day 3 less busy',
   'What scams should I avoid?',
 ];
-
-/** Shown one at a time while a revise-itinerary request is in flight — makes
- * the wait read as the assistant actively verifying real constraints rather
- * than a generic spinner. */
-const CONSTRAINT_CHECKS = [
-  'Keep locked activities',
-  'Stay below budget',
-  'Preserve travel pace',
-  'Avoid schedule conflicts',
-  'Keep nearby attractions together',
-];
-const CONSTRAINT_STEP_MS = 550;
 
 type PanelStatus = 'idle' | 'analyzing' | 'error';
 
@@ -89,16 +77,7 @@ export default function AIAssistantPanel({
   const [input, setInput] = useState('');
   const [status, setStatus] = useState<PanelStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [constraintStep, setConstraintStep] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const constraintTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const stopConstraintTimer = () => {
-    if (constraintTimerRef.current) {
-      clearInterval(constraintTimerRef.current);
-      constraintTimerRef.current = null;
-    }
-  };
 
   // Reload history if the user navigates to a different trip's workspace
   useEffect(() => {
@@ -129,11 +108,6 @@ export default function AIAssistantPanel({
     setInput('');
     setStatus('analyzing');
     setErrorMessage(null);
-    setConstraintStep(0);
-    stopConstraintTimer();
-    constraintTimerRef.current = setInterval(() => {
-      setConstraintStep((s) => Math.min(s + 1, CONSTRAINT_CHECKS.length));
-    }, CONSTRAINT_STEP_MS);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -201,14 +175,8 @@ export default function AIAssistantPanel({
           : 'Something went wrong. Please check your connection.',
       );
       setStatus('error');
-    } finally {
-      stopConstraintTimer();
     }
   };
-
-  // Interval is per-component, not per-request — stop it on unmount so a
-  // panel switch mid-analysis doesn't leak a timer.
-  useEffect(() => stopConstraintTimer, []);
 
   // Triggered by the proactive suggestion banner — submits on the user's
   // behalf but still only ever produces a reviewable proposal, never an
@@ -240,12 +208,12 @@ export default function AIAssistantPanel({
       {/* Header */}
       <div className="flex items-center gap-2.5 mb-5 shrink-0">
         <div className="h-9 w-9 rounded-xl ai-gradient flex items-center justify-center shrink-0 shadow-soft">
-          <Bot className="text-white" size={18} />
+          <Sparkles className="text-white" size={18} />
         </div>
         <div>
-          <h3 className="font-display text-base font-700 text-ink-900">AI Copilot</h3>
+          <h3 className="font-display text-base font-700 text-ink-900">Ask Planora</h3>
           <p className="text-xs text-ink-600">
-            {aiGreeting ? 'Your concierge for this trip' : 'Ask questions or request itinerary changes'}
+            {aiGreeting ? 'Your concierge for this trip' : 'What would you like to change?'}
           </p>
         </div>
       </div>
@@ -299,30 +267,17 @@ export default function AIAssistantPanel({
         </div>
       )}
 
-      {/* Analyzing state — a checklist of real constraints the apply step
-          actually enforces (see apply-itinerary-revision), revealed one at a
-          time so the wait reads as active verification, not a blind spinner. */}
+      {/* Analyzing state — a single honest status line tied to the one real
+          request in flight. No fake step-by-step progress: the actual
+          constraint verification happens server-side, all at once, when the
+          response arrives — not incrementally on the client, so nothing here
+          pretends otherwise. */}
       {status === 'analyzing' && (
-        <div className="rounded-xl bg-violet-500/10 px-3.5 py-3 mb-4 shrink-0">
-          <div className="flex items-center gap-2.5">
-            <span className="typing-dots"><span /><span /><span /></span>
-            <p className="text-xs text-violet-200 leading-relaxed font-medium">
-              {loadingMessage || 'Understanding your request…'}
-            </p>
-          </div>
-          <ul className="mt-2.5 space-y-1.5">
-            {CONSTRAINT_CHECKS.map((label, i) => (
-              <li
-                key={label}
-                className={`flex items-center gap-1.5 text-[11px] transition-opacity duration-300 ${i < constraintStep ? 'opacity-100' : 'opacity-35'}`}
-              >
-                {i < constraintStep
-                  ? <Check size={11} className="text-violet-600 dark:text-violet-300 shrink-0" />
-                  : <span className="h-[11px] w-[11px] rounded-full border border-current shrink-0" />}
-                <span className="text-violet-700 dark:text-violet-200">{label}</span>
-              </li>
-            ))}
-          </ul>
+        <div className="rounded-xl bg-violet-500/10 px-3.5 py-3 mb-4 shrink-0 flex items-center gap-2.5">
+          <span className="typing-dots"><span /><span /><span /></span>
+          <p className="text-xs text-violet-200 leading-relaxed font-medium">
+            {loadingMessage || 'Understanding your request…'}
+          </p>
         </div>
       )}
 
@@ -350,44 +305,41 @@ export default function AIAssistantPanel({
         </div>
       )}
 
-      {/* Quick request chips */}
+      {/* Suggested changes — understated actions, not decorative chips: plain
+          text with a restrained border, no filled color background. */}
       {status !== 'analyzing' && messages.length === 0 && (
         <div className="mb-3 shrink-0">
           <p className="text-xs font-semibold text-ink-600 uppercase tracking-wide mb-2">
             {trip.isDemo
-              ? <span className="flex items-center gap-1"><Zap size={11} className="text-amber-800 dark:text-amber-400" /> Quick requests</span>
-              : 'Try asking'
+              ? <span className="flex items-center gap-1"><Zap size={11} className="text-amber-800 dark:text-amber-400" /> Suggested changes</span>
+              : 'Suggested changes'
             }
           </p>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-col gap-1">
             {chips.map((chip) => (
               <button
                 key={chip}
                 type="button"
                 onClick={() => handleChipClick(chip)}
-                className={`chip transition-colors ${
-                  trip.isDemo
-                    ? 'bg-amber-500/10 text-amber-800 dark:text-amber-300 hover:bg-amber-500/20'
-                    : 'bg-ink-200/40 text-ink-600 hover:bg-violet-500/10 hover:text-violet-200'
-                }`}
+                className="rounded-lg px-2.5 py-1.5 text-left text-xs text-ink-600 border border-glass/10 hover:border-glass/20 hover:bg-glass/5 hover:text-ink-800 transition-colors"
               >
                 {chip}
               </button>
             ))}
           </div>
           {trip.isDemo && (
-            <p className="text-[10px] text-ink-600 mt-1.5">Tap a chip to instantly request a real AI response.</p>
+            <p className="text-[10px] text-ink-600 mt-1.5">Tap one to instantly request a real AI response.</p>
           )}
         </div>
       )}
 
       {/* Input form */}
       <form className="mt-auto shrink-0" onSubmit={handleSubmit}>
-        <label htmlFor="ai-input" className="sr-only">Ask the AI Copilot</label>
+        <label htmlFor="ai-input" className="sr-only">Ask Planora</label>
         <textarea
           id="ai-input"
           className="input min-h-[64px] resize-none"
-          placeholder="Ask a travel question or request a change…"
+          placeholder="Describe a change, or ask a travel question…"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={status === 'analyzing'}
@@ -401,7 +353,7 @@ export default function AIAssistantPanel({
           disabled={!canSubmit}
         >
           {status === 'analyzing'
-            ? <><Loader2 size={14} className="animate-spin" /> Thinking…</>
+            ? <><Loader2 size={14} className="animate-spin" /> Analyzing…</>
             : <><Send size={14} /> Send</>
           }
         </button>
