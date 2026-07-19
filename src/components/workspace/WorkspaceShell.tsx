@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
-import { Bot, X } from 'lucide-react';
+import { Sparkles, X } from 'lucide-react';
 import type { AIRevisionProposal, Trip } from '../../types';
 import type { WorkspaceSectionId } from './types';
 import WorkspaceSidebar from './WorkspaceSidebar';
@@ -82,13 +82,14 @@ export default function WorkspaceShell({
         <MobileWorkspaceNav active={activeSection} onSelect={onSelectSection} />
       </div>
 
-      {/* Mobile floating "Ask AI" trigger */}
+      {/* Mobile floating "Ask Planora" trigger — softer shadow than shadow-pop
+          so it reads as available rather than visually dominant. */}
       <button
         onClick={() => setMobileCopilotOpen(true)}
-        className="md:hidden fixed bottom-20 right-4 z-30 h-12 w-12 rounded-full ai-gradient shadow-pop flex items-center justify-center text-white"
-        aria-label="Open AI Copilot"
+        className="md:hidden fixed bottom-20 right-4 z-30 h-12 w-12 rounded-full ai-gradient shadow-soft flex items-center justify-center text-white"
+        aria-label="Open Ask Planora"
       >
-        <Bot size={20} />
+        <Sparkles size={20} />
       </button>
 
       {/* Mobile Copilot sheet — always mounted in the DOM (never conditionally
@@ -108,11 +109,11 @@ export default function WorkspaceShell({
           transition={{ type: 'spring', damping: 30, stiffness: 300 }}
         >
           <div className="flex items-center justify-between px-4 py-3 border-b border-glass/10 shrink-0">
-            <span className="text-sm font-700 text-ink-900">AI Copilot</span>
+            <span className="text-sm font-700 text-ink-900">Ask Planora</span>
             <button
               onClick={() => setMobileCopilotOpen(false)}
               className="rounded-lg p-1.5 text-ink-500 hover:text-ink-800 hover:bg-glass/5 transition"
-              aria-label="Close AI Copilot"
+              aria-label="Close Ask Planora"
             >
               <X size={18} />
             </button>

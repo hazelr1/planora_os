@@ -342,7 +342,7 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
             <Sparkles className="text-white" size={17} />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 id="review-title" className="font-display text-base font-700 text-ink-900">AI Change Review</h2>
+            <h2 id="review-title" className="font-display text-base font-700 text-ink-900">Review changes</h2>
             <p className="text-xs text-ink-600 mt-0.5">Nothing is applied until you click Apply Changes</p>
           </div>
           <button
