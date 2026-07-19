@@ -47,10 +47,10 @@ export default function MyTrips({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="font-display text-2xl font-800 text-ink-900">My Trips</h1>
-          <p className="text-ink-600 mt-1 text-sm">
+          <h1 className="font-display text-xl font-700 text-ink-900">My Trips</h1>
+          <p className="text-ink-600 mt-0.5 text-sm">
             {isLoading ? 'Loading…' : trips.length === 0 ? 'No trips yet' : `${trips.length} ${trips.length === 1 ? 'trip' : 'trips'}`}
           </p>
         </div>
@@ -61,7 +61,7 @@ export default function MyTrips({
 
       {/* Loading skeletons */}
       {isLoading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <TripCardSkeleton />
           <TripCardSkeleton />
           <TripCardSkeleton />
@@ -70,8 +70,9 @@ export default function MyTrips({
 
       {/* Load error */}
       {!isLoading && loadError && (
-        <div className="card p-8 text-center">
+        <div className="card p-8 text-center" role="alert">
           <p className="text-sm font-medium text-rose-800 dark:text-rose-300 mb-1">{loadError}</p>
+          <p className="text-xs text-ink-600 mt-1">Check your connection and try again.</p>
           <button onClick={onRetryLoad} className="btn-primary mt-4">Retry</button>
         </div>
       )}
@@ -81,7 +82,7 @@ export default function MyTrips({
         <div className="card">
           <EmptyState
             icon={<Map size={24} />}
-            title="Your next adventure starts here"
+            title="Your next journey starts here."
             description="Create your first itinerary with AI."
             action={
               <button onClick={() => onNavigate({ name: 'create' })} className="btn-primary">

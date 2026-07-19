@@ -11,32 +11,11 @@ interface CreateTripProps {
 
 type GenerateStatus = 'idle' | 'generating' | 'error';
 
-const PROGRESS_MESSAGES = [
-  'Understanding your preferences…',
-  'Planning each day…',
-  'Balancing your budget…',
-  'Grouping nearby places…',
-  'Checking schedule conflicts…',
-  'Preparing your itinerary…',
-];
-
 export default function CreateTrip({ onNavigate, onCreate }: CreateTripProps) {
   const [status, setStatus] = useState<GenerateStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [savedValues, setSavedValues] = useState<TripFormValues | null>(null);
-  const [progressIndex, setProgressIndex] = useState(0);
-
-  const startProgress = () => {
-    setProgressIndex(0);
-    return setInterval(() => {
-      setProgressIndex((i) => i + 1);
-    }, 3000);
-  };
-
-  const stopProgress = (id: ReturnType<typeof setInterval>) => {
-    clearInterval(id);
-  };
 
   const handleSubmit = async (values: TripFormValues) => {
     if (status === 'generating') return;
@@ -46,12 +25,9 @@ export default function CreateTrip({ onNavigate, onCreate }: CreateTripProps) {
     setWarnings([]);
     setStatus('generating');
 
-    const pid = startProgress();
-
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        stopProgress(pid);
         setErrorMessage('Your session has expired. Please sign in again.');
         setStatus('error');
         return;
@@ -83,8 +59,6 @@ export default function CreateTrip({ onNavigate, onCreate }: CreateTripProps) {
 
       const json = await response.json() as { tripId?: string; warnings?: string[]; error?: string };
 
-      stopProgress(pid);
-
       if (!response.ok || !json.tripId) {
         setErrorMessage(json.error ?? 'Could not generate your itinerary. Please try again.');
         setStatus('error');
@@ -97,7 +71,6 @@ export default function CreateTrip({ onNavigate, onCreate }: CreateTripProps) {
 
       onCreate(json.tripId);
     } catch (err) {
-      stopProgress(pid);
       const isTimeout = err instanceof DOMException && err.name === 'TimeoutError';
       setErrorMessage(
         isTimeout
@@ -112,18 +85,16 @@ export default function CreateTrip({ onNavigate, onCreate }: CreateTripProps) {
     if (savedValues) void handleSubmit(savedValues);
   };
 
-  const progressMessage = PROGRESS_MESSAGES[progressIndex % PROGRESS_MESSAGES.length];
-
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="mb-6">
-        <h1 className="font-display text-2xl font-800 text-ink-900">Create a trip</h1>
-        <p className="text-ink-600 mt-1">Fill in the details and AI will build your day-by-day itinerary.</p>
+      <div className="mb-5">
+        <h1 className="font-display text-xl font-700 text-ink-900">Create a trip</h1>
+        <p className="text-ink-600 mt-0.5 text-sm">Fill in the details and AI will build your day-by-day itinerary.</p>
       </div>
 
       {/* Generating overlay */}
       {status === 'generating' && (
-        <div className="ai-surface p-8 mb-6 flex flex-col items-center text-center gap-5 animate-scale-in">
+        <div className="ai-surface p-6 mb-5 flex flex-col items-center text-center gap-4 animate-scale-in" role="status" aria-label="Generating itinerary">
           <div className="relative flex items-center justify-center h-16 w-16">
             <div className="absolute inset-0 rounded-full border-2 border-violet-400/20 border-t-violet-400 animate-spin" />
             <div className="absolute inset-0 rounded-full animate-float">
@@ -131,18 +102,15 @@ export default function CreateTrip({ onNavigate, onCreate }: CreateTripProps) {
             </div>
           </div>
           <div>
-            <p className="font-display font-700 text-ink-900 text-base">Generating your itinerary</p>
-            <p key={progressMessage} className="text-sm ai-shimmer font-medium mt-1.5 min-h-[1.25rem] animate-fade-in">
-              {progressMessage}
-            </p>
+            <p className="font-display font-600 text-ink-900 text-sm">Generating your itinerary</p>
+            <p className="text-sm text-ink-600 mt-1">This usually takes 15–30 seconds.</p>
           </div>
-          <p className="text-xs text-ink-600">This usually takes 15–30 seconds.</p>
         </div>
       )}
 
       {/* Error state */}
       {status === 'error' && errorMessage && (
-        <div className="rounded-xl bg-rose-500/10 px-4 py-3 mb-5 flex items-start gap-2.5">
+        <div className="rounded-xl bg-rose-500/10 px-3.5 py-2.5 mb-4 flex items-start gap-2" role="alert">
           <AlertTriangle size={16} className="text-rose-800 dark:text-rose-400 mt-0.5 shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm text-rose-800 dark:text-rose-300 font-medium whitespace-pre-line">{errorMessage}</p>

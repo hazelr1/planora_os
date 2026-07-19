@@ -68,7 +68,7 @@ export default function ActivityCard({
         hasConflict ? 'border-rose-500/40 bg-rose-500/[0.03]' : activity.locked ? 'border-brand-400/30 bg-brand-500/[0.04]' : 'border-glass/10 bg-ink-200/30'
       } ${highlighted ? 'ring-2 ring-brand-400/60' : ''}`}
     >
-      <div className="p-4 flex items-start gap-3">
+      <div className="p-3.5 flex items-start gap-2.5">
         {/* Drag handle */}
         <button
           type="button"
@@ -83,8 +83,8 @@ export default function ActivityCard({
 
         <div className="min-w-0 flex-1">
           {/* Time, category, lock state, conflict — one quiet line, no chip chrome except the one actionable signal */}
-          <div className="flex items-baseline gap-x-2.5 gap-y-1 flex-wrap">
-            <span className="text-sm font-700 text-ink-900 tabular-nums">{activity.time}</span>
+          <div className="flex items-baseline gap-x-2 gap-y-0.5 flex-wrap">
+            <span className="text-sm font-600 text-ink-900 tabular-nums">{activity.time}</span>
             {activity.category !== 'Other' && (
               <span className="text-xs text-ink-500">{activity.category}</span>
             )}
@@ -106,13 +106,13 @@ export default function ActivityCard({
             )}
           </div>
 
-          <h4 className="font-display text-base font-700 text-ink-900 mt-1">{activity.title}</h4>
+          <h4 className="font-display text-base font-600 text-ink-900 mt-0.5">{activity.title}</h4>
           {activity.description && (
-            <p className="text-sm text-ink-600 mt-1 leading-relaxed">{activity.description}</p>
+            <p className="text-sm text-ink-600 mt-0.5 leading-relaxed">{activity.description}</p>
           )}
 
           {/* Location, duration, cost */}
-          <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink-600">
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-sm text-ink-600">
             {activity.location && (
               <span className="flex items-center gap-1.5 min-w-0">
                 <MapPin size={13} className="text-ink-500 shrink-0" />
@@ -131,14 +131,14 @@ export default function ActivityCard({
 
           {/* AI reason — a quiet annotation (left-border accent), not a boxed sub-card. Only rendered when the AI actually left one. */}
           {activity.aiReason && (
-            <div className="mt-2.5 pl-3 border-l-2 border-violet-400/30 flex items-start gap-1.5">
+            <div className="mt-2 pl-3 border-l-2 border-violet-400/30 flex items-start gap-1.5">
               <Sparkles size={12} className="text-violet-600 dark:text-violet-300 mt-0.5 shrink-0" />
               <p className="text-xs text-violet-700 dark:text-violet-200 leading-relaxed">{activity.aiReason}</p>
             </div>
           )}
 
           {/* Estimate quality + last edited — one quiet line */}
-          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-500">
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-ink-500">
             <span
               className={`inline-flex items-center gap-1 ${estimateQualityColors[activity.costConfidence]}`}
               title={`Estimate quality: ${activity.costConfidence} — based on typical travel prices, not a guaranteed cost.`}
@@ -153,7 +153,7 @@ export default function ActivityCard({
 
           {/* Notes */}
           {activity.notes.length > 0 && (
-            <div className="mt-3 space-y-1.5">
+            <div className="mt-2.5 space-y-1">
               {activity.notes.map((note) => (
                 <div key={note.id} className="flex items-start gap-2 rounded-lg bg-ink-200/40 px-3.5 py-2.5">
                   <StickyNote size={12} className="text-ink-500 mt-0.5 shrink-0" />
@@ -164,7 +164,7 @@ export default function ActivityCard({
           )}
 
           {/* Actions — always visible, never hover-gated; touch-sized tap targets */}
-          <div className="mt-3 flex items-center gap-1 flex-wrap border-t border-glass/10 pt-3">
+          <div className="mt-2.5 flex items-center gap-0.5 flex-wrap border-t border-glass/10 pt-2.5">
             <button onClick={onEdit} className={`btn-ghost px-3 py-2 text-xs ${focusRing}`}>
               <Pencil size={12} /> Edit
             </button>

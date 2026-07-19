@@ -65,7 +65,7 @@ export default function DaySection({
                   <span className="text-sm text-ink-600 italic">— {day.theme}</span>
                 )}
               </div>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 mt-1">
                 <p className="text-xs text-ink-600 flex items-center gap-1">
                   <CalendarDays size={11} />
                   {formatDate(day.date)}
@@ -103,8 +103,8 @@ export default function DaySection({
           <div className="pl-11">
             <EmptyState
               icon={<CalendarDays size={22} />}
-              title="No activities yet"
-              description={emptyStateDescription || 'Add something to do on this day.'}
+              title="This day is open."
+              description={emptyStateDescription || 'Add an activity or ask Planora for ideas.'}
               action={
                 <button onClick={() => onAddActivity(day.id)} className="btn-outline text-xs">
                   <Plus size={13} /> Add an activity
@@ -114,7 +114,7 @@ export default function DaySection({
           </div>
         ) : (
           <SortableContext items={sorted.map((a) => a.id)} strategy={verticalListSortingStrategy}>
-            <div className="space-y-4 pb-1">
+            <div className="space-y-3 pb-1">
               {sorted.map((a, idx, arr) => (
                 <div
                   key={a.id}

@@ -21,15 +21,15 @@ export default function BudgetSection({ trip }: { trip: Trip }) {
   const categoryTotal = [...byCategory.values()].reduce((s, v) => s + v, 0);
 
   return (
-    <div className="max-w-3xl grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+    <div className="max-w-3xl grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
       <BudgetSummary trip={trip} />
 
-      <div className="card p-6">
-        <h3 className="font-display text-base font-700 text-ink-900 mb-4">By category</h3>
+      <div className="card p-4">
+        <h3 className="font-display text-sm font-600 text-ink-900 mb-3">By category</h3>
         {categoryTotal === 0 ? (
           <p className="text-sm text-ink-600">No costs recorded yet.</p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {CATEGORY_ORDER.filter((c) => byCategory.has(c)).map((cat) => {
               const amount = byCategory.get(cat) ?? 0;
               const pct = Math.round((amount / categoryTotal) * 100);
@@ -49,11 +49,11 @@ export default function BudgetSection({ trip }: { trip: Trip }) {
         )}
       </div>
 
-      <div className="card p-6 lg:col-span-2">
-        <h3 className="font-display text-base font-700 text-ink-900 mb-4">By day</h3>
-        <div className="space-y-2">
+      <div className="card p-4 lg:col-span-2">
+        <h3 className="font-display text-sm font-600 text-ink-900 mb-3">By day</h3>
+        <div className="space-y-1.5">
           {byDay.map(({ day, total }) => (
-            <div key={day.id} className="flex items-center justify-between text-sm py-1.5 border-b border-glass/5 last:border-0">
+            <div key={day.id} className="flex items-center justify-between text-sm py-1 border-b border-glass/5 last:border-0">
               <span className="text-ink-700">{day.label}{day.theme ? ` — ${day.theme}` : ''}</span>
               <span className="font-600 text-ink-900">{trip.currency} {total.toLocaleString()}</span>
             </div>

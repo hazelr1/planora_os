@@ -79,7 +79,7 @@ export default function MapView({ days, currency, selectedActivityId, onSelectAc
       <div className="card">
         <EmptyState
           icon={<MapPin size={22} />}
-          title="Nothing to map yet"
+          title="Map unavailable"
           description="Activities need coordinates before they can appear on the map. Newly generated or AI-added activities are placed automatically."
         />
       </div>
@@ -93,9 +93,9 @@ export default function MapView({ days, currency, selectedActivityId, onSelectAc
 
   return (
     <div className="card overflow-hidden">
-      <div className="px-5 py-3 border-b border-glass/10 bg-ink-200/30 flex items-center justify-between">
-        <p className="text-sm font-700 text-ink-900 flex items-center gap-2">
-          <MapPin size={15} className="text-brand-400" /> Trip map
+      <div className="px-4 py-2.5 border-b border-glass/10 bg-ink-200/30 flex items-center justify-between">
+        <p className="text-sm font-600 text-ink-900 flex items-center gap-1.5">
+          <MapPin size={14} className="text-brand-400" /> Trip map
         </p>
         <p className="text-xs text-ink-600">Click a marker to highlight the activity</p>
       </div>
@@ -155,7 +155,7 @@ export default function MapView({ days, currency, selectedActivityId, onSelectAc
       </div>
 
       {/* Legend */}
-      <div className="px-5 py-3 border-t border-glass/10 flex flex-wrap gap-x-4 gap-y-1.5">
+      <div className="px-4 py-2.5 border-t border-glass/10 flex flex-wrap gap-x-3 gap-y-1">
         {(Object.keys(categoryDotColor) as ActivityCategory[])
           .filter((cat) => mappable.some((m) => m.activity.category === cat))
           .map((cat) => (

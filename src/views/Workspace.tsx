@@ -278,7 +278,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
   // fresh load now lands on.
   if (loadStatus === 'loading') {
     return (
-      <div className="p-6 space-y-5 max-w-4xl">
+      <div className="p-6 space-y-5 max-w-4xl" role="status" aria-label="Loading itinerary">
         <div>
           <div className="skeleton h-7 w-64 mb-2.5" />
           <div className="skeleton h-4 w-96 max-w-full" />
@@ -297,9 +297,9 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
   if (loadStatus === 'not_found') {
     return (
       <div className="p-6">
-        <div className="card p-12 text-center">
+        <div className="card p-12 text-center" role="alert">
           <p className="text-base font-600 text-ink-800 mb-1">Trip not found</p>
-          <p className="text-sm text-ink-600 mb-6">This trip may have been deleted.</p>
+          <p className="text-sm text-ink-600 mb-6">This trip may have been deleted or you may not have access to it.</p>
           <button onClick={() => onNavigate({ name: 'trips' })} className="btn-primary">
             Back to My Trips
           </button>
@@ -311,7 +311,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
   if (loadStatus === 'error') {
     return (
       <div className="p-6">
-        <div className="card p-12 text-center">
+        <div className="card p-12 text-center" role="alert">
           <AlertTriangle size={24} className="text-rose-800 dark:text-rose-400 mx-auto mb-3" />
           <p className="text-base font-600 text-ink-800 mb-1">Could not load this trip</p>
           <p className="text-sm text-ink-600 mb-6">Please check your connection and try again.</p>
@@ -388,9 +388,9 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="font-display text-2xl font-800 text-ink-900">{trip.title}</h1>
+            <h1 className="font-display text-xl font-700 text-ink-900">{trip.title}</h1>
             {trip.isDemo && (
-              <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500/15 text-amber-800 dark:text-amber-300 px-2 py-0.5 text-xs font-700">
+              <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500/15 text-amber-800 dark:text-amber-300 px-2 py-0.5 text-xs font-600">
                 <FlaskConical size={11} /> Demo Data
               </span>
             )}
@@ -414,7 +414,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
               </button>
             )}
           </div>
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-ink-600">
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-600">
             <span className="flex items-center gap-1.5"><MapPin size={13} /> {trip.destination}</span>
             <span className="flex items-center gap-1.5"><Calendar size={13} /> {dateRange}</span>
             <span className="flex items-center gap-1.5"><Users size={13} /> {trip.travelers} {trip.travelers === 1 ? 'traveler' : 'travelers'}</span>
@@ -429,14 +429,14 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
       {/* Persists across every workspace section (Overview, Days, Flights, Budget, etc.)
           since it lives in the shared header above `sectionContent`, not per-section —
           one quiet line rather than a caveat repeated on every price/time/duration. */}
-      <p className="flex items-center gap-1.5 text-xs text-ink-500">
+      <p className="flex items-center gap-1 text-xs text-ink-500">
         <Info size={12} className="shrink-0" />
         Times, prices, durations, and availability are estimates — verify important details before booking.
       </p>
 
       {showAppliedBanner && (
-        <div className="rounded-xl bg-emerald-500/10 px-4 py-3 flex items-center gap-2.5" role="status">
-          <CheckCircle2 size={16} className="text-emerald-800 dark:text-emerald-400 shrink-0" />
+        <div className="rounded-xl bg-emerald-500/10 px-3.5 py-2.5 flex items-center gap-2" role="status">
+          <CheckCircle2 size={14} className="text-emerald-800 dark:text-emerald-400 shrink-0" />
           <p className="text-sm text-emerald-800 dark:text-emerald-300 font-medium">Changes applied. Your itinerary has been updated.</p>
         </div>
       )}
@@ -496,12 +496,12 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
       sectionContent = (
         <div className="space-y-4">
           {/* View switcher */}
-          <div className="flex gap-1.5 rounded-xl bg-ink-200/60 p-1 w-full sm:w-fit overflow-x-auto">
+          <div className="flex gap-1 rounded-lg bg-ink-200/60 p-0.5 w-full sm:w-fit overflow-x-auto">
             {VIEW_TABS.map(({ id, label, Icon }) => (
               <button
                 key={id}
                 onClick={() => setViewMode(id)}
-                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-600 transition shrink-0 ${
+                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-500 transition shrink-0 ${
                   viewMode === id ? 'bg-ink-300/80 text-ink-900 shadow-soft' : 'text-ink-500 hover:text-ink-700'
                 }`}
               >
@@ -604,16 +604,16 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
               same detection logic as before, just lower in the stack. */}
           <ProactiveSuggestionBanner trip={trip} onAskCopilot={setCopilotPrompt} />
           {tripIssues.length > 0 && (
-            <div className="card p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="h-7 w-7 rounded-lg bg-amber-500/15 text-amber-800 dark:text-amber-400 flex items-center justify-center">
-                  <AlertTriangle size={14} />
+            <div className="card p-4">
+              <div className="flex items-center gap-2 mb-2.5">
+                <div className="h-6 w-6 rounded-lg bg-amber-500/15 text-amber-800 dark:text-amber-400 flex items-center justify-center">
+                  <AlertTriangle size={12} />
                 </div>
-                <h3 className="font-display text-base font-700 text-ink-900">Potential issues</h3>
+                <h3 className="font-display text-sm font-600 text-ink-900">Potential issues</h3>
               </div>
-              <ul className="space-y-2">
+              <ul className="space-y-1.5">
                 {tripIssues.map((issue) => (
-                  <li key={issue.id} className="flex items-start gap-2 text-sm text-ink-700">
+                  <li key={issue.id} className="flex items-start gap-1.5 text-sm text-ink-700">
                     <span className="mt-1.5 h-1 w-1 rounded-full bg-amber-500 shrink-0" />
                     <span className="leading-relaxed">{issue.message}</span>
                   </li>

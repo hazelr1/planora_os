@@ -204,16 +204,16 @@ export default function AIAssistantPanel({
   const chips = trip.isDemo ? DEMO_CHIPS : SUGGESTION_CHIPS;
 
   return (
-    <div className="ai-surface p-5 flex flex-col h-full">
+    <div className="ai-surface p-4 flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-2.5 mb-5 shrink-0">
-        <div className="h-9 w-9 rounded-xl ai-gradient flex items-center justify-center shrink-0 shadow-soft">
-          <Sparkles className="text-white" size={18} />
+      <div className="flex items-center gap-2.5 mb-4 shrink-0">
+        <div className="h-8 w-8 rounded-xl ai-gradient flex items-center justify-center shrink-0 shadow-soft">
+          <Sparkles className="text-white" size={16} />
         </div>
         <div>
-          <h3 className="font-display text-base font-700 text-ink-900">Ask Planora</h3>
+          <h3 className="font-display text-sm font-600 text-ink-900">Ask Planora</h3>
           <p className="text-xs text-ink-600">
-            {aiGreeting ? 'Your concierge for this trip' : 'What would you like to change?'}
+            {aiGreeting ? 'Your concierge for this trip' : 'Describe what you would like to change, then review the proposal before applying it.'}
           </p>
         </div>
       </div>
@@ -273,17 +273,17 @@ export default function AIAssistantPanel({
           response arrives — not incrementally on the client, so nothing here
           pretends otherwise. */}
       {status === 'analyzing' && (
-        <div className="rounded-xl bg-violet-500/10 px-3.5 py-3 mb-4 shrink-0 flex items-center gap-2.5">
+        <div className="rounded-xl bg-violet-500/10 px-3 py-2.5 mb-3 shrink-0 flex items-center gap-2">
           <span className="typing-dots"><span /><span /><span /></span>
           <p className="text-xs text-violet-200 leading-relaxed font-medium">
-            {loadingMessage || 'Understanding your request…'}
+            {loadingMessage || 'Revising your itinerary…'}
           </p>
         </div>
       )}
 
       {/* Error state */}
       {status === 'error' && errorMessage && (
-        <div className="rounded-xl bg-rose-500/10 px-3.5 py-3 flex items-start gap-2 mb-4 shrink-0">
+        <div className="rounded-xl bg-rose-500/10 px-3 py-2.5 flex items-start gap-2 mb-3 shrink-0">
           <AlertTriangle size={14} className="text-rose-800 dark:text-rose-400 mt-0.5 shrink-0" />
           <p className="text-xs text-rose-800 dark:text-rose-300 leading-relaxed whitespace-pre-line">{errorMessage}</p>
         </div>
@@ -309,7 +309,7 @@ export default function AIAssistantPanel({
           text with a restrained border, no filled color background. */}
       {status !== 'analyzing' && messages.length === 0 && (
         <div className="mb-3 shrink-0">
-          <p className="text-xs font-semibold text-ink-600 uppercase tracking-wide mb-2">
+          <p className="text-[10px] font-semibold text-ink-600 uppercase tracking-wider mb-1.5">
             {trip.isDemo
               ? <span className="flex items-center gap-1"><Zap size={11} className="text-amber-800 dark:text-amber-400" /> Suggested changes</span>
               : 'Suggested changes'
@@ -338,7 +338,7 @@ export default function AIAssistantPanel({
         <label htmlFor="ai-input" className="sr-only">Ask Planora</label>
         <textarea
           id="ai-input"
-          className="input min-h-[64px] resize-none"
+          className="input min-h-[56px] resize-none"
           placeholder="Describe a change, or ask a travel question…"
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -349,7 +349,7 @@ export default function AIAssistantPanel({
         />
         <button
           type="submit"
-          className="btn-primary w-full mt-2"
+          className="btn-primary w-full mt-1.5"
           disabled={!canSubmit}
         >
           {status === 'analyzing'
