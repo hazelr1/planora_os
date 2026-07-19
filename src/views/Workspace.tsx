@@ -267,27 +267,20 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
   };
 
   // ── Loading ────────────────────────────────────────────────────────────────
+  // Shaped to preview Overview specifically (meta line, one large itinerary
+  // card, one smaller budget card) since that's the section every fresh
+  // load actually lands on — previously mirrored a generic 2-column grid
+  // that no longer resembles what renders once the trip loads.
   if (loadStatus === 'loading') {
     return (
-      <div className="p-6 space-y-5">
+      <div className="p-6 space-y-5 max-w-4xl">
         <div>
           <div className="skeleton h-7 w-64 mb-2.5" />
           <div className="skeleton h-4 w-96 max-w-full" />
         </div>
-        <div className="flex gap-2">
-          {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-8 w-20" />)}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <div className="lg:col-span-2 card p-4 space-y-3">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="skeleton h-28" style={{ animationDelay: `${i * 80}ms` }} />
-            ))}
-          </div>
-          <div className="space-y-5">
-            <div className="skeleton h-40" />
-            <div className="skeleton h-64" />
-          </div>
-        </div>
+        <div className="skeleton h-4 w-72 max-w-full" />
+        <div className="skeleton h-28 rounded-2xl" style={{ animationDelay: '80ms' }} />
+        <div className="skeleton h-16 rounded-2xl" style={{ animationDelay: '160ms' }} />
       </div>
     );
   }
