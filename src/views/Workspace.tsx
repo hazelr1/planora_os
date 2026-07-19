@@ -21,6 +21,8 @@ import DestinationHero from '../components/workspace/DestinationHero';
 import DestinationDivider from '../components/workspace/DestinationDivider';
 import { useExperienceTokens } from '../destinations';
 import OverviewSection from '../components/workspace/OverviewSection';
+import ProactiveSuggestionBanner from '../components/ProactiveSuggestionBanner';
+import { detectTripIssues } from '../utils/insights';
 import FlightsSection from '../components/workspace/FlightsSection';
 import HotelsSection from '../components/workspace/HotelsSection';
 import BudgetSection from '../components/workspace/BudgetSection';
@@ -316,6 +318,10 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
 
   const showDestinationTheming = destinationOrigin !== 'default';
   const dateRange = formatDateRange(trip.startDate, trip.endDate);
+  // Proactive suggestions/issues are about the itinerary specifically, so
+  // they render on the Days screen itself now (see the 'days' case below)
+  // rather than only in the separate Overview summary.
+  const tripIssues = detectTripIssues(trip);
 
   const openAdd = (dayId: string) => setModal({ mode: 'add', activity: null, dayId });
 
@@ -435,7 +441,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
   let sectionContent: React.ReactNode;
   switch (activeSection) {
     case 'overview':
-      sectionContent = <OverviewSection trip={trip} onAskCopilot={setCopilotPrompt} onNavigate={setActiveSection} />;
+      sectionContent = <OverviewSection trip={trip} onNavigate={setActiveSection} />;
       break;
     case 'flights':
       sectionContent = <FlightsSection trip={trip} />;
@@ -482,6 +488,29 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
     default:
       sectionContent = (
         <div className="space-y-4">
+          {/* AI suggestions/issues — about the itinerary specifically, so
+              they live here (apply across every day-view mode) rather than
+              only in the separate Overview summary. */}
+          <ProactiveSuggestionBanner trip={trip} onAskCopilot={setCopilotPrompt} />
+          {tripIssues.length > 0 && (
+            <div className="card p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-7 w-7 rounded-lg bg-amber-500/15 text-amber-800 dark:text-amber-400 flex items-center justify-center">
+                  <AlertTriangle size={14} />
+                </div>
+                <h3 className="font-display text-base font-700 text-ink-900">Potential issues</h3>
+              </div>
+              <ul className="space-y-2">
+                {tripIssues.map((issue) => (
+                  <li key={issue.id} className="flex items-start gap-2 text-sm text-ink-700">
+                    <span className="mt-1.5 h-1 w-1 rounded-full bg-amber-500 shrink-0" />
+                    <span className="leading-relaxed">{issue.message}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* View switcher */}
           <div className="flex gap-1.5 rounded-xl bg-ink-200/60 p-1 w-full sm:w-fit overflow-x-auto">
             {VIEW_TABS.map(({ id, label, Icon }) => (
