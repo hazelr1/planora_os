@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, Loader2, Send, Sparkles, User, Zap } from 'lucide-react';
+import { AlertTriangle, Loader2, MessageSquarePlus, Send, Sparkles, User, Zap } from 'lucide-react';
 import type { AIRevisionProposal, CopilotMessage, CopilotReply, Trip } from '../types';
 import { supabase } from '../lib/supabase';
 
@@ -90,6 +90,13 @@ export default function AIAssistantPanel({
   }, [messages, trip.id]);
 
   const canSubmit = input.trim().length > 0 && status !== 'analyzing';
+
+  const startNewChat = () => {
+    setMessages([]);
+    setInput('');
+    setErrorMessage(null);
+    setStatus('idle');
+  };
 
   const submitMessage = async (text: string) => {
     const trimmed = text.trim();
@@ -210,12 +217,23 @@ export default function AIAssistantPanel({
         <div className="h-8 w-8 rounded-xl ai-gradient flex items-center justify-center shrink-0 shadow-soft">
           <Sparkles className="text-white" size={16} />
         </div>
-        <div>
+        <div className="min-w-0 flex-1">
           <h3 className="font-display text-sm font-600 text-ink-900">Ask Planora</h3>
           <p className="text-xs text-ink-600">
             {aiGreeting ? 'Your concierge for this trip' : 'Describe what you would like to change, then review the proposal before applying it.'}
           </p>
         </div>
+        {messages.length > 0 && (
+          <button
+            type="button"
+            onClick={startNewChat}
+            className="shrink-0 rounded-lg p-1.5 text-ink-500 hover:text-ink-800 hover:bg-glass/5 transition"
+            aria-label="Start new chat"
+            title="Start new chat"
+          >
+            <MessageSquarePlus size={15} />
+          </button>
+        )}
       </div>
 
       {/* Conversation. aria-live announces new messages to screen reader
