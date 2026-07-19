@@ -62,7 +62,7 @@ export default function DestinationHero({ tokens, copy, destination }: Destinati
   const ambientDuration = (typeof tokens.motion.transition.duration === 'number' ? tokens.motion.transition.duration : 0.5) * 50;
 
   return (
-    <section className="relative overflow-hidden rounded-[28px] shadow-pop mb-6 animate-fade-in">
+    <section className="relative overflow-hidden rounded-card-lg shadow-pop mb-6 animate-fade-in">
       {/* Layer 1 — the gradient scene, standing in for a photograph. Always
           rendered immediately, with no loading flash — this is the
           permanent fallback, not a placeholder for Layer 1b below. */}

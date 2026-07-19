@@ -48,6 +48,26 @@ export default {
         800: '800',
         900: '900',
       },
+      // Centralized radius/container/transition tokens — previously several
+      // components reached for arbitrary one-off values (rounded-[28px],
+      // duration-[400ms]) instead of a shared scale. These don't change any
+      // page's composition on their own; they give existing and future
+      // component work a named value to reach for instead of a magic number.
+      borderRadius: {
+        // Dialed down from the previous 16px/28px one-off values — calmer,
+        // less "bubble," while staying a soft (never sharp) corner.
+        card: '0.875rem',
+        'card-lg': '1.25rem',
+      },
+      maxWidth: {
+        narrow: '28rem',
+        content: '48rem',
+        wide: '64rem',
+      },
+      transitionDuration: {
+        control: '200ms',
+        card: '350ms',
+      },
       colors: {
         // Every shade below resolves through a CSS variable (see index.css),
         // so switching data-theme="light"/"dark" on <html> re-themes the
@@ -74,9 +94,6 @@ export default {
         pop: 'var(--shadow-pop)',
         glow: 'var(--shadow-glow)',
         'glow-lg': 'var(--shadow-glow-lg)',
-        // AI-specific, deliberately not theme-tuned — violet reads as "the
-        // AI's own accent" consistently regardless of light/dark.
-        'glow-violet': '0 0 0 1px rgba(167,139,250,0.25), 0 0 32px -6px rgba(139,92,246,0.35)',
       },
       keyframes: {
         'fade-in': {
@@ -95,10 +112,6 @@ export default {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
         },
-        'glow-pulse': {
-          '0%, 100%': { boxShadow: '0 0 0 1px rgba(167,139,250,0.2), 0 0 20px -4px rgba(139,92,246,0.25)' },
-          '50%': { boxShadow: '0 0 0 1px rgba(167,139,250,0.4), 0 0 32px -2px rgba(139,92,246,0.45)' },
-        },
         float: {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-4px)' },
@@ -116,7 +129,6 @@ export default {
         'scale-in': 'scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         'slide-up': 'slide-up 0.45s cubic-bezier(0.16, 1, 0.3, 1)',
         shimmer: 'shimmer 2.2s ease-in-out infinite',
-        'glow-pulse': 'glow-pulse 2.4s ease-in-out infinite',
         float: 'float 3.5s ease-in-out infinite',
         'dot-bounce': 'dot-bounce 1.2s ease-in-out infinite',
       },

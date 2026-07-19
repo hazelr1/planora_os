@@ -334,7 +334,7 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleCancel} aria-hidden="true" />
 
-      <div ref={containerRef} className="relative w-full sm:max-w-xl max-h-[92dvh] flex flex-col rounded-t-2xl sm:rounded-2xl ai-surface shadow-pop animate-scale-in overflow-hidden">
+      <div ref={containerRef} className="relative w-full sm:max-w-xl max-h-[92dvh] flex flex-col rounded-t-card sm:rounded-card ai-surface shadow-pop animate-scale-in overflow-hidden">
 
         {/* ── Header ── */}
         <div className="flex items-start gap-3 px-5 py-4 border-b border-violet-400/15 shrink-0">

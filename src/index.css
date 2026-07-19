@@ -151,14 +151,18 @@
 }
 
 @layer components {
+  /* Calmer than the previous rounded-2xl + backdrop-blur-md pairing: a
+     smaller, centralized radius (see tailwind.config.js) and a lighter
+     blur — depth here now comes mainly from --shadow-card, not from
+     glassmorphism. */
   .card {
-    @apply rounded-2xl bg-ink-100/60 backdrop-blur-md border border-glass/[0.06] shadow-card transition-all duration-[400ms] ease-out;
+    @apply rounded-card bg-ink-100/60 backdrop-blur-sm border border-glass/[0.06] shadow-card transition-all duration-card ease-out;
   }
   .card-interactive {
     @apply hover:-translate-y-0.5 hover:shadow-card-hover hover:border-glass/[0.10];
   }
   .btn {
-    @apply relative inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-[250ms] ease-out disabled:opacity-50 disabled:pointer-events-none;
+    @apply relative inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-control ease-out disabled:opacity-50 disabled:pointer-events-none;
   }
   .btn-primary {
     @apply btn text-white shadow-soft hover:-translate-y-0.5 hover:shadow-glow-lg active:translate-y-0;
@@ -217,15 +221,24 @@
   }
 }
 
+/* AI surfaces used to pulse (a looping glow-pulse box-shadow animation) —
+   retired in favor of a calm, static surface. The AI is still visually
+   distinct (the violet border/tint), it just doesn't announce itself with
+   motion; it should read as useful, not decorative. Blur dropped too —
+   .card above no longer leans on backdrop-blur for depth, and this
+   shouldn't either. */
 .ai-surface {
-  @apply rounded-2xl border border-violet-400/25 bg-violet-500/[0.06] backdrop-blur-xl shadow-card;
-  animation: glow-pulse 3.2s ease-in-out infinite;
+  @apply rounded-card border border-violet-400/20 bg-violet-500/[0.05] shadow-card;
 }
 .ai-accent {
   @apply text-violet-600 dark:text-violet-300;
 }
+/* Was a three-stop cyan->violet->indigo gradient (visually a "neon AI"
+   signal). Now a single-hue violet gradient built from the app's own
+   --violet-* tokens (already theme-aware) instead of hardcoded hex — still
+   reads as "the AI's accent," just restrained. */
 .ai-gradient {
-  background-image: linear-gradient(135deg, #22d3ee 0%, #7c3aed 60%, #4f46e5 100%);
+  background-image: linear-gradient(135deg, rgb(var(--violet-500)) 0%, rgb(var(--violet-700)) 100%);
 }
 
 /* Dark mode: light lavender sweep. Light mode: deep violet sweep on ivory. */
@@ -286,16 +299,16 @@
 }
 
 [data-destination-theme] .card {
-  border-radius: var(--dest-radius, 1rem);
+  border-radius: var(--dest-radius, 0.875rem);
   border-color: rgb(var(--glass) / var(--dest-glass-opacity, 0.06));
   box-shadow: var(--dest-elevation-shadow, var(--shadow-card));
-  transition-duration: var(--dest-hover-duration, 400ms);
+  transition-duration: var(--dest-hover-duration, 350ms);
 }
 [data-destination-theme] .card-interactive:hover {
   border-color: rgb(var(--glass) / calc(var(--dest-glass-opacity, 0.06) + 0.04));
 }
 [data-destination-theme] .btn {
-  transition-duration: var(--dest-hover-duration, 250ms);
+  transition-duration: var(--dest-hover-duration, 200ms);
 }
 [data-destination-theme] .animate-fade-in,
 [data-destination-theme] .animate-slide-up,

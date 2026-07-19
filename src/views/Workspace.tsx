@@ -281,8 +281,8 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
           <div className="skeleton h-4 w-96 max-w-full" />
         </div>
         <div className="skeleton h-4 w-72 max-w-full" />
-        <div className="skeleton h-28 rounded-2xl" style={{ animationDelay: '80ms' }} />
-        <div className="skeleton h-16 rounded-2xl" style={{ animationDelay: '160ms' }} />
+        <div className="skeleton h-28 rounded-card" style={{ animationDelay: '80ms' }} />
+        <div className="skeleton h-16 rounded-card" style={{ animationDelay: '160ms' }} />
       </div>
     );
   }

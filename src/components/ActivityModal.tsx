@@ -142,7 +142,7 @@ export default function ActivityModal({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div ref={containerRef} className="relative w-full max-w-xl card max-h-[94vh] overflow-hidden flex flex-col rounded-t-2xl sm:rounded-2xl" role="dialog" aria-modal="true" aria-labelledby="activity-modal-title">
+      <div ref={containerRef} className="relative w-full max-w-xl card max-h-[94vh] overflow-hidden flex flex-col rounded-t-card sm:rounded-card" role="dialog" aria-modal="true" aria-labelledby="activity-modal-title">
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-glass/10 shrink-0">

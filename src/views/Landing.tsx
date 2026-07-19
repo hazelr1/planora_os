@@ -254,7 +254,7 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
           {...revealProps}
           variants={revealUp}
           transition={{ delay: 0.15 }}
-          className="relative mt-16 overflow-hidden rounded-[28px] bg-gradient-to-br from-brand-500/15 via-blue-500/10 to-violet-500/15 p-10 text-center shadow-glow sm:p-14"
+          className="relative mt-16 overflow-hidden rounded-card-lg bg-gradient-to-br from-brand-500/15 via-blue-500/10 to-violet-500/15 p-10 text-center shadow-glow sm:p-14"
         >
           <p className="font-display mx-auto max-w-xl text-2xl font-700 leading-snug text-ink-900 sm:text-3xl">
             &ldquo;The AI travel planner that adapts with you.&rdquo;
