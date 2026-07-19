@@ -15,19 +15,22 @@ interface DestinationHeroProps {
 /**
  * The editorial destination hero — the first thing a themed Trip Workspace
  * shows. Replaces the old compact DestinationHeroBanner strip; this is
- * meant to be the "you have already arrived" moment the brief asks for,
- * not a decorative accent.
+ * meant to be a "you have already arrived" moment, not a decorative accent —
+ * sized (aspect-ratio + max-height, not an open-ended min-height) so it never
+ * pushes the itinerary below the fold, especially on mobile.
  *
- * The base scene is composed entirely from tokens — a gradient, a large
+ * The fallback scene is composed entirely from tokens — a gradient, a large
  * watermark of the destination's own motif, a slow-drifting ambient glow
  * whose pace comes from `tokens.motion` (so Santorini's glow moves
  * differently than Dubai's, without either being hardcoded here), and a
  * barely-there texture overlay — and renders immediately with no loading
  * flash. A real photo (see services/destinationImages.ts) is a progressive
  * enhancement layered on top once/if one resolves; the gradient scene is the
- * permanent fallback, never an error state. Every value drawn from
- * `tokens`/`copy`/`destination` — this component has no idea Santorini
- * exists.
+ * permanent fallback, never an error state. The glow/texture atmosphere is
+ * fallback-only (see `showFallbackAtmosphere`) — once a real photo is
+ * showing, it does the emotional work alone, without decoration competing
+ * on top of it. Every value drawn from `tokens`/`copy`/`destination` — this
+ * component has no idea Santorini exists.
  *
  * The destination *name* renders as a styled `<p>`, not an `<h1>` — the
  * page's one `<h1>` is the trip's own title in Workspace.tsx just below.
@@ -61,8 +64,14 @@ export default function DestinationHero({ tokens, copy, destination }: Destinati
   // should.
   const ambientDuration = (typeof tokens.motion.transition.duration === 'number' ? tokens.motion.transition.duration : 0.5) * 50;
 
+  // A real photo is doing the emotional work once one resolves — the
+  // gradient scene's own atmosphere (ambient glow, texture) exists to make
+  // the *fallback* feel intentional, not to layer on top of real
+  // photography. Stacking both reads as over-decorated, not premium.
+  const showFallbackAtmosphere = !photo || photoFailed;
+
   return (
-    <section className="relative overflow-hidden rounded-card-lg shadow-pop mb-6 animate-fade-in">
+    <section className="relative overflow-hidden rounded-card-lg shadow-pop mb-6 animate-fade-in aspect-[4/3] sm:aspect-[21/9] max-h-[260px] sm:max-h-[320px]">
       {/* Layer 1 — the gradient scene, standing in for a photograph. Always
           rendered immediately, with no loading flash — this is the
           permanent fallback, not a placeholder for Layer 1b below. */}
@@ -88,6 +97,7 @@ export default function DestinationHero({ tokens, copy, destination }: Destinati
             alt={photo.alt}
             width={1600}
             height={900}
+            decoding="async"
             onError={() => setPhotoFailed(true)}
             className="h-full w-full object-cover"
           />
@@ -107,22 +117,28 @@ export default function DestinationHero({ tokens, copy, destination }: Destinati
         </a>
       )}
 
-      {/* Layer 2 — slow ambient glow, destination-paced. The app's global
-          CSS reduced-motion rule only covers CSS animations/transitions —
-          Framer Motion's `animate` prop runs its own JS-driven loop that
-          rule never touches, so this checks the same media query directly
-          via Framer's own `useReducedMotion` and renders the glow static
-          instead of looping when the user has asked for less motion. */}
-      <motion.div
-        aria-hidden="true"
-        className="absolute -top-1/3 -right-1/4 h-[160%] w-3/4 rounded-full blur-3xl"
-        style={{ background: `radial-gradient(circle, rgb(${tokens.colors.accentSoft} / 0.35) 0%, transparent 70%)` }}
-        animate={prefersReducedMotion ? undefined : { x: [0, 22, 0], y: [0, -14, 0] }}
-        transition={{ duration: ambientDuration, repeat: Infinity, ease: 'easeInOut' }}
-      />
+      {/* Layer 2 — slow ambient glow, destination-paced. Only rendered over
+          the procedural fallback scene (see showFallbackAtmosphere above) —
+          real photography doesn't need an animated gradient competing with
+          it. The app's global CSS reduced-motion rule only covers CSS
+          animations/transitions — Framer Motion's `animate` prop runs its
+          own JS-driven loop that rule never touches, so this checks the
+          same media query directly via Framer's own `useReducedMotion` and
+          renders the glow static instead of looping when the user has
+          asked for less motion. */}
+      {showFallbackAtmosphere && (
+        <motion.div
+          aria-hidden="true"
+          className="absolute -top-1/3 -right-1/4 h-[160%] w-3/4 rounded-full blur-3xl"
+          style={{ background: `radial-gradient(circle, rgb(${tokens.colors.accentSoft} / 0.35) 0%, transparent 70%)` }}
+          animate={prefersReducedMotion ? undefined : { x: [0, 22, 0], y: [0, -14, 0] }}
+          transition={{ duration: ambientDuration, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      )}
 
-      {/* Layer 3 — barely-there texture, unique per destination, never louder than this */}
-      {textureImage && (
+      {/* Layer 3 — barely-there texture, unique per destination, never
+          louder than this. Same reasoning as Layer 2: fallback-only. */}
+      {showFallbackAtmosphere && textureImage && (
         <div
           aria-hidden="true"
           className="absolute inset-0"
@@ -151,23 +167,27 @@ export default function DestinationHero({ tokens, copy, destination }: Destinati
           carry the emotional weight; mood stays a real field on the copy
           model for any future surface that wants it, just not rendered
           three times over in one hero. */}
-      <div className="relative flex min-h-[300px] sm:min-h-[360px] flex-col justify-end p-6 sm:p-10">
-        <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-white/70">
+      <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-8">
+        <p className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-white/70">
           {copy.region ?? destination}
         </p>
-        <p className="font-display mb-3 max-w-xl text-4xl font-500 text-white sm:text-5xl">
+        <p className="font-display mb-2 max-w-xl text-3xl font-500 text-white sm:text-5xl">
           {copy.name}
         </p>
-        <p className="mb-3 max-w-lg text-sm text-white/80 sm:text-base">
+        <p className="mb-2 max-w-lg text-sm text-white/80 sm:text-base line-clamp-2">
           {copy.essence}
         </p>
+        {/* The pull-quote is the one purely emotional flourish here — kept
+            for larger screens where there's room, dropped on mobile so the
+            hero stays short enough that the itinerary isn't pushed below
+            the fold. */}
         {copy.quote && (
-          <p className="font-display mb-5 max-w-md text-base italic text-white/90 sm:text-lg">
+          <p className="hidden sm:block font-display mb-5 max-w-md text-lg italic text-white/90">
             &ldquo;{copy.quote}&rdquo;
           </p>
         )}
 
-        <div className="flex flex-wrap gap-x-6 gap-y-3 text-white/85">
+        <div className="flex flex-wrap gap-x-6 gap-y-2 text-white/85">
           {copy.bestSeason && (
             <div className="flex items-center gap-2 text-xs sm:text-sm">
               <Sun size={14} className="shrink-0 text-white/70" />

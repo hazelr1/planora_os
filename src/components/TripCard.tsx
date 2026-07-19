@@ -53,6 +53,8 @@ export default function TripCard({ trip, onOpen, onEdit, onDuplicate, onDelete }
             alt={photo.alt}
             width={1280}
             height={720}
+            loading="lazy"
+            decoding="async"
             onError={() => setPhotoFailed(true)}
             className="absolute inset-0 h-full w-full object-cover animate-fade-in"
           />
