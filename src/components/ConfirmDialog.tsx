@@ -50,6 +50,7 @@ export default function ConfirmDialog({
         <button
           onClick={onCancel}
           className="absolute right-4 top-4 rounded-lg p-1 text-ink-500 hover:text-ink-800 hover:bg-glass/5 transition"
+          aria-label="Close"
         >
           <X size={16} />
         </button>

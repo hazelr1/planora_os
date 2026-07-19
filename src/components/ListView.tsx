@@ -27,7 +27,7 @@ export default function ListView({
           return (
             <div key={day.id}>
               <div className="px-5 py-2.5 bg-ink-200/30 flex items-center gap-2 sticky top-0 z-10">
-                <span className="font-display text-sm font-700 text-ink-900">{day.label}</span>
+                <span className="font-display text-sm font-600 text-ink-900">{day.label}</span>
                 <span className="text-xs text-ink-600">{formatDate(day.date, { month: 'short', day: 'numeric' })}</span>
                 {day.theme && <span className="text-xs text-ink-600">— {day.theme}</span>}
                 {conflicts.size > 0 && (
@@ -43,12 +43,20 @@ export default function ListView({
                   <div
                     key={a.id}
                     onClick={() => onSelectActivity?.(a.id)}
-                    className={`px-5 py-3 flex items-center gap-3 hover:bg-glass/5 transition cursor-pointer animate-fade-in ${
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onSelectActivity?.(a.id);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    className={`px-5 py-3 flex items-center gap-3 hover:bg-glass/5 transition cursor-pointer animate-fade-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 ${
                       selectedActivityId === a.id ? 'bg-brand-500/10' : ''
                     }`}
                     style={{ animationDelay: `${Math.min(idx, 10) * 40}ms`, animationFillMode: 'backwards' }}
                   >
-                    <span className="text-xs font-700 text-ink-600 tabular-nums w-12 shrink-0">{a.time}</span>
+                    <span className="text-xs font-600 text-ink-600 tabular-nums w-12 shrink-0">{a.time}</span>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-600 text-ink-900 truncate flex items-center gap-1.5">
                         {a.locked && <Lock size={11} className="text-brand-400 shrink-0" />}

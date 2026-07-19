@@ -435,7 +435,7 @@ export default function Workspace({ tripId, onNavigate, onUpdateTripFields }: Wo
       </p>
 
       {showAppliedBanner && (
-        <div className="rounded-xl bg-emerald-500/10 px-3.5 py-2.5 flex items-center gap-2" role="status">
+        <div className="rounded-xl bg-emerald-500/10 px-3.5 py-2.5 flex items-center gap-2" role="status" aria-live="polite">
           <CheckCircle2 size={14} className="text-emerald-800 dark:text-emerald-400 shrink-0" />
           <p className="text-sm text-emerald-800 dark:text-emerald-300 font-medium">Changes applied. Your itinerary has been updated.</p>
         </div>

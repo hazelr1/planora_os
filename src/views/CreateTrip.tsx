@@ -94,7 +94,7 @@ export default function CreateTrip({ onNavigate, onCreate }: CreateTripProps) {
 
       {/* Generating overlay */}
       {status === 'generating' && (
-        <div className="ai-surface p-6 mb-5 flex flex-col items-center text-center gap-4 animate-scale-in" role="status" aria-label="Generating itinerary">
+        <div className="ai-surface p-6 mb-5 flex flex-col items-center text-center gap-4 animate-scale-in" role="status" aria-live="polite" aria-label="Generating itinerary">
           <div className="relative flex items-center justify-center h-16 w-16">
             <div className="absolute inset-0 rounded-full border-2 border-violet-400/20 border-t-violet-400 animate-spin" />
             <div className="absolute inset-0 rounded-full animate-float">
