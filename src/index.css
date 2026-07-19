@@ -60,70 +60,47 @@
 :root[data-theme='light'] {
   color-scheme: light;
 
-  /* Warm tan/beige neutrals — a third, meaningfully deeper pass (lum ~0.66,
-     down from ~0.77) for a genuine tan/khaki page background rather than a
-     cream that still read close to white. Pushing this deep took Tailwind's
-     own rose-700/sky-700 (hardcoded hex, used for delete/move-operation
-     text) below 4.5:1, so — same fix as amber/emerald in the previous
-     pass — every light-mode-facing rose-700/sky-700 was bumped to -800
-     (see ActivityCard.tsx/AIChangeReview.tsx and the ~50 other spots using
-     rose-700 for errors/destructive actions). Every stop re-verified:
-     ink-900 ~11:1, ink-600 ~6.8:1, ink-500 ~5.2:1, rose-800 ~5.5:1,
-     sky-800 ~5.1:1, amber-800 ~4.8:1, emerald-800 ~5.2:1 — all clear of
-     WCAG AA with real margin, not a knife's edge. */
-  --ink-50: 230 210 183;
-  --ink-100: 236 228 217;
-  --ink-200: 209 185 153;
-  --ink-300: 190 158 116;
-  --ink-400: 148 121 87;
-  --ink-500: 95 81 63;
-  --ink-600: 75 65 53;
-  --ink-700: 58 52 44;
-  --ink-800: 46 41 36;
-  --ink-900: 34 31 28;
-  --ink-950: 19 18 16;
+  /* Nature-inspired palette built from the provided swatches:
+     Vanilla (#ECE69D), Powder Blue (#A9B6C4), Glaucous (#59789F),
+     Moss Green (#7A9445), Dark Green (#243C2C).
+     --brand-500 is Glaucous for active nav/chips. .btn-primary uses its own
+     three-stop gradient below. */
+  --ink-50: 236 230 157;
+  --ink-100: 220 224 232;
+  --ink-200: 196 200 208;
+  --ink-300: 169 182 196;
+  --ink-400: 122 148 69;
+  --ink-500: 89 120 159;
+  --ink-600: 75 95 130;
+  --ink-700: 60 80 115;
+  --ink-800: 36 60 44;
+  --ink-900: 25 45 30;
+  --ink-950: 15 30 20;
 
-  /* Warm terracotta/sienna — replaces the previous teal for light mode only
-     (dark mode's own --brand-* above is untouched). Drawn from a travel
-     photography palette (burnt sienna / ivory sand / stormy sky / sage
-     green) that already sits close in warmth to this theme's ivory
-     background, so the accent reads as part of the same scene rather than
-     a bolted-on SaaS color. --brand-500 is the palette's actual "Burnt
-     Sienna" (#984216). Used for chips/badges/icons/active nav — the app's
-     general accent color, distinct from the primary-button gradient below. */
-  --brand-50: 250 243 239;
-  --brand-100: 246 228 218;
-  --brand-200: 239 193 169;
-  --brand-300: 230 138 91;
-  --brand-400: 206 89 28;
-  --brand-500: 152 66 22;
-  --brand-600: 118 53 19;
-  --brand-700: 94 44 18;
-  --brand-800: 74 37 17;
-  --brand-900: 59 32 17;
-  --brand-950: 33 20 13;
+  --brand-50: 236 230 157;
+  --brand-100: 220 224 232;
+  --brand-200: 196 200 208;
+  --brand-300: 169 182 196;
+  --brand-400: 122 148 69;
+  --brand-500: 89 120 159;
+  --brand-600: 75 95 130;
+  --brand-700: 60 80 115;
+  --brand-800: 36 60 44;
+  --brand-900: 25 45 30;
+  --brand-950: 15 30 20;
 
-  /* Warm dark brown (was a cool slate blue) — the low-opacity border/hover
-     overlay tint, now consistent with the rest of the warm palette. */
-  --glass: 42 34 26;
+  --glass: 169 182 196;
 
-  /* Deep travel-blue → soft sage — .btn-primary's own gradient (literally
-     "primary buttons" in the brief), kept a distinct hue from the
-     terracotta brand accent above so the two read as a considered pair,
-     not a clash. --accent-from is Midnight Harbor (#1E2F44). Every stop
-     checked against white button text: 13.6:1 / 9.2:1 / 7.5:1 — all far
-     clear of AA, and better than the original teal gradient's own weakest
-     stop (~3.3:1). */
-  --accent-from: 30 47 68;
-  --accent-via: 46 75 96;
-  --accent-to: 77 89 54;
+  --accent-from: 89 120 159;
+  --accent-via: 169 182 196;
+  --accent-to: 236 230 157;
 
-  --shadow-soft: 0 1px 2px rgba(46,41,36,0.07), 0 1px 1px rgba(46,41,36,0.05);
-  --shadow-card: 0 2px 16px -4px rgba(46,41,36,0.10), 0 1px 2px rgba(46,41,36,0.06);
-  --shadow-card-hover: 0 12px 36px -10px rgba(46,41,36,0.16), 0 2px 6px rgba(46,41,36,0.07);
-  --shadow-pop: 0 20px 60px -16px rgba(46,41,36,0.20), 0 4px 10px rgba(46,41,36,0.07);
-  --shadow-glow: 0 0 28px -8px rgba(46,75,96,0.24);
-  --shadow-glow-lg: 0 8px 32px -8px rgba(46,75,96,0.26), 0 0 48px -16px rgba(141,149,126,0.22);
+  --shadow-soft: 0 1px 2px rgba(25,45,30,0.08), 0 1px 1px rgba(89,120,159,0.06);
+  --shadow-card: 0 2px 16px -4px rgba(25,45,30,0.10), 0 1px 2px rgba(89,120,159,0.08);
+  --shadow-card-hover: 0 12px 36px -10px rgba(25,45,30,0.14), 0 2px 6px rgba(89,120,159,0.10);
+  --shadow-pop: 0 20px 60px -16px rgba(25,45,30,0.18), 0 4px 10px rgba(89,120,159,0.10);
+  --shadow-glow: 0 0 28px -8px rgba(89,120,159,0.28);
+  --shadow-glow-lg: 0 8px 32px -8px rgba(89,120,159,0.26), 0 0 48px -16px rgba(122,148,69,0.22);
 
   --violet-50: 245 240 255;
   --violet-100: 124 58 237;
