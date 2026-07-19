@@ -36,10 +36,11 @@ const categoryColors: Record<ActivityCategory, string> = {
   Other: 'bg-glass/5 text-ink-600',
 };
 
+// Text-only (no chip background) — used in the quiet meta line, not a pill.
 const estimateQualityColors: Record<CostConfidence, string> = {
-  high: 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300',
-  medium: 'bg-amber-500/15 text-amber-800 dark:text-amber-300',
-  low: 'bg-rose-500/15 text-rose-800 dark:text-rose-300',
+  high: 'text-emerald-800 dark:text-emerald-400',
+  medium: 'text-amber-800 dark:text-amber-400',
+  low: 'text-rose-800 dark:text-rose-400',
 };
 
 export default function ActivityCard({
@@ -143,40 +144,42 @@ export default function ActivityCard({
           </span>
         </div>
 
-        {/* Intelligence row */}
-        <div className="mt-2.5 flex flex-wrap items-center gap-2">
-          {hasConflict && (
+        {/* Conflict — the one genuinely actionable signal here, kept as a chip so it stands out */}
+        {hasConflict && (
+          <div className="mt-2.5">
             <span
               className="chip bg-rose-500/15 text-rose-800 dark:text-rose-300 font-600"
               title="This activity's time overlaps a neighboring activity — adjust the time or duration to resolve it."
             >
               <AlertTriangle size={11} /> Time conflict
             </span>
-          )}
-          <span
-            className={`chip ${estimateQualityColors[activity.costConfidence]}`}
-            title={`Estimate quality: ${activity.costConfidence} — based on typical travel prices, not a guaranteed cost.`}
-          >
-            {activity.costConfidence} estimate quality
-          </span>
-          <span
-            className="chip bg-glass/5 text-ink-500"
-            title="Weather forecasts require a weather provider to be connected"
-          >
-            <CloudOff size={11} /> Weather unavailable
-          </span>
-          <span className="flex items-center gap-1 text-xs text-ink-500 ml-auto" title={activity.updatedAt}>
-            <History size={11} /> Updated {formatLastUpdated(activity.updatedAt)}
-          </span>
-        </div>
+          </div>
+        )}
 
-        {/* AI reason */}
+        {/* AI reason — a quiet annotation (left-border accent), not a boxed sub-card */}
         {activity.aiReason && (
-          <div className="mt-3.5 rounded-lg bg-violet-500/10 px-3.5 py-2.5 flex items-start gap-2">
-            <Sparkles size={13} className="text-violet-600 dark:text-violet-300 mt-0.5 shrink-0" />
+          <div className="mt-3 pl-3 border-l-2 border-violet-400/30 flex items-start gap-1.5">
+            <Sparkles size={12} className="text-violet-600 dark:text-violet-300 mt-0.5 shrink-0" />
             <p className="text-xs text-violet-700 dark:text-violet-200 leading-relaxed">{activity.aiReason}</p>
           </div>
         )}
+
+        {/* Secondary meta — same info as before (estimate quality, weather availability, last edited), now one quiet text line instead of three separate pill chips */}
+        <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-500">
+          <span
+            className={`inline-flex items-center gap-1 ${estimateQualityColors[activity.costConfidence]}`}
+            title={`Estimate quality: ${activity.costConfidence} — based on typical travel prices, not a guaranteed cost.`}
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-current shrink-0" />
+            {activity.costConfidence} estimate
+          </span>
+          <span className="flex items-center gap-1" title="Weather forecasts require a weather provider to be connected">
+            <CloudOff size={11} className="shrink-0" /> Weather unavailable
+          </span>
+          <span className="flex items-center gap-1 ml-auto" title={activity.updatedAt}>
+            <History size={11} className="shrink-0" /> Updated {formatLastUpdated(activity.updatedAt)}
+          </span>
+        </div>
 
         {/* Notes */}
         {activity.notes.length > 0 && (

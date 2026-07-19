@@ -53,19 +53,19 @@ export default function DaySection({
         <div className="absolute left-[18px] top-9 bottom-2 w-px bg-glass/10" aria-hidden="true" />
 
         {/* Day marker */}
-        <div className="relative flex items-start justify-between gap-3 pb-6">
+        <div className="relative flex items-start justify-between gap-3 pb-7">
           <div className="flex items-start gap-3.5">
             <div className="relative z-10 h-9 w-9 rounded-full bg-brand-500 text-white dark:text-black flex items-center justify-center font-display font-700 text-sm shrink-0">
               {day.label.replace('Day ', '')}
             </div>
             <div className="min-w-0 pt-0.5">
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-baseline gap-2 flex-wrap">
                 <h3 className="font-display text-base font-700 text-ink-900">{day.label}</h3>
                 {day.theme && (
-                  <span className="text-sm text-ink-600 font-medium">— {day.theme}</span>
+                  <span className="text-sm text-ink-600 italic">— {day.theme}</span>
                 )}
               </div>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
                 <p className="text-xs text-ink-600 flex items-center gap-1">
                   <CalendarDays size={11} />
                   {formatDate(day.date)}
@@ -86,7 +86,7 @@ export default function DaySection({
                 )}
               </div>
               {day.summary && (
-                <p className="text-sm text-ink-600 mt-1.5 leading-relaxed max-w-prose">{day.summary}</p>
+                <p className="text-sm text-ink-600 mt-2 leading-relaxed max-w-prose">{day.summary}</p>
               )}
             </div>
           </div>
