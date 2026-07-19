@@ -61,32 +61,7 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
     <div className="flex flex-col">
       {/* ─── Hero ─── */}
       <section className="relative -mx-4 -mt-6 overflow-hidden sm:-mx-6 sm:-mt-8">
-        <div className="absolute inset-0">
-          <img
-            src={heroImage}
-            alt=""
-            className="h-full w-full object-cover"
-            style={{ filter: 'saturate(2.2) contrast(1.15) brightness(0.82)' }}
-          />
-          {/* Duotone color wash — a real blend (not a flat alpha overlay), so
-              it actually shifts the photo's own highlights/midtones/shadows
-              toward amber/teal instead of just darkening them. Far more
-              reliable "make it colorful" than pushing saturate() alone,
-              which can only amplify color that's already in the source. */}
-          <div
-            className="absolute inset-0"
-            style={{
-              background: 'linear-gradient(135deg, rgba(217,119,6,0.55) 0%, transparent 45%, transparent 55%, rgba(8,145,178,0.55) 100%)',
-              mixBlendMode: 'color',
-            }}
-          />
-          {/* Warm amber/sky atmospheric tint (subtle, adds depth on top of the duotone) */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-amber-900/25 via-transparent to-sky-900/20" />
-          {/* Strong bottom scrim behind headline/CTA */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/25 to-transparent" />
-          {/* Subtle top darkening for nav */}
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/35 via-transparent to-transparent" />
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-br from-[#CFE1B9] via-[#B6C99B] to-[#98A77C]" />
 
         <div className="relative flex min-h-[78vh] flex-col items-center justify-end px-4 pb-28 pt-24 text-center sm:min-h-[85vh] sm:pb-36">
           <div className="inline-flex items-center gap-2 chip bg-white/10 text-white mb-8 animate-fade-in backdrop-blur-sm">

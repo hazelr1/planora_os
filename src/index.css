@@ -60,10 +60,9 @@
 :root[data-theme='light'] {
   color-scheme: light;
 
-  /* Updated nature-inspired palette built from the provided swatches:
-     Deep Sage (#7E8F6D), Olive Tone (#8A9A5B), Sage Green (#B2AC88),
-     Soft Sage (#9CAF88), Almost Ivory Green (#EEF3E7).
-     --brand-500 is Deep Sage for active nav/chips. .btn-primary uses its own
+  /* Nature-inspired palette built from the provided swatches:
+     #CFE1B9, #B6C99B, #98A77C, #88976C, #728156.
+     --brand-500 is #88976C for active nav/chips. .btn-primary uses its own
      three-stop gradient below. */
   --ink-50: 238 243 231;
   --ink-100: 220 223 212;
@@ -77,12 +76,12 @@
   --ink-900: 40 48 32;
   --ink-950: 25 32 20;
 
-  --brand-50: 156 175 136;
-  --brand-100: 138 155 123;
+  --brand-50: 207 225 185;
+  --brand-100: 182 201 155;
   --brand-200: 178 172 136;
   --brand-300: 156 175 136;
   --brand-400: 138 155 123;
-  --brand-500: 126 143 109;
+  --brand-500: 136 151 108;
   --brand-600: 108 125 92;
   --brand-700: 92 108 78;
   --brand-800: 60 68 52;
@@ -91,16 +90,16 @@
 
   --glass: 169 182 156;
 
-  --accent-from: 126 143 109;
+  --accent-from: 136 151 108;
   --accent-via: 156 175 136;
-  --accent-to: 238 243 231;
+  --accent-to: 207 225 185;
 
-  --shadow-soft: 0 1px 2px rgba(40,48,32,0.08), 0 1px 1px rgba(126,143,109,0.06);
-  --shadow-card: 0 2px 16px -4px rgba(40,48,32,0.10), 0 1px 2px rgba(126,143,109,0.08);
-  --shadow-card-hover: 0 12px 36px -10px rgba(40,48,32,0.14), 0 2px 6px rgba(126,143,109,0.10);
-  --shadow-pop: 0 20px 60px -16px rgba(40,48,32,0.18), 0 4px 10px rgba(126,143,109,0.10);
-  --shadow-glow: 0 0 28px -8px rgba(126,143,109,0.28);
-  --shadow-glow-lg: 0 8px 32px -8px rgba(126,143,109,0.26), 0 0 48px -16px rgba(138,154,91,0.22);
+  --shadow-soft: 0 1px 2px rgba(40,48,32,0.08), 0 1px 1px rgba(136,151,108,0.06);
+  --shadow-card: 0 2px 16px -4px rgba(40,48,32,0.10), 0 1px 2px rgba(136,151,108,0.08);
+  --shadow-card-hover: 0 12px 36px -10px rgba(40,48,32,0.14), 0 2px 6px rgba(136,151,108,0.10);
+  --shadow-pop: 0 20px 60px -16px rgba(40,48,32,0.18), 0 4px 10px rgba(136,151,108,0.10);
+  --shadow-glow: 0 0 28px -8px rgba(136,151,108,0.28);
+  --shadow-glow-lg: 0 8px 32px -8px rgba(136,151,108,0.26), 0 0 48px -16px rgba(152,167,124,0.22);
 
   --violet-50: 245 240 255;
   --violet-100: 124 58 237;
