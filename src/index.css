@@ -60,47 +60,47 @@
 :root[data-theme='light'] {
   color-scheme: light;
 
-  /* Nature-inspired palette built from the provided swatches:
-     Vanilla (#ECE69D), Powder Blue (#A9B6C4), Glaucous (#59789F),
-     Moss Green (#7A9445), Dark Green (#243C2C).
-     --brand-500 is Glaucous for active nav/chips. .btn-primary uses its own
+  /* Updated nature-inspired palette built from the provided swatches:
+     Deep Sage (#7E8F6D), Olive Tone (#8A9A5B), Sage Green (#B2AC88),
+     Soft Sage (#9CAF88), Almost Ivory Green (#EEF3E7).
+     --brand-500 is Deep Sage for active nav/chips. .btn-primary uses its own
      three-stop gradient below. */
-  --ink-50: 236 230 157;
-  --ink-100: 220 224 232;
-  --ink-200: 196 200 208;
-  --ink-300: 169 182 196;
-  --ink-400: 122 148 69;
-  --ink-500: 89 120 159;
-  --ink-600: 75 95 130;
-  --ink-700: 60 80 115;
-  --ink-800: 36 60 44;
-  --ink-900: 25 45 30;
-  --ink-950: 15 30 20;
+  --ink-50: 238 243 231;
+  --ink-100: 220 223 212;
+  --ink-200: 196 199 188;
+  --ink-300: 178 180 168;
+  --ink-400: 138 140 125;
+  --ink-500: 126 143 109;
+  --ink-600: 108 125 92;
+  --ink-700: 92 108 78;
+  --ink-800: 60 68 52;
+  --ink-900: 40 48 32;
+  --ink-950: 25 32 20;
 
-  --brand-50: 236 230 157;
-  --brand-100: 220 224 232;
-  --brand-200: 196 200 208;
-  --brand-300: 169 182 196;
-  --brand-400: 122 148 69;
-  --brand-500: 89 120 159;
-  --brand-600: 75 95 130;
-  --brand-700: 60 80 115;
-  --brand-800: 36 60 44;
-  --brand-900: 25 45 30;
-  --brand-950: 15 30 20;
+  --brand-50: 156 175 136;
+  --brand-100: 138 155 123;
+  --brand-200: 178 172 136;
+  --brand-300: 156 175 136;
+  --brand-400: 138 155 123;
+  --brand-500: 126 143 109;
+  --brand-600: 108 125 92;
+  --brand-700: 92 108 78;
+  --brand-800: 60 68 52;
+  --brand-900: 40 48 32;
+  --brand-950: 25 32 20;
 
-  --glass: 169 182 196;
+  --glass: 169 182 156;
 
-  --accent-from: 89 120 159;
-  --accent-via: 169 182 196;
-  --accent-to: 236 230 157;
+  --accent-from: 126 143 109;
+  --accent-via: 156 175 136;
+  --accent-to: 238 243 231;
 
-  --shadow-soft: 0 1px 2px rgba(25,45,30,0.08), 0 1px 1px rgba(89,120,159,0.06);
-  --shadow-card: 0 2px 16px -4px rgba(25,45,30,0.10), 0 1px 2px rgba(89,120,159,0.08);
-  --shadow-card-hover: 0 12px 36px -10px rgba(25,45,30,0.14), 0 2px 6px rgba(89,120,159,0.10);
-  --shadow-pop: 0 20px 60px -16px rgba(25,45,30,0.18), 0 4px 10px rgba(89,120,159,0.10);
-  --shadow-glow: 0 0 28px -8px rgba(89,120,159,0.28);
-  --shadow-glow-lg: 0 8px 32px -8px rgba(89,120,159,0.26), 0 0 48px -16px rgba(122,148,69,0.22);
+  --shadow-soft: 0 1px 2px rgba(40,48,32,0.08), 0 1px 1px rgba(126,143,109,0.06);
+  --shadow-card: 0 2px 16px -4px rgba(40,48,32,0.10), 0 1px 2px rgba(126,143,109,0.08);
+  --shadow-card-hover: 0 12px 36px -10px rgba(40,48,32,0.14), 0 2px 6px rgba(126,143,109,0.10);
+  --shadow-pop: 0 20px 60px -16px rgba(40,48,32,0.18), 0 4px 10px rgba(126,143,109,0.10);
+  --shadow-glow: 0 0 28px -8px rgba(126,143,109,0.28);
+  --shadow-glow-lg: 0 8px 32px -8px rgba(126,143,109,0.26), 0 0 48px -16px rgba(138,154,91,0.22);
 
   --violet-50: 245 240 255;
   --violet-100: 124 58 237;
