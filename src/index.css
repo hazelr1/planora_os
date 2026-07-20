@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&family=Bebas+Neue&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&family=Bebas+Neue&family=Space+Grotesk:wght@700;800&family=Inter+Tight:wght@700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -55,52 +55,67 @@
   --violet-800: 91 33 182;
   --violet-900: 76 29 149;
   --violet-950: 46 16 101;
+
+  /* Single warm-neutral accent, intentionally not part of the ink/brand/
+     violet theme scales — same muted amber/gold in both light and dark
+     mode. Reserved for small overline labels and dividers only, never a
+     primary color. */
+  --gold-accent: 212 165 116;
 }
 
 :root[data-theme='light'] {
   color-scheme: light;
 
-  /* Updated nature-inspired palette built from the provided swatches:
-     Deep Sage (#7E8F6D), Olive Tone (#8A9A5B), Sage Green (#B2AC88),
-     Soft Sage (#9CAF88), Almost Ivory Green (#EEF3E7).
-     --brand-500 is Deep Sage for active nav/chips. .btn-primary uses its own
-     three-stop gradient below. */
-  --ink-50: 238 243 231;
-  --ink-100: 220 223 212;
-  --ink-200: 196 199 188;
-  --ink-300: 178 180 168;
-  --ink-400: 138 140 125;
-  --ink-500: 126 143 109;
-  --ink-600: 108 125 92;
-  --ink-700: 92 108 78;
-  --ink-800: 60 68 52;
-  --ink-900: 40 48 32;
-  --ink-950: 25 32 20;
+  /* "Refined Sage" (deepened) palette, anchored on two explicit hexes —
+     page background #E7EEDD (ink-50) and primary text #1B2415 (ink-900) —
+     with the rest of the ink scale linearly interpolated between them so
+     every intermediate tone (borders, placeholders, secondary text) stays
+     part of the same ramp instead of drifting to an unrelated hue. */
+  --ink-50: 231 238 221;
+  /* ink-100 is never used as text — every reference is a surface role
+     (.card, panel footers, nav bars) — so it carries the approved
+     Surface anchor (#FFFFFF) directly rather than the interpolated ramp;
+     .card's 60% opacity then blends it toward the greener page bg,
+     giving cards a crisp near-white plane without going flat pure-white. */
+  --ink-100: 255 255 255;
+  --ink-200: 194 202 185;
+  --ink-300: 170 177 161;
+  --ink-400: 139 147 131;
+  --ink-500: 113 121 105;
+  --ink-600: 88 97 81;
+  --ink-700: 68 76 61;
+  --ink-800: 47 56 41;
+  --ink-900: 27 36 21;
+  --ink-950: 18 23 14;
 
-  --brand-50: 156 175 136;
-  --brand-100: 138 155 123;
-  --brand-200: 178 172 136;
-  --brand-300: 156 175 136;
-  --brand-400: 138 155 123;
-  --brand-500: 126 143 109;
-  --brand-600: 108 125 92;
-  --brand-700: 92 108 78;
-  --brand-800: 60 68 52;
-  --brand-900: 40 48 32;
-  --brand-950: 25 32 20;
+  /* Brand scale built as an HSL tonal ramp (H~106°, S~27%) around the
+     approved mid-point #3F5C36 (brand-500) and deep/hover stop #2E4527
+     (brand-600) — every other stop is derived from those two anchors
+     rather than invented separately. */
+  --brand-50: 240 246 239;
+  --brand-100: 226 236 223;
+  --brand-200: 203 221 197;
+  --brand-300: 167 199 158;
+  --brand-400: 109 162 93;
+  --brand-500: 63 92 54;
+  --brand-600: 46 69 39;
+  --brand-700: 35 52 30;
+  --brand-800: 26 39 22;
+  --brand-900: 19 28 16;
+  --brand-950: 12 18 10;
 
-  --glass: 169 182 156;
+  --glass: 170 177 161;
 
-  --accent-from: 126 143 109;
-  --accent-via: 156 175 136;
-  --accent-to: 238 243 231;
+  --accent-from: 63 92 54;
+  --accent-via: 55 81 47;
+  --accent-to: 46 69 39;
 
-  --shadow-soft: 0 1px 2px rgba(40,48,32,0.08), 0 1px 1px rgba(126,143,109,0.06);
-  --shadow-card: 0 2px 16px -4px rgba(40,48,32,0.10), 0 1px 2px rgba(126,143,109,0.08);
-  --shadow-card-hover: 0 12px 36px -10px rgba(40,48,32,0.14), 0 2px 6px rgba(126,143,109,0.10);
-  --shadow-pop: 0 20px 60px -16px rgba(40,48,32,0.18), 0 4px 10px rgba(126,143,109,0.10);
-  --shadow-glow: 0 0 28px -8px rgba(126,143,109,0.28);
-  --shadow-glow-lg: 0 8px 32px -8px rgba(126,143,109,0.26), 0 0 48px -16px rgba(138,154,91,0.22);
+  --shadow-soft: 0 1px 2px rgba(27,36,21,0.08), 0 1px 1px rgba(63,92,54,0.06);
+  --shadow-card: 0 2px 16px -4px rgba(27,36,21,0.10), 0 1px 2px rgba(63,92,54,0.08);
+  --shadow-card-hover: 0 12px 36px -10px rgba(27,36,21,0.14), 0 2px 6px rgba(63,92,54,0.10);
+  --shadow-pop: 0 20px 60px -16px rgba(27,36,21,0.18), 0 4px 10px rgba(63,92,54,0.10);
+  --shadow-glow: 0 0 28px -8px rgba(63,92,54,0.28);
+  --shadow-glow-lg: 0 8px 32px -8px rgba(63,92,54,0.26), 0 0 48px -16px rgba(46,69,39,0.22);
 
   --violet-50: 245 240 255;
   --violet-100: 124 58 237;

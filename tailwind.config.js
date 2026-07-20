@@ -30,6 +30,21 @@ export default {
         // moments (text-6xl+) sitting directly over a photo — a distinct
         // register from Fraunces, not a replacement for it.
         wordmark: ['Bebas Neue', 'Fraunces', 'ui-serif', 'serif'],
+        // Heavy-weight, tight-tracking grotesk for hero-scale headline text
+        // — a third, distinct register from both Fraunces (editorial serif)
+        // and Inter (body/UI). Pairs with the `hero` fontSize below. Not yet
+        // wired into any component.
+        hero: ['"Space Grotesk"', '"Inter Tight"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
+      fontSize: {
+        // Full-bleed hero headline scale — fluid between mobile and
+        // ultra-wide, tight leading/tracking for a heavy display face.
+        // Calibrated against its first real usage (Landing hero "CHANGES"):
+        // the initial clamp(3.5rem, 8vw, 7rem) read as just a bigger line,
+        // not a dominant one, so the vw factor and ceiling were raised to
+        // actually command the container at desktop widths while keeping
+        // the mobile floor safe for a single uppercase word.
+        hero: ['clamp(3.75rem, 13vw, 10.5rem)', { lineHeight: '0.95', letterSpacing: '-0.03em', fontWeight: '800' }],
       },
       // Numeric font-weight utilities. Extends (never replaces) Tailwind's
       // named scale — font-medium/font-semibold/font-normal keep working —
@@ -80,6 +95,10 @@ export default {
         brand: scale('brand'),
         violet: scale('violet'),
         glass: themeVar('glass'),
+        // Muted amber/gold warm-neutral accent — same value in both themes
+        // (see --gold-accent in index.css). For overline labels and
+        // dividers only, used sparingly, never as a primary color.
+        gold: themeVar('gold-accent'),
       },
       // Shadow values are CSS variables (see index.css) rather than static
       // strings, so light mode gets warm, low-contrast elevation suited to

@@ -13,10 +13,14 @@ interface TripCardProps {
   onDelete: () => void;
 }
 
-const statusStyles: Record<string, string> = {
-  Planning: 'bg-amber-500/15 text-amber-800 dark:text-amber-300',
-  Confirmed: 'bg-brand-500/15 text-brand-700 dark:text-brand-300',
-  Completed: 'bg-glass/5 text-ink-600',
+// Fixed (non-theme-driven) dot colors — this badge always sits on a photo,
+// never the app's own surface, so it uses the same "black/40 pill, white
+// text" treatment as the location pill below it rather than ink/brand
+// tones that assume a themed background.
+const statusDotColor: Record<string, string> = {
+  Planning: 'bg-amber-400',
+  Confirmed: 'bg-emerald-400',
+  Completed: 'bg-slate-400',
 };
 
 export default function TripCard({ trip, onOpen, onEdit, onDuplicate, onDelete }: TripCardProps) {
@@ -59,8 +63,25 @@ export default function TripCard({ trip, onOpen, onEdit, onDuplicate, onDelete }
             className="absolute inset-0 h-full w-full object-cover animate-fade-in"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
-        <span className={`chip absolute right-3 top-3 ${statusStyles[trip.status] ?? statusStyles.Planning}`}>
+        {/* Bottom scrim strengthened to a fixed multi-stop black gradient
+            (rather than Tailwind's from/via/to shorthand) so the location
+            pill sits on consistently clean tonal ground regardless of the
+            photo's own brightness or the active theme — the shorthand
+            version read flatter in light mode simply because it's the same
+            fixed black values either way, but needed more graduated depth
+            to compete with brighter daylight photos. */}
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 25%, rgba(0,0,0,0.15) 55%, transparent 75%)' }}
+        />
+        {/* Matching top scrim so the status badge (which the bottom
+            gradient doesn't reach) also has guaranteed contrast. */}
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 40%)' }}
+        />
+        <span className="chip absolute right-3 top-3 gap-1.5 bg-black/40 text-white backdrop-blur-sm">
+          <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${statusDotColor[trip.status] ?? statusDotColor.Planning}`} />
           {trip.status}
         </span>
         <div className="absolute inset-x-3 bottom-3 flex items-center gap-1.5 rounded-full bg-black/40 backdrop-blur-sm px-3 py-1.5 w-fit max-w-[calc(100%-1.5rem)]">

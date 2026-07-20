@@ -156,8 +156,18 @@ export default function DestinationHero({ tokens, copy, destination }: Destinati
         className="absolute right-0 bottom-0 h-2/3 w-2/3 sm:w-1/2 text-white/[0.16]"
       />
 
-      {/* Layer 5 — scrim for legibility */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+      {/* Layer 5 — scrim for legibility. A graduated multi-stop black
+          gradient (not the from/via/to shorthand) reaching further up the
+          frame than before — the destination name now renders much larger
+          (see below), so it spans higher into the photo than the old
+          scrim's reach covered. Fixed, not theme-driven: this sits on a
+          photo, never the app's own surface, and needs to hold contrast
+          the same way against both a bright sky shot and a busy night shot
+          like Tokyo. */}
+      <div
+        className="absolute inset-0"
+        style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.48) 30%, rgba(0,0,0,0.14) 60%, transparent 85%)' }}
+      />
 
       {/* Content. Essence, quote, and mood tags all carried the same
           "atmosphere" idea in three forms (a descriptive sentence, an
@@ -171,23 +181,60 @@ export default function DestinationHero({ tokens, copy, destination }: Destinati
         <p className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-white/70">
           {copy.region ?? destination}
         </p>
-        <p className="font-display mb-2 max-w-xl text-3xl font-500 text-white sm:text-5xl">
+        {/* Destination name — the font-hero/tight-tracking recipe from the
+            token pass, but sized with its own clamp rather than the literal
+            `hero` fontSize token: that scale (up to 10.5rem) was built for a
+            full-viewport landing hero, and this banner is height-capped at
+            260–320px total including the essence, quote, and best-time
+            rows beneath it, so the same size would overflow. This keeps the
+            heavy-weight, tight-leading character while fitting the box.
+
+            Single-line truncation (regression fix, 3rd pass — see git
+            history for the two dead ends this replaced):
+            - line-clamp-2 (`display: -webkit-box`) mis-measured the box for
+              a single short line like "Dubai," so the essence sibling below
+              it got positioned as if the name were shorter than what
+              actually painted, overlapping it.
+            - Fixing that by wrapping to 2 real lines (plain block,
+              overflow-hidden + max-height) traded one bug for another:
+              verified via outlined boxes that the box model was correct
+              (a real, measured 16px gap to essence) — but this heavy
+              700-weight face's *glyph ink* renders taller than a line-height
+              under ~1.3 can contain, so line 2 visually spilled into
+              essence regardless of the (correct) box spacing. Raising
+              line-height to fix that then made the 2-line block taller than
+              this component's fixed 260–320px section budget, clipping the
+              *top* of line 2 against the section's own boundary instead.
+            Two real lines at this weight/size simply don't fit this
+            component's height budget. Single-line + ellipsis sidesteps the
+            whole "second line" problem, and matches what real-trip testing
+            (Tokyo, Santorini, Dubai — all short names) already proved
+            clean at this line-height. Long AI-generated names (up to 80
+            chars) just truncate with "…" instead of wrapping. */}
+        <p
+          className="font-hero mb-4 max-w-2xl overflow-hidden whitespace-nowrap text-ellipsis text-white"
+          style={{ fontSize: 'clamp(1.75rem,6vw,3.75rem)', lineHeight: 1.15, letterSpacing: '-0.03em', textShadow: '0 1px 2px rgba(0,0,0,0.55), 0 4px 12px rgba(0,0,0,0.45)' }}
+        >
           {copy.name}
         </p>
-        <p className="mb-2 max-w-lg text-sm text-white/80 sm:text-base line-clamp-2">
+        <p className="mb-2.5 max-w-lg text-sm text-white/80 sm:text-base line-clamp-2">
           {copy.essence}
         </p>
         {/* The pull-quote is the one purely emotional flourish here — kept
             for larger screens where there's room, dropped on mobile so the
             hero stays short enough that the itinerary isn't pushed below
-            the fold. */}
+            the fold. Serif italic (font-display) is a deliberately distinct
+            register from the name's heavy grotesk above it. */}
         {copy.quote && (
-          <p className="hidden sm:block font-display mb-5 max-w-md text-lg italic text-white/90">
+          <p
+            className="hidden sm:block font-display font-500 mb-7 max-w-md text-lg italic text-white/90"
+            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.45)' }}
+          >
             &ldquo;{copy.quote}&rdquo;
           </p>
         )}
 
-        <div className="flex flex-wrap gap-x-6 gap-y-2 text-white/85">
+        <div className={`flex flex-wrap gap-x-6 gap-y-2 text-white/85 ${copy.quote ? '' : 'mt-2.5'}`}>
           {copy.bestSeason && (
             <div className="flex items-center gap-2 text-xs sm:text-sm">
               <Sun size={14} className="shrink-0 text-white/70" />

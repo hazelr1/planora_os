@@ -49,8 +49,15 @@ export default function DaySection({
   return (
     <section className="card overflow-hidden">
       <div className="relative p-5 sm:p-6">
-        {/* Connecting timeline line — runs from the day marker through every activity dot */}
-        <div className="absolute left-[18px] top-9 bottom-2 w-px bg-glass/10" aria-hidden="true" />
+        {/* Connecting timeline line — runs from the day marker through every
+            activity dot. Solid, not translucent: a 1px line at any alpha
+            washes out to near-invisible via subpixel antialiasing (verified
+            — bg-glass/10 and even bg-brand-400/35 both rendered as
+            functionally invisible despite computing a correct, unoccluded
+            background). A 2px solid brand-300 line — a shade softer than
+            the dots' brand-400 so it reads as connective tissue, not a
+            competing accent — is reliably visible in both themes. */}
+        <div className="absolute left-[17px] top-9 bottom-2 w-0.5 bg-brand-300" aria-hidden="true" />
 
         {/* Day marker */}
         <div className="relative flex items-start justify-between gap-3 pb-7">
