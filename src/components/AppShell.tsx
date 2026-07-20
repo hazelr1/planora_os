@@ -23,11 +23,19 @@ export default function AppShell({
   }
 
   const isWorkspace = screen.name === 'workspace';
+  const isLanding = screen.name === 'landing';
   const displayName = user?.name || user?.email || '';
 
+  // Landing gets its own warmer green-yellow gradient ground in light mode
+  // (dark mode keeps the standard ink-50 base) — every other screen keeps
+  // the flat bg-ink-50 used app-wide.
+  const bgClass = isLanding
+    ? 'bg-gradient-to-b from-[#E7F5DC] to-[#CFE1B9] dark:bg-none dark:bg-ink-50'
+    : 'bg-ink-50';
+
   return (
-    <div className={fullBleed ? 'h-screen flex flex-col bg-ink-50 overflow-hidden' : 'min-h-screen bg-ink-50'}>
-      <header className="sticky top-0 z-30 bg-ink-50/70 backdrop-blur-xl border-b border-glass/10 shrink-0">
+    <div className={`${fullBleed ? 'h-screen flex flex-col overflow-hidden' : 'min-h-screen'} ${bgClass}`}>
+      <header className={`sticky top-0 z-30 backdrop-blur-xl border-b border-glass/10 shrink-0 ${isLanding ? 'bg-[#E7F5DC]/70 dark:bg-ink-50/70' : 'bg-ink-50/70'}`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
 
           {/* Logo */}

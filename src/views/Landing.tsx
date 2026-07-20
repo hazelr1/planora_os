@@ -120,7 +120,7 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
               <button
                 onClick={handleTryDemo}
                 disabled={demoLoading}
-                className="btn-outline text-base px-6 py-3 w-full sm:w-auto min-w-[140px]"
+                className="btn border border-white/25 bg-white/10 text-white hover:bg-white/20 hover:border-white/40 text-base px-6 py-3 w-full sm:w-auto min-w-[140px]"
               >
                 {demoLoading
                   ? <><Loader2 size={15} className="animate-spin" /> Preparing…</>
@@ -128,19 +128,23 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
                 }
               </button>
             </div>
-            <div className="flex flex-col items-center gap-2 text-xs text-ink-500 sm:items-end">
+            {/* Fixed light colors (not theme-driven ink/brand tones) — this
+                card always sits on the hero photo's dark bottom scrim,
+                regardless of app theme, so its text needs to stay legible
+                against that scrim rather than against a page background. */}
+            <div className="flex flex-col items-center gap-2 text-xs text-white/70 sm:items-end">
               {['Free Demo', 'Free to explore', 'Edit every detail'].map((text) => (
                 <span key={text} className="flex items-center gap-1.5">
-                  <Check size={12} className="text-brand-500 dark:text-brand-400 shrink-0" /> {text}
+                  <Check size={12} className="text-brand-300 shrink-0" /> {text}
                 </span>
               ))}
             </div>
           </div>
           {demoError && (
-            <p className="mt-4 text-center text-sm text-rose-800 dark:text-rose-400">{demoError}</p>
+            <p className="mt-4 text-center text-sm text-rose-300">{demoError}</p>
           )}
-          <div className="mt-6 flex justify-center border-t border-glass/10 pt-5 sm:justify-start">
-            <StatTrio stats={HERO_STATS} />
+          <div className="mt-6 flex justify-center border-t border-white/15 pt-5 sm:justify-start">
+            <StatTrio stats={HERO_STATS} onDark />
           </div>
         </motion.div>
       </section>
