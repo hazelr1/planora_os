@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Sparkles, MapPin, Calendar, Wallet, Bot, ArrowRight, Check, Loader2 } from 'lucide-react';
+import { Sparkles, MapPin, Calendar, Wallet, Bot, ArrowRight, Check, Loader2, Compass } from 'lucide-react';
 import type { Screen } from '../types';
 import StatTrio from '../components/StatTrio';
 import { pickDaily } from '../lib/dailyRotation';
@@ -24,7 +24,7 @@ const SHOWCASE = [
 ];
 
 const HERO_STATS: [{ value: string; label: string }, { value: string; label: string }, { value: string; label: string }] = [
-  { value: '50K+', label: 'trips planned' },
+  { value: 'Browse', label: 'trips others have planned' },
   { value: '180+', label: 'destinations' },
   { value: '12 min', label: 'avg. planning time' },
 ];
@@ -37,6 +37,7 @@ const revealUp = {
 export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
   const [demoLoading, setDemoLoading] = useState(false);
   const [demoError, setDemoError] = useState<string | null>(null);
+  const [showSuggestedNotice, setShowSuggestedNotice] = useState(false);
   const prefersReducedMotion = useReducedMotion();
   const heroImage = pickDaily(HERO_IMAGES, 'hero');
 
@@ -153,6 +154,18 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
                   : 'Try Demo'
                 }
               </button>
+              {/* Third, lowest-emphasis path — a plain outline, no fill,
+                  so the hierarchy reads Start Planning > Try Demo > this,
+                  matching how unbuilt-behind-it this option currently is.
+                  Not wired to a real flow yet (see landing page notes) —
+                  surfaces the intent and collects interest without faking
+                  a browsing experience that doesn't exist. */}
+              <button
+                onClick={() => setShowSuggestedNotice((v) => !v)}
+                className="btn border border-white/15 text-white/80 hover:bg-white/10 hover:border-white/30 hover:text-white text-base px-6 py-2.5 w-full sm:w-auto"
+              >
+                <Compass size={16} /> View suggested trip plans
+              </button>
             </div>
             {/* Fixed light colors (not theme-driven ink/brand tones) — this
                 card always sits on the hero photo's dark bottom scrim,
@@ -168,6 +181,11 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
           </div>
           {demoError && (
             <p className="mt-4 text-center text-sm text-rose-300">{demoError}</p>
+          )}
+          {showSuggestedNotice && (
+            <p className="mt-4 text-center text-sm text-amber-200/90">
+              Browsing curated trip plans by country is coming soon — for now, start a custom plan or try the live demo above.
+            </p>
           )}
           <div className="mt-4 flex justify-center border-t border-white/15 pt-4 sm:justify-start">
             <StatTrio stats={HERO_STATS} onDark />
