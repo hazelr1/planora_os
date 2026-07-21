@@ -23,6 +23,7 @@ interface DbTrip {
   last_updated: string;
   created_at: string;
   is_demo: boolean;
+  cloned_from_template_id: string | null;
 }
 
 interface DbTripDay {
@@ -120,6 +121,7 @@ function mapTrip(row: DbTrip, days: Day[]): Trip {
     status: row.status as TripStatus,
     lastUpdated: row.last_updated,
     isDemo: row.is_demo ?? false,
+    clonedFromTemplateId: row.cloned_from_template_id ?? null,
     days,
   };
 }
@@ -209,10 +211,22 @@ class SupabaseTripRepository implements ITripRepository {
       return { ok: false, error: validationError('Trip length must be greater than 0 days.', 'trip') };
     }
 
+    // trips' INSERT policy checks user_id = auth.uid() — there is no
+    // column default or trigger covering it (confirmed against the live
+    // schema), so it must be set explicitly or RLS silently rejects the
+    // row. This path isn't currently wired into any UI (trip creation
+    // goes through the generate-itinerary edge function's service-role
+    // client instead), but fixing it here keeps this method correct for
+    // whoever calls it next — see duplicateTrip below, which had the
+    // identical gap and was confirmed broken via the "Copy" button.
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { ok: false, error: internal('You must be signed in to create a trip.') };
+
     const now = new Date().toISOString();
     const { data, error } = await supabase
       .from('trips')
       .insert({
+        user_id: user.id,
         title: (input.title?.trim() || input.destination).trim(),
         destination: input.destination,
         start_date: input.startDate,
@@ -294,9 +308,20 @@ class SupabaseTripRepository implements ITripRepository {
     const original = source.data;
     const now = new Date().toISOString();
 
+    // Confirmed broken without this: the "Copy" button on My Trips called
+    // this method, the insert below silently failed RLS ("new row violates
+    // row-level security policy for table trips") because user_id was
+    // never set, and the failure went nowhere visible — useTrips.duplicateTrip
+    // throws, but MyTrips.tsx's onClick doesn't catch it, so the promise
+    // rejection was silently swallowed and the trip list just... didn't
+    // change. Same fix as createTrip above.
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { ok: false, error: internal('You must be signed in to duplicate a trip.') };
+
     const { data: newTripData, error: tripErr } = await supabase
       .from('trips')
       .insert({
+        user_id: user.id,
         title: `${original.title} (Copy)`,
         destination: original.destination,
         start_date: original.startDate,

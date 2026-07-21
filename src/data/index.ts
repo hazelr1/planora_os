@@ -11,6 +11,7 @@ export { supabaseProfileRepository as profileRepository } from './repositories/s
 export { supabaseTripRepository as tripRepository } from './repositories/supabase/supabaseTripRepository';
 export { supabaseActivityRepository as activityRepository } from './repositories/supabase/supabaseActivityRepository';
 export { supabaseRevisionRepository as revisionRepository } from './repositories/supabase/supabaseRevisionRepository';
+export { supabaseTemplateRepository as templateRepository } from './repositories/supabase/supabaseTemplateRepository';
 
 // Re-export interfaces so callers can type-annotate without reaching into impl files
 export type { IAuthRepository, SignUpInput, SignInInput, AuthStateChangeCallback } from './repositories/authRepository';
@@ -18,6 +19,7 @@ export type { IProfileRepository, Profile, CreateProfileInput, UpdateProfileInpu
 export type { ITripRepository, CreateTripInput, UpdateTripInput } from './repositories/tripRepository';
 export type { IActivityRepository, ActivityInput, ReorderInput } from './repositories/activityRepository';
 export type { IRevisionRepository, Revision, RevisionStatus, CreateRevisionInput } from './repositories/revisionRepository';
+export type { ITemplateRepository, TripTemplateSummary } from './repositories/templateRepository';
 
 // Re-export error primitives so hooks can handle failures consistently
 export type { Result, DatabaseError, DatabaseErrorCode } from './databaseErrors';

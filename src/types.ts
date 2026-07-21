@@ -68,6 +68,8 @@ export interface Trip {
   lastUpdated: string;
   isDemo: boolean;
   days: Day[];
+  /** Set when this trip was cloned from a suggested trip plan (see templateRepository). Undefined/null for every other trip. */
+  clonedFromTemplateId?: string | null;
 }
 
 export interface AIRevision {
@@ -144,7 +146,12 @@ export type Screen =
   | { name: 'create' }
   | { name: 'workspace'; tripId: string }
   | { name: 'settings' }
-  | { name: 'contact' };
+  | { name: 'contact' }
+  /** Flat browse list of suggested trip plans — temporary stand-in for the
+   * continent/country picker (proof of concept scope; see BrowseTemplates.tsx). */
+  | { name: 'browse-templates' }
+  /** Read-only preview of a single suggested trip plan, until the first edit clones it into a real trip. */
+  | { name: 'template'; templateId: string };
 
 // ─── AI Copilot (conversational assistant) ───────────────────────────────────
 

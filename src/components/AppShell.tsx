@@ -53,9 +53,10 @@ export default function AppShell({
             </span>
           </button>
 
-          {/* Nav — "My Trips" plus, when signed in, a single avatar menu
-              (Settings/Contact us/Sign out) instead of a separate theme
-              toggle + name + Sign out row. Theme now lives in Settings. */}
+          {/* Nav — "My Trips" and "Suggested Trip Plans" plus, when signed
+              in, a single avatar menu (Settings/Contact us/Sign out)
+              instead of a separate theme toggle + name + Sign out row.
+              Theme now lives in Settings. */}
           <nav className="flex items-center gap-1 sm:gap-2">
             {isWorkspace ? (
               <button onClick={() => onNavigate({ name: 'trips' })} className="btn-ghost">
@@ -68,6 +69,11 @@ export default function AppShell({
                 <span className="hidden sm:inline">My Trips</span>
               </button>
             )}
+
+            <button onClick={() => onNavigate({ name: 'browse-templates' })} className="btn-ghost">
+              <Compass size={16} />
+              <span className="hidden sm:inline">Suggested Trip Plans</span>
+            </button>
 
             {user ? (
               <UserMenu name={displayName} onNavigate={onNavigate} onSignOut={() => onSignOut?.()} />

@@ -7,6 +7,8 @@ import ResetPassword from './views/ResetPassword';
 import MyTrips from './views/MyTrips';
 import CreateTrip from './views/CreateTrip';
 import Workspace from './views/Workspace';
+import BrowseTemplates from './views/BrowseTemplates';
+import TemplateWorkspace from './views/TemplateWorkspace';
 import Settings from './views/Settings';
 import ContactUs from './views/ContactUs';
 import { useTrips } from './hooks/useTrips';
@@ -16,7 +18,7 @@ import { supabase } from './lib/supabase';
 import { authRepository } from './data';
 
 // Screens that require an authenticated session
-const PROTECTED: Screen['name'][] = ['trips', 'create', 'workspace', 'settings'];
+const PROTECTED: Screen['name'][] = ['trips', 'create', 'workspace', 'settings', 'browse-templates', 'template'];
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'landing' });
@@ -212,6 +214,18 @@ export default function App() {
       {screen.name === 'workspace' && (
         <Workspace
           tripId={screen.tripId}
+          onNavigate={navigate}
+          onUpdateTripFields={updateTripFields}
+        />
+      )}
+
+      {screen.name === 'browse-templates' && (
+        <BrowseTemplates onNavigate={navigate} />
+      )}
+
+      {screen.name === 'template' && (
+        <TemplateWorkspace
+          templateId={screen.templateId}
           onNavigate={navigate}
           onUpdateTripFields={updateTripFields}
         />
