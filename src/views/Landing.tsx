@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Sparkles, MapPin, Calendar, Wallet, Bot, ArrowRight, Check, Loader2 } from 'lucide-react';
 import type { Screen } from '../types';
+import { templateRepository } from '../data';
 import StatTrio from '../components/StatTrio';
+import DestinationPlanCard from '../components/DestinationPlanCard';
 import { pickDaily } from '../lib/dailyRotation';
 
 interface LandingProps {
@@ -16,11 +18,31 @@ interface LandingProps {
 // amplify. The remaining two are both genuinely vivid (teal glacial lake,
 // golden-hour Rio de Janeiro).
 const HERO_IMAGES = ['/image/landing-hero-2.jpg', '/image/landing-hero-3.jpg'];
+
+// The full pool this section's teaser samples from — every entry has a real
+// approved trip_templates row backing it (see
+// findApprovedTemplatesByDestinationNames below), so whichever subset gets
+// shown is always genuinely clickable into a suggested plan, never an
+// arbitrary destination list. Only a random few are shown at once (see
+// sampleShowcase) — a fresh sample every page load, not this whole set.
+// `name` doubles as the prefix used to match against a template's
+// `destination` column, so it needs to be the leading segment of that
+// column (e.g. "Ubud", not "Bali", since the template's destination is
+// "Ubud, Bali, Indonesia"). Marrakech never had an approved template in the
+// pool — Jaipur takes its "market and craft" register instead. Five of ten
+// reuse this app's bundled destination photos; the rest resolve a live
+// photo per destination (see DestinationPlanCard).
 const SHOWCASE = [
   { name: 'Santorini', region: 'Greece', essence: 'Whitewashed cliffs above a caldera sea.', images: ['/image/destination-santorini.jpg', '/image/destination-santorini-2.jpg'] },
   { name: 'Kyoto', region: 'Japan', essence: 'Temple bells and quiet backstreets.', images: ['/image/destination-kyoto.jpg', '/image/destination-kyoto-2.jpg'] },
-  { name: 'Marrakech', region: 'Morocco', essence: 'Zellige tile and saffron-lit souks.', images: ['/image/destination-marrakech.jpg', '/image/destination-marrakech-2.jpg'] },
   { name: 'Reykjavik', region: 'Iceland', essence: 'Glacial light over volcanic coastline.', images: ['/image/destination-iceland.jpg', '/image/destination-iceland-2.jpg'] },
+  { name: 'Ubud', region: 'Bali, Indonesia', essence: 'Terraced rice fields and temple incense in the hills.', images: ['/image/destination-bali.jpg'] },
+  { name: 'Lisbon', region: 'Portugal', essence: 'Tiled facades and fado drifting up from the river.', images: ['/image/destination-lisbon.jpg'] },
+  { name: 'Jaipur', region: 'India', essence: 'Pink sandstone forts above a spice-market maze.' },
+  { name: 'Dubai', region: 'United Arab Emirates', essence: 'Glass towers rising clean out of the dune line.' },
+  { name: 'Rome', region: 'Italy', essence: 'Marble ruins keeping time beside espresso bars.' },
+  { name: 'Barcelona', region: 'Spain', essence: 'Gaudí’s curves against a Mediterranean grid.' },
+  { name: 'Seoul', region: 'South Korea', essence: 'Neon alleys and palace eaves under one skyline.' },
 ];
 
 const HERO_STATS: [{ value: string; label: string }, { value: string; label: string }, { value: string; label: string }] = [
@@ -34,11 +56,41 @@ const revealUp = {
   show: { opacity: 1, y: 0 },
 };
 
+const SHOWCASE_SAMPLE_SIZE = 5;
+
+/** A fresh random slice of SHOWCASE — a small teaser, not the whole pool. Recomputed on every mount, so a reload shows a different set. */
+function sampleShowcase() {
+  const shuffled = [...SHOWCASE];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, SHOWCASE_SAMPLE_SIZE);
+}
+
 export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
   const [demoLoading, setDemoLoading] = useState(false);
   const [demoError, setDemoError] = useState<string | null>(null);
+  const [showcaseTemplateIds, setShowcaseTemplateIds] = useState<Record<string, string>>({});
+  const [showcase] = useState(sampleShowcase);
   const prefersReducedMotion = useReducedMotion();
   const heroImage = pickDaily(HERO_IMAGES, 'hero');
+
+  // Links a showcase card straight to its matching approved template, when
+  // one exists — the "See more" grid below is the primary path regardless.
+  useEffect(() => {
+    let cancelled = false;
+    templateRepository.findApprovedTemplatesByDestinationNames(showcase.map((d) => d.name)).then((result) => {
+      if (cancelled || !result.ok) return;
+      const matches: Record<string, string> = {};
+      for (const t of result.data) {
+        const showcaseMatch = showcase.find((d) => t.destination.toLowerCase().startsWith(d.name.toLowerCase()));
+        if (showcaseMatch) matches[showcaseMatch.name] = t.id;
+      }
+      setShowcaseTemplateIds(matches);
+    });
+    return () => { cancelled = true; };
+  }, [showcase]);
 
   const handleTryDemo = async () => {
     setDemoLoading(true);
@@ -245,28 +297,33 @@ export default function Landing({ onNavigate, onTryDemo }: LandingProps) {
 
         <motion.div
           {...revealProps}
-          transition={{ staggerChildren: 0.08, delayChildren: 0.1 }}
-          className="mt-14 grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-5"
+          transition={{ staggerChildren: 0.06, delayChildren: 0.1 }}
+          className="mt-14 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-5"
         >
-          {SHOWCASE.map((d) => (
-            <motion.div
-              key={d.name}
-              variants={revealUp}
-              className="card group relative aspect-[4/5] overflow-hidden p-0 shadow-pop transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-glow-lg"
-            >
-              <img
-                src={pickDaily(d.images, d.name)}
-                alt={`${d.name}, ${d.region}`}
-                className="absolute inset-0 h-full w-full object-cover transition-transform duration-[600ms] ease-out group-hover:scale-[1.06]"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-              <div className="relative flex h-full flex-col justify-end p-4">
-                <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/70">{d.region}</p>
-                <p className="font-display mt-1 text-xl font-600 text-white">{d.name}</p>
-                <p className="mt-1.5 text-[11px] leading-relaxed text-white/75 line-clamp-2">{d.essence}</p>
-              </div>
-            </motion.div>
-          ))}
+          {showcase.map((d) => {
+            const templateId = showcaseTemplateIds[d.name];
+            return (
+              <motion.div key={d.name} variants={revealUp}>
+                <DestinationPlanCard
+                  name={d.name}
+                  region={d.region}
+                  description={d.essence}
+                  photoQuery={`${d.name}, ${d.region}`}
+                  images={d.images}
+                  onClick={templateId ? () => onNavigate({ name: 'template', templateId }) : undefined}
+                />
+              </motion.div>
+            );
+          })}
+        </motion.div>
+
+        <motion.div {...revealProps} variants={revealUp} transition={{ delay: 0.15 }} className="mt-8 flex justify-center sm:justify-start">
+          <button
+            onClick={() => onNavigate({ name: 'browse-templates' })}
+            className="btn-ghost text-sm"
+          >
+            See more suggested trip plans <ArrowRight size={14} />
+          </button>
         </motion.div>
       </section>
 

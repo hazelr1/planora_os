@@ -137,27 +137,50 @@ function mapTemplateSummary(row: DbTemplate): TripTemplateSummary {
 // ─── Implementation ───────────────────────────────────────────────────────────
 
 class SupabaseTemplateRepository implements ITemplateRepository {
-  async listTemplatesForContinent(continent: string, limit = 15): Promise<Result<TripTemplateSummary[]>> {
+  async listApprovedTemplates(limit = 15): Promise<Result<TripTemplateSummary[]>> {
     const { data, error } = await supabase
       .from('trip_templates')
       .select('*')
-      .eq('continent', continent)
       .eq('review_status', 'approved');
     if (error) return { ok: false, error: internal(error.message) };
 
     // Random sample + order, done client-side rather than ORDER BY
-    // random() in Postgres — the pool per continent is small (tens of
-    // rows, not thousands), and supabase-js's query builder has no
-    // ORDER BY random() escape hatch short of a raw RPC, which isn't
-    // worth standing up for a shuffle this cheap. Every call reshuffles,
-    // so repeat visits (and different users) see a different slice/order
+    // random() in Postgres — the approved pool is small (tens of rows,
+    // not thousands), and supabase-js's query builder has no ORDER BY
+    // random() escape hatch short of a raw RPC, which isn't worth
+    // standing up for a shuffle this cheap. Every call reshuffles, so
+    // repeat visits (and different users) see a different slice/order
     // of the same shared pool.
     const rows = (data as DbTemplate[]).map(mapTemplateSummary);
     for (let i = rows.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [rows[i], rows[j]] = [rows[j], rows[i]];
     }
-    return ok(rows.slice(0, limit));
+
+    // Multiple approved templates often exist for the same destination
+    // (different pace/budget/interests variants) — keep only the first
+    // (random) one per destination so the grid never shows the same place
+    // twice, then slice to the limit.
+    const seen = new Set<string>();
+    const deduped: TripTemplateSummary[] = [];
+    for (const row of rows) {
+      if (seen.has(row.destination)) continue;
+      seen.add(row.destination);
+      deduped.push(row);
+    }
+
+    return ok(deduped.slice(0, limit));
+  }
+
+  async findApprovedTemplatesByDestinationNames(names: string[]): Promise<Result<TripTemplateSummary[]>> {
+    if (names.length === 0) return ok([]);
+    const { data, error } = await supabase
+      .from('trip_templates')
+      .select('*')
+      .eq('review_status', 'approved')
+      .or(names.map((n) => `destination.ilike.${n}%`).join(','));
+    if (error) return { ok: false, error: internal(error.message) };
+    return ok((data as DbTemplate[]).map(mapTemplateSummary));
   }
 
   async getTemplateWithDetails(id: string): Promise<Result<Trip>> {

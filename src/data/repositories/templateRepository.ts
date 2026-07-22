@@ -34,15 +34,21 @@ export interface TripTemplateSummary {
 
 export interface ITemplateRepository {
   /**
-   * A random sample of up to `limit` approved templates for a continent
-   * (default 15) — the picker no longer has a country step, so this reads
-   * across every country in the continent's pool at once. Order and
-   * selection are randomized per call: different users (and repeat visits)
-   * see a different slice/order of the same shared pool, not a fixed list.
-   * Zero rows is a valid, expected result for a continent that hasn't been
-   * seeded yet, not an error.
+   * A random sample of up to `limit` approved templates (default 15), at
+   * most one per destination — no continent/country filter, just the
+   * entire shared pool. Order and selection are randomized per call:
+   * different users (and repeat visits) see a different slice/order, not
+   * a fixed list. Zero rows is a valid, expected result before the pool
+   * has been seeded, not an error.
    */
-  listTemplatesForContinent(continent: string, limit?: number): Promise<Result<TripTemplateSummary[]>>;
+  listApprovedTemplates(limit?: number): Promise<Result<TripTemplateSummary[]>>;
+
+  /**
+   * Approved templates whose destination starts with one of the given
+   * names (case-insensitive) — lets the landing page link a static
+   * showcase card straight to a matching template when one exists.
+   */
+  findApprovedTemplatesByDestinationNames(names: string[]): Promise<Result<TripTemplateSummary[]>>;
 
   /**
    * A single template with all days and activities, mapped into the same
