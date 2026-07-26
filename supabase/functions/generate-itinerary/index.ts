@@ -151,7 +151,97 @@ function enumerateDates(startDate: string, endDate: string): string[] {
   return dates;
 }
 
-async function callOpenAI(req: GenerateRequest, apiKey: string): Promise<OpenAIItinerary> {
+/*
+─── Trip preference tags ──────────────────────────────────────────────────
+Wires up the previously-unused `profiles` table: a rolling, three-tag
+snapshot (pace / travels_with_kids / budget_tier) derived from whichever
+trip a user most recently generated, read back on every *subsequent*
+generation to season the prompt, and refreshed again after this one saves.
+Deliberately a plain heuristic, not another AI call — these tags are coarse
+enough that a keyword scan and a per-day-per-traveler bucket are exactly as
+good as asking a model, for a fraction of the latency/cost. The same
+thresholds are duplicated (not imported — this is a separately deployed
+Deno function) in src/lib/tripPreferences.ts for the one client-side edit
+surface that never hits an edge function (SettingsSection's budget edit),
+and in generate-trip-from-text for its own creation path.
+*/
+
+interface TripPreferenceTags {
+  pace?: "slow" | "moderate" | "packed";
+  travels_with_kids?: "yes" | "no";
+  budget_tier?: "budget" | "mid-range" | "luxury";
+}
+
+const KIDS_KEYWORDS = [
+  "kid", "kids", "child", "children", "toddler", "family friendly", "family-friendly", "stroller", "baby", "infant",
+];
+
+function deriveTripPreferenceTags(req: GenerateRequest, numDays: number): TripPreferenceTags {
+  const tags: TripPreferenceTags = {};
+
+  if (req.travel_pace === "Relaxed") tags.pace = "slow";
+  else if (req.travel_pace === "Packed") tags.pace = "packed";
+  else if (req.travel_pace === "Balanced") tags.pace = "moderate";
+
+  const lowerText = (req.special_requests ?? "").toLowerCase();
+  tags.travels_with_kids = KIDS_KEYWORDS.some((kw) => lowerText.includes(kw)) ? "yes" : "no";
+
+  if (req.budget > 0 && req.travelers > 0 && numDays > 0) {
+    const perDayPerTraveler = req.budget / req.travelers / numDays;
+    tags.budget_tier = perDayPerTraveler < 100 ? "budget" : perDayPerTraveler < 300 ? "mid-range" : "luxury";
+  }
+
+  return tags;
+}
+
+/** One line to fold into the generation prompt, or null when there's nothing stored yet (first-time users). */
+function buildPreferenceNote(tags: TripPreferenceTags | null): string | null {
+  if (!tags) return null;
+  const parts: string[] = [];
+  if (tags.pace) parts.push(`prefers a ${tags.pace} pace`);
+  if (tags.travels_with_kids === "yes") parts.push("often travels with kids");
+  if (tags.budget_tier) parts.push(`typically travels ${tags.budget_tier}`);
+  if (parts.length === 0) return null;
+  return `Known traveler preferences from past trips (soft guidance — defer to anything explicit above): ${parts.join(", ")}.`;
+}
+
+/** Best-effort: a profiles read/write hiccup should never fail (or even slow down the user's view of) a successful generation. */
+async function readProfilePreferences(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+): Promise<TripPreferenceTags | null> {
+  try {
+    const { data } = await supabase.from("profiles").select("preferences").eq("id", userId).maybeSingle();
+    const prefs = (data as { preferences?: TripPreferenceTags } | null)?.preferences;
+    return prefs && Object.keys(prefs).length > 0 ? prefs : null;
+  } catch (err) {
+    console.warn("[generate-itinerary] could not read profile preferences:", err);
+    return null;
+  }
+}
+
+/** Merges (never overwrites) the derived tags onto whatever preferences already exist for this user. */
+async function updateProfilePreferences(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  tags: TripPreferenceTags,
+): Promise<void> {
+  try {
+    const { data } = await supabase.from("profiles").select("preferences").eq("id", userId).maybeSingle();
+    if (!data) return; // no profiles row for this user (shouldn't happen outside demo accounts, which never reach here) — nothing to merge onto
+    const existing = (data as { preferences?: TripPreferenceTags }).preferences ?? {};
+    const merged = { ...existing, ...tags };
+    const { error } = await supabase
+      .from("profiles")
+      .update({ preferences: merged, updated_at: new Date().toISOString() })
+      .eq("id", userId);
+    if (error) console.warn("[generate-itinerary] preference update failed:", error.message);
+  } catch (err) {
+    console.warn("[generate-itinerary] preference update threw:", err);
+  }
+}
+
+async function callOpenAI(req: GenerateRequest, apiKey: string, preferenceNote?: string): Promise<OpenAIItinerary> {
   const dates = enumerateDates(req.start_date, req.end_date);
   const numDays = dates.length;
   const dateList = dates.map((d, i) => `Day ${i + 1}: ${d}`).join("\n");
@@ -163,7 +253,7 @@ Budget: ${req.budget} ${req.currency} (total, for ${req.travelers} traveler${req
 Travel pace: ${req.travel_pace}
 Interests: ${req.interests.join(", ")}
 ${req.special_requests ? `Special requests: ${req.special_requests}` : ""}
-
+${preferenceNote ? `${preferenceNote}\n` : ""}
 REQUIRED DAYS — the "days" array MUST contain exactly ${numDays} entries, one per date below, in this exact order. Do not omit, merge, or summarize any day, even for long trips:
 ${dateList}
 
@@ -183,7 +273,7 @@ For each day, cover a full schedule: a morning activity, an afternoon activity, 
         {
           role: "system",
           content:
-            "You are Planora, an expert travel itinerary planner. Create a realistic and editable itinerary based on the user's destination, dates, budget, traveler count, pace, interests, and special requests. The user prompt lists the exact required dates — you MUST return one entry in the days array for every single one of them, in order, never fewer. Group activities geographically. Include reasonable travel and rest time. Avoid impossible schedules. Do not claim confirmed availability, live prices, reservations, or opening hours. All prices are estimates. Explain briefly why each activity fits the user. For every activity, set cost_confidence to 'high' when you are confident in the estimated_cost (e.g. well-known fixed-price attractions), 'medium' for typical estimates, and 'low' when the price is highly variable or uncertain. For every activity, also provide your best-effort real-world latitude and longitude for its location — use your knowledge of the destination's geography; if you are not reasonably confident of the coordinates, still provide your best estimate rather than a placeholder. Return only structured data matching the required schema.",
+            "You are Planora, an expert travel itinerary planner. Create a realistic and editable itinerary based on the user's destination, dates, budget, traveler count, pace, interests, and special requests. The prompt may also include the traveler's known preferences learned from past trips — treat those as soft guidance that loses to anything explicitly stated for this specific trip. The user prompt lists the exact required dates — you MUST return one entry in the days array for every single one of them, in order, never fewer. Group activities geographically. Include reasonable travel and rest time. Avoid impossible schedules. Do not claim confirmed availability, live prices, reservations, or opening hours. All prices are estimates. Explain briefly why each activity fits the user. For every activity, set cost_confidence to 'high' when you are confident in the estimated_cost (e.g. well-known fixed-price attractions), 'medium' for typical estimates, and 'low' when the price is highly variable or uncertain. For every activity, also provide your best-effort real-world latitude and longitude for its location — use your knowledge of the destination's geography; if you are not reasonably confident of the coordinates, still provide your best estimate rather than a placeholder. Return only structured data matching the required schema.",
         },
         { role: "user", content: userPrompt },
       ],
@@ -389,6 +479,18 @@ Deno.serve(async (req: Request) => {
     const { data: { user }, error: authErr } = await supabase.auth.getUser();
     if (authErr || !user) return jsonResponse({ error: "Authentication required." }, 401);
 
+    // Demo sessions get exactly one seeded trip plus whatever suggested
+    // plans they clone — never unlimited custom AI generation. The client
+    // already keeps demo sessions off this screen (see DEMO_BLOCKED in
+    // App.tsx), but that's a UI nicety, not a security boundary — this is
+    // the actual enforcement, since this function writes with the
+    // service-role client and RLS never sees these inserts.
+    if (user.user_metadata?.is_demo_user) {
+      return jsonResponse({
+        error: "Demo sessions can't generate custom trips. Browse suggested plans, or sign up for a full account.",
+      }, 403);
+    }
+
     // Parse + validate input
     let body: Partial<GenerateRequest>;
     try {
@@ -411,9 +513,14 @@ Deno.serve(async (req: Request) => {
       }, 503);
     }
 
+    // Read back whatever preference tags a past trip left behind — soft
+    // context for this generation, not a requirement (see buildPreferenceNote).
+    const storedPreferences = await readProfilePreferences(supabase, user.id);
+    const preferenceNote = buildPreferenceNote(storedPreferences);
+
     let itinerary: OpenAIItinerary;
     try {
-      itinerary = await callOpenAI(input, apiKey);
+      itinerary = await callOpenAI(input, apiKey, preferenceNote ?? undefined);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "UNKNOWN";
       console.error("[generate-itinerary] OpenRouter error:", msg);
@@ -436,6 +543,12 @@ Deno.serve(async (req: Request) => {
     }
 
     console.log(`[generate-itinerary] Created trip ${result.tripId} for user ${user.id}`);
+
+    // Refresh the traveler's preference snapshot from *this* trip — after
+    // persistItinerary has already succeeded, so a hiccup here never costs
+    // the user their newly-created trip.
+    const freshTags = deriveTripPreferenceTags(input, expectedDates.length);
+    await updateProfilePreferences(supabase, user.id, freshTags);
 
     return jsonResponse({ tripId: result.tripId, warnings: result.warnings });
   } catch (err) {

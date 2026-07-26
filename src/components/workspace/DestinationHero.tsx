@@ -178,9 +178,24 @@ export default function DestinationHero({ tokens, copy, destination }: Destinati
           model for any future surface that wants it, just not rendered
           three times over in one hero. */}
       <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-8">
-        <p className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-white/70">
+        <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.18em] text-white/70">
           {copy.region ?? destination}
         </p>
+        {/* `shrink-0` on the name and essence below isn't decorative — without
+            it, this flex column silently breaks for names like "Lisbon,
+            Portugal" or "Ho Chi Minh City, Vietnam" paired with a full essence
+            sentence: `overflow-hidden` (needed for the name's ellipsis
+            truncation, and implied by essence's `line-clamp-2`) removes a flex
+            item's normal "never shrink below content" protection, so once this
+            column's total content edges past the section's fixed height
+            budget, the flex algorithm quietly compresses those two boxes
+            *below* one line's real height — but the glyphs still paint at
+            full size regardless, spilling out of their now-undersized box
+            into whichever neighbor has the thinnest margin (this region
+            overline, in the regression that prompted this comment). Pinning
+            both to their natural size makes that failure mode impossible;
+            see the name's own comment below for the matching line-height/
+            margin fix on the *other* axis (overlap with essence). */}
         {/* Destination name — the font-hero/tight-tracking recipe from the
             token pass, but sized with its own clamp rather than the literal
             `hero` fontSize token: that scale (up to 10.5rem) was built for a
@@ -207,17 +222,24 @@ export default function DestinationHero({ tokens, copy, destination }: Destinati
               *top* of line 2 against the section's own boundary instead.
             Two real lines at this weight/size simply don't fit this
             component's height budget. Single-line + ellipsis sidesteps the
-            whole "second line" problem, and matches what real-trip testing
-            (Tokyo, Santorini, Dubai — all short names) already proved
-            clean at this line-height. Long AI-generated names (up to 80
-            chars) just truncate with "…" instead of wrapping. */}
+            whole "second line" problem — but going single-line didn't by
+            itself fix the collision: this same "glyph ink needs ~1.3, not
+            ~1.15" finding from the 2-line dead end above applies just as
+            much to one line, and a stale 1.15 here was still letting the
+            heavy face's ink spill past its line box into the essence
+            paragraph's margin, even for a short single-line name like
+            "Tokyo" (verified via screenshots across short and long names,
+            at mobile/tablet/desktop widths). 1.3 line-height + a slightly
+            larger bottom margin gives real clearance instead.
+            Long AI-generated names (up to 80 chars) just truncate with
+            "…" instead of wrapping. */}
         <p
-          className="font-hero mb-4 max-w-2xl overflow-hidden whitespace-nowrap text-ellipsis text-white"
-          style={{ fontSize: 'clamp(1.75rem,6vw,3.75rem)', lineHeight: 1.15, letterSpacing: '-0.03em', textShadow: '0 1px 2px rgba(0,0,0,0.55), 0 4px 12px rgba(0,0,0,0.45)' }}
+          className="font-hero mb-5 max-w-2xl shrink-0 overflow-hidden whitespace-nowrap text-ellipsis text-white"
+          style={{ fontSize: 'clamp(1.75rem,6vw,3.75rem)', lineHeight: 1.3, letterSpacing: '-0.03em', textShadow: '0 1px 2px rgba(0,0,0,0.55), 0 4px 12px rgba(0,0,0,0.45)' }}
         >
           {copy.name}
         </p>
-        <p className="mb-2.5 max-w-lg text-sm text-white/80 sm:text-base line-clamp-2">
+        <p className="mb-2.5 max-w-lg shrink-0 text-sm text-white/80 sm:text-base line-clamp-2">
           {copy.essence}
         </p>
         {/* The pull-quote is the one purely emotional flourish here — kept

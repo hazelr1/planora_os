@@ -24,3 +24,13 @@ export function formatLastUpdated(iso: string): string {
   if (diffDays < 7) return `${diffDays} days ago`;
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
+
+/** Short "in Xh" / "in Xd" countdown — used by the Demo Mode badge, deliberately coarse since the exact minute never matters here. */
+export function formatRelativeExpiry(iso: string): string {
+  const diffMs = new Date(iso).getTime() - Date.now();
+  if (diffMs <= 0) return 'expiring now';
+  const diffHours = Math.round(diffMs / (1000 * 60 * 60));
+  if (diffHours < 1) return 'in <1h';
+  if (diffHours < 48) return `in ${diffHours}h`;
+  return `in ${Math.round(diffHours / 24)}d`;
+}

@@ -4,6 +4,8 @@ import type { Screen } from '../types';
 
 interface UserMenuProps {
   name: string;
+  /** Demo sessions can't change account settings — the menu item is dropped entirely rather than shown disabled. */
+  isDemo?: boolean;
   onNavigate: (screen: Screen) => void;
   onSignOut: () => void;
 }
@@ -23,7 +25,7 @@ function initialsOf(name: string): string {
  * Same open/outside-click/Escape pattern as ThemeToggle's own dropdown, for
  * a consistent feel between the two header menus.
  */
-export default function UserMenu({ name, onNavigate, onSignOut }: UserMenuProps) {
+export default function UserMenu({ name, isDemo = false, onNavigate, onSignOut }: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -71,13 +73,15 @@ export default function UserMenu({ name, onNavigate, onSignOut }: UserMenuProps)
         >
           <p className="px-3 pt-1.5 pb-2 text-sm font-600 text-ink-800 truncate">{name}</p>
           <div className="h-px bg-glass/10 my-1" />
-          <button
-            role="menuitem"
-            onClick={() => go({ name: 'settings' })}
-            className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-600 text-ink-600 hover:bg-glass/5 hover:text-ink-800 transition"
-          >
-            <SettingsIcon size={15} className="shrink-0" /> Settings
-          </button>
+          {!isDemo && (
+            <button
+              role="menuitem"
+              onClick={() => go({ name: 'settings' })}
+              className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-600 text-ink-600 hover:bg-glass/5 hover:text-ink-800 transition"
+            >
+              <SettingsIcon size={15} className="shrink-0" /> Settings
+            </button>
+          )}
           <button
             role="menuitem"
             onClick={() => go({ name: 'contact' })}

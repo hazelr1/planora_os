@@ -6,3 +6,9 @@
 # other function here does by default.
 [functions.launch-demo]
 verify_jwt = false
+
+# Called only by the pg_cron job scheduled in the migrations (never by a
+# browser), authenticated with its own CRON_TRIGGER_SECRET instead of a
+# Supabase user JWT — see the function's own doc comment.
+[functions.delete-expired-demo-accounts]
+verify_jwt = false

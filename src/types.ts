@@ -7,6 +7,10 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  /** True for a "Try Demo" session's auto-provisioned account — never true for a real signup. */
+  isDemo: boolean;
+  /** ISO timestamp the demo account is scheduled for cleanup at, or null for a real account. */
+  demoExpiresAt: string | null;
 }
 
 export interface Note {
@@ -144,6 +148,8 @@ export type Screen =
   | { name: 'reset-password' }
   | { name: 'trips' }
   | { name: 'create' }
+  /** Paste free text (a reel caption, a list of place names, anything) and get a structured trip back — see PasteTrip.tsx. */
+  | { name: 'paste-trip' }
   | { name: 'workspace'; tripId: string }
   | { name: 'settings' }
   | { name: 'contact' }

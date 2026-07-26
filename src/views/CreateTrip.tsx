@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AlertTriangle, Sparkles } from 'lucide-react';
 import type { Screen } from '../types';
 import TripForm, { type TripFormValues } from '../components/TripForm';
+import PreferencesBadge from '../components/PreferencesBadge';
 import { supabase } from '../lib/supabase';
+import { profileRepository, type TripPreferenceTags } from '../data';
 
 interface CreateTripProps {
   onNavigate: (screen: Screen) => void;
@@ -16,6 +18,24 @@ export default function CreateTrip({ onNavigate, onCreate }: CreateTripProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [savedValues, setSavedValues] = useState<TripFormValues | null>(null);
+  const [preferenceTags, setPreferenceTags] = useState<TripPreferenceTags | null>(null);
+
+  // Read-only, best-effort: just tells the badge below whether generation
+  // will actually have preferences to draw on (see generate-itinerary,
+  // which does the real reading at generation time). A brand-new user with
+  // no trip history yet simply never has anything here to show.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const result = await profileRepository.getProfile(user.id);
+      if (!cancelled && result.ok && Object.keys(result.data.preferences).length > 0) {
+        setPreferenceTags(result.data.preferences);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const handleSubmit = async (values: TripFormValues) => {
     if (status === 'generating') return;
@@ -87,9 +107,17 @@ export default function CreateTrip({ onNavigate, onCreate }: CreateTripProps) {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="mb-5">
-        <h1 className="font-display text-xl font-700 text-ink-900">Create a trip</h1>
-        <p className="text-ink-600 mt-0.5 text-sm">Fill in the details and AI will build your day-by-day itinerary.</p>
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h1 className="font-display text-xl font-700 text-ink-900">Create a trip</h1>
+            {preferenceTags && <PreferencesBadge tags={preferenceTags} />}
+          </div>
+          <p className="text-ink-600 mt-0.5 text-sm">Fill in the details and AI will build your day-by-day itinerary.</p>
+        </div>
+        <button onClick={() => onNavigate({ name: 'paste-trip' })} className="btn-ghost text-sm shrink-0">
+          Paste a trip idea instead
+        </button>
       </div>
 
       {/* Generating overlay */}

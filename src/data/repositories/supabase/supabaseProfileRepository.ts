@@ -1,7 +1,7 @@
 import { supabase } from '../../../lib/supabase';
 import { ok, notFound, internal } from '../../databaseErrors';
 import type { Result } from '../../databaseErrors';
-import type { IProfileRepository, Profile, CreateProfileInput, UpdateProfileInput } from '../profileRepository';
+import type { IProfileRepository, Profile, CreateProfileInput, UpdateProfileInput, TripPreferenceTags } from '../profileRepository';
 
 // DB row shape for profiles table (full_name is the actual column name)
 interface DbProfile {
@@ -9,6 +9,7 @@ interface DbProfile {
   email: string;
   full_name: string;
   avatar_url: string | null;
+  preferences: TripPreferenceTags | null;
   created_at: string;
   updated_at: string;
 }
@@ -20,6 +21,7 @@ function mapRow(row: DbProfile): Profile {
     name: row.full_name,
     email: row.email,
     avatarUrl: row.avatar_url ?? '',
+    preferences: row.preferences ?? {},
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -57,6 +59,31 @@ class SupabaseProfileRepository implements IProfileRepository {
     const { data, error } = await supabase
       .from('profiles')
       .update({ ...patch, updated_at: new Date().toISOString() })
+      .eq('id', userId)
+      .select()
+      .maybeSingle();
+    if (error) return { ok: false, error: internal(error.message) };
+    if (!data) return { ok: false, error: notFound('profile', userId) };
+    return ok(mapRow(data as DbProfile));
+  }
+
+  async updatePreferences(userId: string, tags: Partial<TripPreferenceTags>): Promise<Result<Profile>> {
+    // Read-modify-write rather than a raw jsonb `||` merge — supabase-js has
+    // no escape hatch for that short of an RPC, and this is called at most
+    // once per trip create/edit, never a hot path worth standing up one for.
+    const { data: existing, error: fetchErr } = await supabase
+      .from('profiles')
+      .select('preferences')
+      .eq('id', userId)
+      .maybeSingle();
+    if (fetchErr) return { ok: false, error: internal(fetchErr.message) };
+    if (!existing) return { ok: false, error: notFound('profile', userId) };
+
+    const merged: TripPreferenceTags = { ...(existing.preferences as TripPreferenceTags | null ?? {}), ...tags };
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ preferences: merged, updated_at: new Date().toISOString() })
       .eq('id', userId)
       .select()
       .maybeSingle();

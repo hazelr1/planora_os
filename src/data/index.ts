@@ -15,7 +15,7 @@ export { supabaseTemplateRepository as templateRepository } from './repositories
 
 // Re-export interfaces so callers can type-annotate without reaching into impl files
 export type { IAuthRepository, SignUpInput, SignInInput, AuthStateChangeCallback } from './repositories/authRepository';
-export type { IProfileRepository, Profile, CreateProfileInput, UpdateProfileInput } from './repositories/profileRepository';
+export type { IProfileRepository, Profile, CreateProfileInput, UpdateProfileInput, TripPreferenceTags } from './repositories/profileRepository';
 export type { ITripRepository, CreateTripInput, UpdateTripInput } from './repositories/tripRepository';
 export type { IActivityRepository, ActivityInput, ReorderInput } from './repositories/activityRepository';
 export type { IRevisionRepository, Revision, RevisionStatus, CreateRevisionInput } from './repositories/revisionRepository';

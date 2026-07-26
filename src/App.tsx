@@ -6,6 +6,7 @@ import SignIn from './views/SignIn';
 import ResetPassword from './views/ResetPassword';
 import MyTrips from './views/MyTrips';
 import CreateTrip from './views/CreateTrip';
+import PasteTrip from './views/PasteTrip';
 import Workspace from './views/Workspace';
 import BrowseTemplates from './views/BrowseTemplates';
 import TemplateWorkspace from './views/TemplateWorkspace';
@@ -18,7 +19,13 @@ import { supabase } from './lib/supabase';
 import { authRepository } from './data';
 
 // Screens that require an authenticated session
-const PROTECTED: Screen['name'][] = ['trips', 'create', 'workspace', 'settings', 'browse-templates', 'template'];
+const PROTECTED: Screen['name'][] = ['trips', 'create', 'paste-trip', 'workspace', 'settings', 'browse-templates', 'template'];
+
+// Screens a demo session can't reach — no AI trip generation (cost/abuse:
+// the seeded trip plus cloning suggested plans is the whole demo trip
+// budget) and no account changes (renaming, deleting an account that's
+// going to be swept up by the demo-cleanup job anyway).
+const DEMO_BLOCKED: Screen['name'][] = ['create', 'paste-trip', 'settings'];
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'landing' });
@@ -34,11 +41,37 @@ export default function App() {
   // SignIn view is in the middle of handling its own sign-up flow.
   const suppressAuthRedirectRef = useRef(false);
 
+  // Tracks whether the most recently known session was a demo account, so
+  // that if it disappears out from under the user (the hourly demo-cleanup
+  // job deleted it — see supabase/functions/delete-expired-demo-accounts)
+  // while they're still on a protected screen, the route-protection effect
+  // below can tell that apart from an ordinary "never signed in" visitor and
+  // send them somewhere explained rather than a bare sign-in form. Cleared
+  // by handleSignOut so a deliberate sign-out never triggers this path.
+  const wasDemoRef = useRef(false);
+  const [demoSessionExpired, setDemoSessionExpired] = useState(false);
+
+  useEffect(() => {
+    if (user) wasDemoRef.current = user.isDemo;
+  }, [user]);
+
   // ── Route protection ──────────────────────────────────────────────────────
   useEffect(() => {
     if (status === 'loading') return;
 
     if (status === 'unauthenticated' && PROTECTED.includes(screen.name)) {
+      // The demo-cleanup job deleted this account out from under an active
+      // session (or its access token simply outlived a deleted user) —
+      // land on an explained landing page, not a bare, unexplained sign-in
+      // form. wasDemoRef is cleared by handleSignOut, so this never fires
+      // for a deliberate sign-out.
+      if (wasDemoRef.current) {
+        wasDemoRef.current = false;
+        setPendingScreen(null);
+        setDemoSessionExpired(true);
+        setScreen({ name: 'landing' });
+        return;
+      }
       setPendingScreen(screen);
       setScreen({ name: 'signin' });
       return;
@@ -59,7 +92,14 @@ export default function App() {
       if (suppressAuthRedirectRef.current) return;
       setScreen({ name: 'trips' });
     }
-  }, [status, screen.name, pendingScreen]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Defense-in-depth mirror of the same check in navigate() below — catches
+    // a demo session landing on a blocked screen via any path other than a
+    // direct navigate() call (e.g. a stale pendingScreen).
+    if (status === 'authenticated' && user?.isDemo && DEMO_BLOCKED.includes(screen.name)) {
+      setScreen({ name: 'trips' });
+    }
+  }, [status, screen.name, pendingScreen, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Password recovery ─────────────────────────────────────────────────────
   // Fires when the user arrives via a "reset your password" email link —
@@ -79,6 +119,13 @@ export default function App() {
       setScreen({ name: 'signin' });
       return;
     }
+    // Demo sessions don't get AI trip generation or account settings — see
+    // DEMO_BLOCKED. Redirect to My Trips rather than silently no-op-ing, so
+    // there's always somewhere sensible to land.
+    if (user?.isDemo && DEMO_BLOCKED.includes(s.name)) {
+      setScreen({ name: 'trips' });
+      return;
+    }
     // The trips list is fetched once by useTrips and otherwise only kept in
     // sync by its own mutation methods (update/duplicate/delete) — creating
     // a trip (CreateTrip's AI generation) and resetting the demo trip both
@@ -87,8 +134,9 @@ export default function App() {
     // page reload. Refreshing on every arrival at "My Trips" guarantees it's
     // always current regardless of which path changed it.
     if (s.name === 'trips') void retryLoad();
+    if (s.name !== 'landing') setDemoSessionExpired(false);
     setScreen(s);
-  }, [status, retryLoad]);
+  }, [status, retryLoad, user]);
 
   // ── Auth callbacks ────────────────────────────────────────────────────────
   const handleAuthSuccess = useCallback(() => {
@@ -117,6 +165,9 @@ export default function App() {
   }, []);
 
   const handleSignOut = useCallback(async () => {
+    // A deliberate sign-out must never be mistaken for the demo-cleanup job
+    // deleting the account out from under an active session.
+    wasDemoRef.current = false;
     await signOut();
     setScreen({ name: 'landing' });
   }, [signOut]);
@@ -178,7 +229,13 @@ export default function App() {
     <AnimatedBackground />
     <AppShell screen={screen} onNavigate={navigate} user={user} onSignOut={handleSignOut} fullBleed={screen.name === 'workspace'}>
       {screen.name === 'landing' && (
-        <Landing onNavigate={navigate} onTryDemo={handleTryDemo} />
+        <Landing
+          onNavigate={navigate}
+          onTryDemo={handleTryDemo}
+          isDemo={user?.isDemo ?? false}
+          sessionExpiredNotice={demoSessionExpired}
+          onDismissSessionExpiredNotice={() => setDemoSessionExpired(false)}
+        />
       )}
 
       {screen.name === 'signin' && (
@@ -204,11 +261,16 @@ export default function App() {
           onDuplicate={duplicateTrip}
           onDelete={deleteTrip}
           onUpdateTripFields={updateTripFields}
+          isDemo={user?.isDemo ?? false}
         />
       )}
 
-      {screen.name === 'create' && (
+      {screen.name === 'create' && !user?.isDemo && (
         <CreateTrip onNavigate={navigate} onCreate={handleCreate} />
+      )}
+
+      {screen.name === 'paste-trip' && !user?.isDemo && (
+        <PasteTrip onNavigate={navigate} onCreate={handleCreate} />
       )}
 
       {screen.name === 'workspace' && (
@@ -231,7 +293,7 @@ export default function App() {
         />
       )}
 
-      {screen.name === 'settings' && user && (
+      {screen.name === 'settings' && user && !user.isDemo && (
         <Settings user={user} onSignOut={handleSignOut} />
       )}
 

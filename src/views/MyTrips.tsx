@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Map, Plus } from 'lucide-react';
+import { Map, Plus, Compass, ClipboardList } from 'lucide-react';
 import type { Screen, Trip, TripStatus } from '../types';
 import TripCard from '../components/TripCard';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -15,6 +15,8 @@ interface MyTripsProps {
   onDuplicate: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdateTripFields: (id: string, fields: { title?: string; budget?: number; currency?: string; status?: TripStatus }) => Promise<void>;
+  /** Demo sessions can't generate custom AI trips — steer them to the suggested-plans pool instead. */
+  isDemo?: boolean;
 }
 
 function TripCardSkeleton() {
@@ -38,7 +40,7 @@ function TripCardSkeleton() {
 
 export default function MyTrips({
   trips, isLoading, loadError, onRetryLoad,
-  onNavigate, onDuplicate, onDelete, onUpdateTripFields,
+  onNavigate, onDuplicate, onDelete, onUpdateTripFields, isDemo = false,
 }: MyTripsProps) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
@@ -54,9 +56,20 @@ export default function MyTrips({
             {isLoading ? 'Loading…' : trips.length === 0 ? 'No trips yet' : `${trips.length} ${trips.length === 1 ? 'trip' : 'trips'}`}
           </p>
         </div>
-        <button onClick={() => onNavigate({ name: 'create' })} className="btn-primary">
-          <Plus size={15} /> New Trip
-        </button>
+        {isDemo ? (
+          <button onClick={() => onNavigate({ name: 'browse-templates' })} className="btn-primary">
+            <Compass size={15} /> Browse suggested plans
+          </button>
+        ) : (
+          <div className="flex items-center gap-2">
+            <button onClick={() => onNavigate({ name: 'paste-trip' })} className="btn-ghost">
+              <ClipboardList size={15} /> Paste a Trip Idea
+            </button>
+            <button onClick={() => onNavigate({ name: 'create' })} className="btn-primary">
+              <Plus size={15} /> New Trip
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Loading skeletons */}
@@ -83,11 +96,17 @@ export default function MyTrips({
           <EmptyState
             icon={<Map size={24} />}
             title="Your next journey starts here."
-            description="Create your first itinerary with AI."
+            description={isDemo ? 'Demo sessions can browse and clone suggested trip plans.' : 'Create your first itinerary with AI.'}
             action={
-              <button onClick={() => onNavigate({ name: 'create' })} className="btn-primary">
-                <Plus size={15} /> Create a trip
-              </button>
+              isDemo ? (
+                <button onClick={() => onNavigate({ name: 'browse-templates' })} className="btn-primary">
+                  <Compass size={15} /> Browse suggested plans
+                </button>
+              ) : (
+                <button onClick={() => onNavigate({ name: 'create' })} className="btn-primary">
+                  <Plus size={15} /> Create a trip
+                </button>
+              )
             }
           />
         </div>

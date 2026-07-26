@@ -30,6 +30,8 @@ function mapSupabaseUser(user: { id: string; email?: string; user_metadata?: Rec
     id: user.id,
     email: user.email ?? '',
     name: (user.user_metadata?.name as string | undefined) ?? '',
+    isDemo: user.user_metadata?.is_demo_user === true,
+    demoExpiresAt: (user.user_metadata?.demo_expires_at as string | undefined) ?? null,
   };
 }
 

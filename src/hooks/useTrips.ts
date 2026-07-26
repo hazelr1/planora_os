@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { Trip, TripStatus, User } from '../types';
-import { tripRepository } from '../data';
+import { tripRepository, profileRepository } from '../data';
+import { deriveTripPreferenceTags, daysBetween } from '../lib/tripPreferences';
 
 export function useTrips(user?: User | null) {
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -40,7 +41,24 @@ export function useTrips(user?: User | null) {
     const result = await tripRepository.updateTrip(id, fields);
     if (!result.ok) throw new Error(result.error.message);
     await refresh();
-  }, [refresh]);
+
+    // "finished editing a trip" — a budget change is the only preference-
+    // bearing signal this edit surface can produce (pace/travelers aren't
+    // editable post-creation), so nudge just the budget tier. Best-effort:
+    // never lets a profile-write hiccup surface as a failed trip edit, and
+    // demo accounts have no profiles row to begin with.
+    if (fields.budget !== undefined && user && !user.isDemo) {
+      const trip = result.data;
+      const tags = deriveTripPreferenceTags({
+        budget: trip.budget,
+        travelers: trip.travelers,
+        days: daysBetween(trip.startDate, trip.endDate),
+      });
+      void profileRepository.updatePreferences(user.id, tags).then((r) => {
+        if (!r.ok) console.warn('Preference update failed:', r.error.message);
+      });
+    }
+  }, [refresh, user]);
 
   const duplicateTrip = useCallback(async (id: string): Promise<void> => {
     const result = await tripRepository.duplicateTrip(id);

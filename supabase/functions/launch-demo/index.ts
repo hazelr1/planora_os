@@ -363,11 +363,18 @@ Deno.serve(async (req: Request) => {
     const email = `demo-${uniqueId}@planora.demo`;
     const password = crypto.randomUUID();
 
+    // Stamped at creation, read by the scheduled demo-cleanup job — demo
+    // accounts are never meant to persist like a real signup. 48h gives a
+    // visitor a full day-plus to poke around without leaving auth.users
+    // growing unbounded.
+    const DEMO_LIFETIME_MS = 48 * 60 * 60 * 1000;
+    const expiresAt = new Date(Date.now() + DEMO_LIFETIME_MS).toISOString();
+
     const { data: newUser, error: createErr } = await adminClient.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
-      user_metadata: { is_demo_user: true },
+      user_metadata: { is_demo_user: true, demo_expires_at: expiresAt },
     });
 
     if (createErr || !newUser?.user) {

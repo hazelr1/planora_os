@@ -1,6 +1,7 @@
 import { Compass, ArrowLeft, Map } from 'lucide-react';
 import type { Screen, User as AppUser } from '../types';
 import UserMenu from './UserMenu';
+import DemoModeBadge from './DemoModeBadge';
 
 interface AppShellProps {
   screen: Screen;
@@ -56,8 +57,14 @@ export default function AppShell({
           {/* Nav — "My Trips" and "Suggested Trip Plans" plus, when signed
               in, a single avatar menu (Settings/Contact us/Sign out)
               instead of a separate theme toggle + name + Sign out row.
-              Theme now lives in Settings. */}
+              Theme now lives in Settings. The demo badge lives here (not as
+              a separate justify-between slot) so it shares the same
+              gap/wrap-safe flex row as the rest of the nav on narrow
+              screens, always on screen for a demo session — not buried in
+              a menu that might never get opened. */}
           <nav className="flex items-center gap-1 sm:gap-2">
+            {user?.isDemo && <DemoModeBadge expiresAt={user.demoExpiresAt} />}
+
             {isWorkspace ? (
               <button onClick={() => onNavigate({ name: 'trips' })} className="btn-ghost">
                 <ArrowLeft size={16} />
@@ -76,7 +83,7 @@ export default function AppShell({
             </button>
 
             {user ? (
-              <UserMenu name={displayName} onNavigate={onNavigate} onSignOut={() => onSignOut?.()} />
+              <UserMenu name={displayName} isDemo={user.isDemo} onNavigate={onNavigate} onSignOut={() => onSignOut?.()} />
             ) : (
               <button onClick={() => onNavigate({ name: 'signin' })} className="btn-outline">
                 Sign in
