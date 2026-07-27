@@ -69,7 +69,13 @@ export default function UserMenu({ name, isDemo = false, onNavigate, onSignOut }
         <div
           role="menu"
           aria-label="Account menu"
-          className="card absolute right-0 top-full mt-2 w-48 p-1.5 z-50 animate-scale-in"
+          // Not `.card` — that class is 60% opacity + a backdrop blur, tuned
+          // for a card sitting in-flow on the page's own background. This is
+          // a floating overlay on top of arbitrary page content (trip cards,
+          // status badges), which needs a fully solid surface or whatever's
+          // underneath visibly bleeds through. Same rounded-card/border/
+          // shadow-card as .card, just with an opaque bg-ink-100 instead.
+          className="absolute right-0 top-full mt-2 w-48 p-1.5 z-50 rounded-card border border-glass/[0.06] bg-ink-100 shadow-card animate-scale-in"
         >
           <p className="px-3 pt-1.5 pb-2 text-sm font-600 text-ink-800 truncate">{name}</p>
           <div className="h-px bg-glass/10 my-1" />
