@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { MapPin, Calendar, Wallet, Users, Copy, Trash2, ArrowRight, Clock, Pencil } from 'lucide-react';
 import type { Trip } from '../types';
 import { formatDateRange, formatLastUpdated } from '../utils/dates';
+import { formatLocationLabel } from '../utils/text';
 import { useExperienceTokens } from '../destinations';
 import { getDestinationPhoto, type DestinationPhoto } from '../services/destinationImages';
 
@@ -86,7 +87,7 @@ export default function TripCard({ trip, onOpen, onEdit, onDuplicate, onDelete }
         </span>
         <div className="absolute inset-x-3 bottom-3 flex items-center gap-1.5 rounded-full bg-black/40 backdrop-blur-sm px-3 py-1.5 w-fit max-w-[calc(100%-1.5rem)]">
           <MapPin size={13} className="shrink-0 text-white" />
-          <span className="text-sm font-medium text-white truncate">{trip.destination}</span>
+          <span className="text-sm font-medium text-white truncate">{formatLocationLabel(trip.destination)}</span>
         </div>
         {/* Photo-source attribution — Pexels' API terms require a visible
             credit/link; shown for Pixabay too for consistency. Never shown
