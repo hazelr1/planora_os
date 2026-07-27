@@ -61,6 +61,22 @@
      mode. Reserved for small overline labels and dividers only, never a
      primary color. */
   --gold-accent: 212 165 116;
+
+  /* ─── AI accent (cyan → violet) ───────────────────────────────────────
+     A second, narrower accent — not a replacement for the existing
+     .ai-gradient/.ai-accent/.ai-surface (those stay exactly as they are
+     everywhere they're already used: sparkle avatars, chat bubbles, panel
+     chrome). This one is reserved for exactly four AI-specific moments
+     that currently borrow general chrome instead of reading as AI at all:
+     the replan/regenerate button, the locked-activity badge, the
+     before/after cost-delta highlight, and the AI concierge send button.
+     --ai-cyan here is the literal existing dark-mode cyan (the same value
+     as --brand-400 above) — the "basis" this whole accent is built from.
+     --ai-violet is a dedicated copy of --violet-500, kept separate from
+     the general violet scale so this accent's identity doesn't shift if
+     that scale ever does. */
+  --ai-cyan: 42 199 205;
+  --ai-violet: 139 92 246;
 }
 
 :root[data-theme='light'] {
@@ -128,6 +144,16 @@
   --violet-800: 76 29 149;
   --violet-900: 46 16 101;
   --violet-950: 30 10 66;
+
+  /* --ai-cyan can't just reuse --brand-400 the way the dark-mode value
+     does — brand itself is sage green in light mode. Same ~182° hue as
+     the dark cyan, deepened and desaturated until it actually contrasts
+     against the sage page background (a direct lightness-only reuse of
+     the dark value reads illegibly pale here) — "adjusted for contrast
+     against the sage background, not just reused at the same lightness."
+     --ai-violet matches --violet-500 above, same as the dark side. */
+  --ai-cyan: 15 118 122;
+  --ai-violet: 124 58 237;
 }
 
 @layer base {
@@ -169,6 +195,20 @@
     transition: background-position 0.5s ease-out, box-shadow 0.25s ease-out, transform 0.2s ease-out;
   }
   .btn-primary:hover {
+    background-position: 100% 0%;
+  }
+  /* The AI-accent equivalent of .btn-primary — same shape/motion, cyan→
+     violet gradient instead of the general --accent-* one. Reserved for
+     the two buttons that actually trigger/apply an AI action (replan,
+     concierge send); every other primary action keeps .btn-primary. */
+  .btn-ai {
+    @apply btn text-white shadow-soft hover:-translate-y-0.5 hover:shadow-glow-lg active:translate-y-0;
+    background-image: linear-gradient(100deg, rgb(var(--ai-cyan)) 0%, rgb(var(--ai-violet)) 100%);
+    background-size: 160% 100%;
+    background-position: 0% 0%;
+    transition: background-position 0.5s ease-out, box-shadow 0.25s ease-out, transform 0.2s ease-out;
+  }
+  .btn-ai:hover {
     background-position: 100% 0%;
   }
   .btn-ghost {

@@ -274,7 +274,7 @@ export default function AIAssistantPanel({
                   <button
                     type="button"
                     onClick={() => onRevisionProposed(m.proposal!)}
-                    className="btn-primary w-full text-xs py-1.5"
+                    className="btn-ai w-full text-xs py-1.5"
                   >
                     Review changes
                   </button>
@@ -367,7 +367,7 @@ export default function AIAssistantPanel({
         />
         <button
           type="submit"
-          className="btn-primary w-full mt-1.5"
+          className="btn-ai w-full mt-1.5"
           disabled={!canSubmit}
         >
           {status === 'analyzing'

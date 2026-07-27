@@ -90,7 +90,7 @@ export default function ActivityCard({
             )}
             {activity.locked && (
               <span
-                className="inline-flex items-center gap-1 text-xs font-600 text-brand-700 dark:text-brand-300"
+                className="inline-flex items-center gap-1 text-xs font-600 text-ai-violet"
                 title="Locked — protected from AI edits"
               >
                 <Lock size={11} /> Locked

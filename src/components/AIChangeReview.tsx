@@ -114,7 +114,7 @@ function ChangeCard({ change, days, currency }: { change: RevisionChange; days: 
                 <p className="text-ink-700">{change.after.title}</p>
                 {change.after.location && <p className="text-ink-600">{change.after.location}</p>}
                 {change.after.estimated_cost >= 0 && (
-                  <p className="text-ink-600">{fmt(change.after.estimated_cost, currency)}</p>
+                  <p className="text-ai-violet font-600">{fmt(change.after.estimated_cost, currency)}</p>
                 )}
               </div>
             </div>
@@ -135,8 +135,8 @@ function ChangeCard({ change, days, currency }: { change: RevisionChange; days: 
                 <div className="flex items-center gap-2">
                   <span className="text-ink-600 shrink-0 w-12">Cost</span>
                   <span className="line-through text-ink-600">{fmt(change.before.estimated_cost, currency)}</span>
-                  <ArrowRight size={10} className="text-ink-600 shrink-0" />
-                  <span className="text-ink-700">{fmt(change.after.estimated_cost, currency)}</span>
+                  <ArrowRight size={10} className="text-ai-violet shrink-0" />
+                  <span className="text-ai-violet font-600">{fmt(change.after.estimated_cost, currency)}</span>
                 </div>
               )}
               {change.before.duration_minutes !== change.after.duration_minutes && change.after.duration_minutes > 0 && (
@@ -498,7 +498,7 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
                   </button>
                   <button
                     type="submit"
-                    className="btn-primary flex-1 text-sm"
+                    className="btn-ai flex-1 text-sm"
                     disabled={!refinement.trim() || tryStatus === 'loading'}
                   >
                     {tryStatus === 'loading'
@@ -532,7 +532,7 @@ export default function AIChangeReview({ proposal: initialProposal, tripId, days
               </button>
               <button
                 onClick={handleApply}
-                className="btn-primary sm:flex-1 text-sm"
+                className="btn-ai sm:flex-1 text-sm"
                 disabled={applyStatus === 'loading' || !p.revisionId}
               >
                 {applyStatus === 'loading'

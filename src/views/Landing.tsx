@@ -517,6 +517,20 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
         >
           <div className="absolute inset-0">
             <img src="/image/destination-generic-highlands.jpg" alt="" className="h-full w-full object-cover" />
+            {/* Dark-mode-only duotone wash (same mix-blend-mode technique as
+                the hero photo above) — this highlands photo's natural olive/
+                amber-brown cast doesn't relate to dark mode's navy/teal
+                palette used everywhere else on this page. Light mode isn't
+                touched: this "always dark" card already reads as an
+                intentional contrast block against the light page regardless
+                of the photo's own undertone, so there's nothing to fix there. */}
+            <div
+              className="absolute inset-0 hidden dark:block"
+              style={{
+                background: 'linear-gradient(135deg, rgba(12,17,32,0.75) 0%, transparent 45%, transparent 55%, rgba(22,165,178,0.5) 100%)',
+                mixBlendMode: 'color',
+              }}
+            />
             {/* Fixed dark scrim (not theme-driven) — deliberately strong so
                 this closing section reads as a clear visual break from the
                 page background in both light and dark mode, not just a
