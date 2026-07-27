@@ -230,12 +230,16 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
                   narrow phones instead of shrinking further — this inline
                   override lowers just the floor so the same 13vw fluid
                   scaling takes over sooner, with no effect at the sm+ widths
-                  where the original clamp already governed. */}
+                  where the original clamp already governed. Fraunces italic
+                  at 600 (not the font-hero grotesk) makes this the one
+                  editorial-serif accent word in an otherwise heavy-sans
+                  headline; tracking is loosened from the grotesk original
+                  since a serif italic doesn't want -0.03em. */}
               <span
-                className="font-hero block w-full uppercase text-white"
-                style={{ fontSize: 'clamp(1.75rem, 13vw, 10.5rem)', lineHeight: 0.95, letterSpacing: '-0.03em', fontWeight: 800 }}
+                className="font-display italic block w-full text-white"
+                style={{ fontSize: 'clamp(1.75rem, 13vw, 10.5rem)', lineHeight: 0.95, letterSpacing: '-0.01em', fontWeight: 600 }}
               >
-                Shouldn't
+                shouldn't
               </span>
               <span className="block font-700 text-xl sm:text-3xl lg:text-4xl">rebuild your whole trip.</span>
             </h1>
