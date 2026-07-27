@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Sparkles, Lock, Bot, PlayCircle, ChevronDown, ArrowRight, Check, Loader2, Clock, X } from 'lucide-react';
+import { Sparkles, ChevronDown, ArrowRight, Check, Loader2, Clock, X } from 'lucide-react';
 import type { Screen } from '../types';
 import { templateRepository } from '../data';
 import StatTrio from '../components/StatTrio';
@@ -339,7 +339,13 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
           </div>
 
           <motion.div {...revealProps} variants={revealUp} transition={{ delay: 0.1 }}>
-            <ScreenshotPlaceholder icon={<Lock size={22} />} label="Locked activities & cost delta" />
+            <div className="card overflow-hidden p-0">
+              <img
+                src="/image/landing-locked-activities.jpg"
+                alt="A locked activity (with an Unlock action) sitting next to an unlocked one in a trip's day view"
+                className="aspect-[4/3] w-full object-cover object-top"
+              />
+            </div>
           </motion.div>
         </div>
       </section>
@@ -418,7 +424,13 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
           </div>
 
           <motion.div {...revealProps} variants={revealUp} transition={{ delay: 0.1 }} className="lg:order-1">
-            <ScreenshotPlaceholder icon={<Bot size={22} />} label="AI concierge chat" />
+            <div className="card overflow-hidden p-0">
+              <img
+                src="/image/landing-ai-concierge.jpg"
+                alt="A real exchange in the Ask Planora concierge panel, asking what scams to avoid in Tokyo and getting a real answer"
+                className="aspect-[4/3] w-full object-cover"
+              />
+            </div>
           </motion.div>
         </div>
       </section>
@@ -463,7 +475,13 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
           </div>
 
           <motion.div {...revealProps} variants={revealUp} transition={{ delay: 0.1 }}>
-            <ScreenshotPlaceholder icon={<PlayCircle size={22} />} label="Seeded demo trip" />
+            <div className="card overflow-hidden p-0">
+              <img
+                src="/image/landing-demo-trip.jpg"
+                alt="The seeded Tokyo Discovery demo trip, showing its destination hero and day-by-day itinerary tabs"
+                className="aspect-[4/3] w-full object-cover object-top"
+              />
+            </div>
           </motion.div>
         </div>
       </section>
@@ -526,24 +544,6 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
           </div>
         </motion.div>
       </section>
-    </div>
-  );
-}
-
-/**
- * Stand-in for a real product screenshot in each capability section below —
- * reuses the app's own `.card` frame so swapping this for an actual
- * `<img>` later is a one-line change, not a restyle.
- */
-function ScreenshotPlaceholder({ icon, label }: { icon: React.ReactNode; label: string }) {
-  return (
-    <div className="card overflow-hidden p-0">
-      <div className="aspect-[4/3] flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-brand-500/10 via-glass/5 to-violet-500/10">
-        <div className="h-14 w-14 rounded-2xl bg-ink-100 border border-glass/10 flex items-center justify-center text-ink-500 shadow-soft">
-          {icon}
-        </div>
-        <span className="text-xs font-medium uppercase tracking-[0.14em] text-ink-400">{label}</span>
-      </div>
     </div>
   );
 }
