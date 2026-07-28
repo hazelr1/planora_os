@@ -15,10 +15,23 @@
  *      destination is looked up against those APIs at most once globally,
  *      not on every render or every browser session. API keys live only in
  *      that edge function's environment, never in client-shipped code.
- *   3. Bundled local fallback — a generic travel photo shipped with the
- *      app, used when neither live source has anything for a destination
- *      the demo set doesn't cover. Guarantees *something* photographic
- *      renders rather than nothing, without depending on any network call.
+ *
+ * There used to be a step 3 here: an unrelated bundled stock photo (a
+ * sailboat) substituted in whenever step 2 failed. Removed — every caller
+ * (TripCard, DestinationPlanCard, DestinationHero) already renders its own
+ * neutral gradient/skeleton placeholder when this resolves to null, so the
+ * substitution was never actually filling a gap, it was overriding a
+ * perfectly good neutral state with an unrelated photo. That made a
+ * *transient* failure (this module's own client-side timeout — see
+ * fetchLivePhoto — racing under the ~15-20 concurrent requests the
+ * Suggested Trip Plans grid fires on mount) look like "this destination's
+ * photo is a sailboat" instead of "still loading" — worse, once memoized
+ * in the cache below it stayed that way for the rest of the browser tab's
+ * session. Confirmed via direct edge-function calls that the server side
+ * (Pexels lookup + its cache in destination_worlds) was returning correct
+ * results the whole time; concurrent-request latency was documented as high
+ * as ~3.9s per request in a 15-way burst, well within reach of this
+ * module's own timeout under worse conditions.
  *
  * The curated map is a deliberate, narrow exception to the rest of
  * src/destinations/ being destination-agnostic (see registry.ts's own doc
@@ -28,7 +41,7 @@
 
 import { supabase } from '../lib/supabase';
 
-export type DestinationPhotoSource = 'curated' | 'pexels' | 'pixabay' | 'fallback';
+export type DestinationPhotoSource = 'curated' | 'pexels' | 'pixabay';
 
 export interface DestinationPhoto {
   url: string;
@@ -56,9 +69,6 @@ const CURATED_PHOTOS: Record<string, { url: string; alt: string }> = {
   queenstown: { url: '/image/destination-generic-highlands.jpg', alt: 'Mountain and lake scenery near Queenstown' },
 };
 
-/** Generic bundled photo used when no curated or live-API photo is available. */
-const FALLBACK_PHOTO = { url: '/image/landing-hero.jpg', alt: 'Scenic travel photograph' };
-
 function normalizeQuery(query: string): string {
   return query.trim().toLowerCase();
 }
@@ -77,7 +87,7 @@ interface ResolvePhotoResponse {
   error?: string;
 }
 
-/** Calls the server-side Pexels/Pixabay resolver — never throws, resolves to null on any failure (no session, network error, timeout, non-OK response). */
+/** Calls the server-side Pexels/Pixabay resolver — never throws, resolves to null on any failure (no session, network error, timeout, non-OK response). Every failure path logs, so a bad run shows up in the console instead of silently reading as "no photo for this destination." */
 async function fetchLivePhoto(destination: string): Promise<DestinationPhoto | null> {
   try {
     const { data: { session } } = await supabase.auth.getSession();
@@ -97,7 +107,10 @@ async function fetchLivePhoto(destination: string): Promise<DestinationPhoto | n
       },
     );
 
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.warn(`[destinationImages] resolve-destination-photo returned ${response.status} for "${destination}"`);
+      return null;
+    }
     const json = await response.json() as ResolvePhotoResponse;
     if (!json.photo) return null;
 
@@ -108,7 +121,13 @@ async function fetchLivePhoto(destination: string): Promise<DestinationPhoto | n
       photographer: json.photo.photographer,
       photographerUrl: json.photo.photographerUrl,
     };
-  } catch {
+  } catch (err) {
+    // Most often the client-side AbortSignal.timeout firing — under the
+    // ~15-20 concurrent requests a full destination grid fires on mount,
+    // individual invocations have been observed taking several seconds
+    // (see the doc comment above), so this is a real, reproducible-under-
+    // load failure mode, not a hypothetical one.
+    console.warn(`[destinationImages] live photo lookup failed for "${destination}":`, err);
     return null;
   }
 }
@@ -117,13 +136,24 @@ async function fetchLivePhoto(destination: string): Promise<DestinationPhoto | n
 // concurrent/repeat network calls within a single browser tab's lifetime.
 // Durable, cross-session, cross-user reuse is the edge function's job (see
 // resolve-destination-photo), backed by the destination_worlds table.
+//
+// Only ever holds *successful* resolutions. A failed lookup is deliberately
+// never memoized here (see the resolve-and-evict logic below) — it's most
+// likely transient (a timeout under concurrent load, a network blip), and
+// caching it would leave that destination showing the neutral placeholder
+// for the rest of this tab's session even after the underlying issue
+// clears. The in-flight promise is still shared with concurrent callers
+// (so a burst of cards requesting the same destination at once only
+// triggers one network call) — it's just not kept once it settles false.
 const cache = new Map<string, Promise<DestinationPhoto | null>>();
 
 /**
  * Resolves a photo for a destination: curated, then Pexels/Pixabay (cached
- * server-side), then the generic bundled fallback. Never throws or rejects,
- * and never blocks — every caller can render its gradient scene immediately
- * and cross-fade this in only once/if it resolves.
+ * server-side). Never throws or rejects, and never blocks — every caller
+ * can render its own neutral gradient/skeleton immediately and cross-fade
+ * this in only once/if it resolves. Resolves to null (not a substitute
+ * photo) when nothing is available, so a failure reads as "still loading"
+ * rather than "here's an unrelated photo."
  */
 export function getDestinationPhoto(query: string): Promise<DestinationPhoto | null> {
   const normalized = normalizeQuery(query);
@@ -133,9 +163,16 @@ export function getDestinationPhoto(query: string): Promise<DestinationPhoto | n
   if (cached) return cached;
 
   const curated = matchCurated(normalized);
-  const pending = curated
-    ? Promise.resolve(curated)
-    : fetchLivePhoto(query.trim()).then((photo) => photo ?? { ...FALLBACK_PHOTO, source: 'fallback' as const });
+  if (curated) {
+    const resolved = Promise.resolve(curated);
+    cache.set(normalized, resolved);
+    return resolved;
+  }
+
+  const pending = fetchLivePhoto(query.trim()).then((photo) => {
+    if (!photo) cache.delete(normalized);
+    return photo;
+  });
 
   cache.set(normalized, pending);
   return pending;
