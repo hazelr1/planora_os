@@ -179,13 +179,13 @@
   .card-interactive {
     @apply hover:-translate-y-0.5 hover:shadow-card-hover hover:border-glass/[0.10];
   }
-  /* Landing page product screenshots — a solid border in the same accent
-     used by .btn-primary (rgb(var(--accent-from)), teal in dark mode /
-     sage in light mode) is the entire "floating card" effect: no shadow,
-     no blur, no glow, unlike .card above. */
+  /* Landing page feature-preview mockups — a solid border in the unified
+     AI accent (rgb(var(--ai-violet)), the same token the locked-activity
+     badge and cost-delta highlight use) is the entire "floating card"
+     effect: no shadow, no blur, no glow, unlike .card above. */
   .shot-frame {
     @apply overflow-hidden rounded-[16px];
-    border: 2px solid rgb(var(--accent-from));
+    border: 2px solid rgb(var(--ai-violet));
   }
   .btn {
     @apply relative inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-control ease-out disabled:opacity-50 disabled:pointer-events-none;

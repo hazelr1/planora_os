@@ -5,6 +5,7 @@ import type { Screen } from '../types';
 import { templateRepository } from '../data';
 import StatTrio from '../components/StatTrio';
 import DestinationPlanCard from '../components/DestinationPlanCard';
+import { LockedActivityMock, ConciergeExchangeMock, DemoTripMock } from '../components/LandingMockups';
 import { pickDaily } from '../lib/dailyRotation';
 
 interface LandingProps {
@@ -343,12 +344,8 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
           </div>
 
           <motion.div {...revealProps} variants={revealUp} transition={{ delay: 0.1 }}>
-            <div className="shot-frame">
-              <img
-                src="/image/landing-locked-activities.jpg"
-                alt="A complete locked activity card in a trip's day view, showing its unlock action"
-                className="aspect-[4/3] w-full object-cover"
-              />
+            <div className="shot-frame aspect-[4/3] w-full">
+              <LockedActivityMock />
             </div>
           </motion.div>
         </div>
@@ -428,12 +425,8 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
           </div>
 
           <motion.div {...revealProps} variants={revealUp} transition={{ delay: 0.1 }} className="lg:order-1">
-            <div className="shot-frame">
-              <img
-                src="/image/landing-ai-concierge.jpg"
-                alt="A real exchange in the Ask Planora concierge panel, asking what scams to avoid in Tokyo and getting a real answer"
-                className="aspect-[4/3] w-full object-cover"
-              />
+            <div className="shot-frame aspect-[4/3] w-full">
+              <ConciergeExchangeMock />
             </div>
           </motion.div>
         </div>
@@ -479,12 +472,8 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
           </div>
 
           <motion.div {...revealProps} variants={revealUp} transition={{ delay: 0.1 }}>
-            <div className="shot-frame">
-              <img
-                src="/image/landing-demo-trip.jpg"
-                alt="The seeded Tokyo Discovery demo trip, showing its trip metadata and Demo Data badge below the destination photo"
-                className="aspect-[4/3] w-full object-cover"
-              />
+            <div className="shot-frame aspect-[4/3] w-full">
+              <DemoTripMock />
             </div>
           </motion.div>
         </div>
