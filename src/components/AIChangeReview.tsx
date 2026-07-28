@@ -114,7 +114,7 @@ function ChangeCard({ change, days, currency }: { change: RevisionChange; days: 
                 <p className="text-ink-700">{change.after.title}</p>
                 {change.after.location && <p className="text-ink-600">{change.after.location}</p>}
                 {change.after.estimated_cost >= 0 && (
-                  <p className="text-ai-violet font-600">{fmt(change.after.estimated_cost, currency)}</p>
+                  <p className="text-ai-accent font-600">{fmt(change.after.estimated_cost, currency)}</p>
                 )}
               </div>
             </div>
@@ -135,8 +135,8 @@ function ChangeCard({ change, days, currency }: { change: RevisionChange; days: 
                 <div className="flex items-center gap-2">
                   <span className="text-ink-600 shrink-0 w-12">Cost</span>
                   <span className="line-through text-ink-600">{fmt(change.before.estimated_cost, currency)}</span>
-                  <ArrowRight size={10} className="text-ai-violet shrink-0" />
-                  <span className="text-ai-violet font-600">{fmt(change.after.estimated_cost, currency)}</span>
+                  <ArrowRight size={10} className="text-ai-accent shrink-0" />
+                  <span className="text-ai-accent font-600">{fmt(change.after.estimated_cost, currency)}</span>
                 </div>
               )}
               {change.before.duration_minutes !== change.after.duration_minutes && change.after.duration_minutes > 0 && (

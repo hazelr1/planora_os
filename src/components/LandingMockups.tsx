@@ -14,7 +14,7 @@ export function LockedActivityMock() {
       <div className="flex items-baseline gap-2 flex-wrap">
         <span className="text-sm font-600 text-ink-900 tabular-nums">07:30</span>
         <span className="text-xs text-ink-500">Culture</span>
-        <span className="inline-flex items-center gap-1 text-xs font-600 text-ai-violet">
+        <span className="inline-flex items-center gap-1 text-xs font-600 text-ai-accent">
           <Lock size={11} /> Locked
         </span>
       </div>

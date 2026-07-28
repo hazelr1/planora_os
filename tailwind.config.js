@@ -99,12 +99,11 @@ export default {
         // (see --gold-accent in index.css). For overline labels and
         // dividers only, used sparingly, never as a primary color.
         gold: themeVar('gold-accent'),
-        // AI accent (cyan → violet) — reserved for AI-specific moments
-        // only (see the --ai-cyan/--ai-violet comment in index.css), never
-        // general chrome. Each resolves through its own theme-aware CSS
+        // Single signature AI accent — reserved for AI/adaptive-specific
+        // moments only (see the --ai-accent comment in index.css), never
+        // general chrome. Resolves through its own theme-aware CSS
         // variable, same mechanism as brand/violet above.
-        'ai-cyan': themeVar('ai-cyan'),
-        'ai-violet': themeVar('ai-violet'),
+        'ai-accent': themeVar('ai-accent'),
       },
       // Shadow values are CSS variables (see index.css) rather than static
       // strings, so light mode gets warm, low-contrast elevation suited to

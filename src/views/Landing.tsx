@@ -235,10 +235,19 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
                   at 600 (not the font-hero grotesk) makes this the one
                   editorial-serif accent word in an otherwise heavy-sans
                   headline; tracking is loosened from the grotesk original
-                  since a serif italic doesn't want -0.03em. */}
+                  since a serif italic doesn't want -0.03em. SOFT/WONK pinned
+                  to 0 — Fraunces' default axis position reads as a bouncy,
+                  almost hand-lettered script at this size; 0/0 is the
+                  classical, non-wonky instance actually intended here. */}
               <span
                 className="font-display italic block w-full text-white"
-                style={{ fontSize: 'clamp(1.75rem, 13vw, 10.5rem)', lineHeight: 0.95, letterSpacing: '-0.01em', fontWeight: 600 }}
+                style={{
+                  fontSize: 'clamp(1.75rem, 13vw, 10.5rem)',
+                  lineHeight: 0.95,
+                  letterSpacing: '-0.01em',
+                  fontWeight: 600,
+                  fontVariationSettings: '"SOFT" 0, "WONK" 0',
+                }}
               >
                 shouldn't
               </span>
@@ -508,29 +517,20 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
           variants={revealUp}
           className="relative overflow-hidden rounded-card-lg p-10 text-center shadow-glow sm:p-14"
         >
-          <div className="absolute inset-0">
-            <img src="/image/destination-generic-highlands.jpg" alt="" className="h-full w-full object-cover" />
-            {/* Dark-mode-only duotone wash (same mix-blend-mode technique as
-                the hero photo above) — this highlands photo's natural olive/
-                amber-brown cast doesn't relate to dark mode's navy/teal
-                palette used everywhere else on this page. Light mode isn't
-                touched: this "always dark" card already reads as an
-                intentional contrast block against the light page regardless
-                of the photo's own undertone, so there's nothing to fix there. */}
-            <div
-              className="absolute inset-0 hidden dark:block"
-              style={{
-                background: 'linear-gradient(135deg, rgba(12,17,32,0.75) 0%, transparent 45%, transparent 55%, rgba(22,165,178,0.5) 100%)',
-                mixBlendMode: 'color',
-              }}
-            />
-            {/* Fixed dark scrim (not theme-driven) — deliberately strong so
-                this closing section reads as a clear visual break from the
-                page background in both light and dark mode, not just a
-                tinted photo. */}
-            <div className="absolute inset-0 bg-black/55" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/25" />
-          </div>
+          {/* Fixed (not theme-driven) navy-to-teal gradient — this card is
+              deliberately "always dark" regardless of app theme, reading as
+              an intentional contrast block against the page either way. Used
+              to be a highlands photo tinted with a dark-mode-only wash; its
+              own olive/amber cast still showed through outside the wash and
+              didn't relate to either theme's palette. This gradient ends on
+              the same signature teal (--ai-accent's dark-mode value) as
+              every AI-related moment elsewhere, hardcoded rather than
+              var()-driven since the card doesn't want light mode's deeper,
+              lower-contrast derived teal — it wants the vivid one either way. */}
+          <div
+            className="absolute inset-0"
+            style={{ background: 'linear-gradient(135deg, rgb(12,17,32) 0%, rgb(13,132,150) 55%, rgb(42,199,205) 100%)' }}
+          />
 
           <div className="relative">
             <p

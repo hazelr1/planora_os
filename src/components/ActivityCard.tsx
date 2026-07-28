@@ -65,7 +65,12 @@ export default function ActivityCard({
       style={style}
       onClick={onSelect}
       className={`rounded-lg border transition-shadow hover:shadow-soft ${
-        hasConflict ? 'border-rose-500/40 bg-rose-500/[0.03]' : activity.locked ? 'border-brand-400/30 bg-brand-500/[0.04]' : 'border-glass/10 bg-ink-200/30'
+        // border-ai-accent, not border-brand-400 — brand-300..600 are
+        // destination-theme overrides (see cssVariables.ts), so a locked
+        // card's border used to silently pick up whatever color that
+        // destination's theme happened to use (e.g. pink for Tokyo).
+        // ai-accent is a dedicated, theme-immune token.
+        hasConflict ? 'border-rose-500/40 bg-rose-500/[0.03]' : activity.locked ? 'border-ai-accent/30 bg-ai-accent/[0.04]' : 'border-glass/10 bg-ink-200/30'
       } ${highlighted ? 'ring-2 ring-brand-400/60' : ''}`}
     >
       <div className="p-3.5 flex items-start gap-2.5">
@@ -90,7 +95,7 @@ export default function ActivityCard({
             )}
             {activity.locked && (
               <span
-                className="inline-flex items-center gap-1 text-xs font-600 text-ai-violet"
+                className="inline-flex items-center gap-1 text-xs font-600 text-ai-accent"
                 title="Locked — protected from AI edits"
               >
                 <Lock size={11} /> Locked

@@ -1,4 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&family=Bebas+Neue&family=Space+Grotesk:wght@700;800&family=Inter+Tight:wght@700;800&display=swap');
+/* Fraunces loaded as the full variable font (opsz+wght, both styles) instead
+   of fixed static instances — the previous static request had no italic
+   weight 600 at all (only 400/500/600/700 upright, 500 italic), so the
+   hero's italic accent word silently fell back to whatever default
+   SOFT/WONK position Google bakes into a plain ital,wght request, which
+   reads as a bouncy, almost hand-lettered script at display size. This
+   still renders identically for every other font-display heading (they
+   don't set font-variation-settings, so they get the same default axis
+   position as before); only elements that explicitly pin SOFT/WONK (see
+   the hero span in Landing.tsx) get the calmer, more classical instance. */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Inter:wght@400;500;600;700&family=Bebas+Neue&family=Space+Grotesk:wght@700;800&family=Inter+Tight:wght@700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -62,21 +72,21 @@
      primary color. */
   --gold-accent: 212 165 116;
 
-  /* ─── AI accent (cyan → violet) ───────────────────────────────────────
-     A second, narrower accent — not a replacement for the existing
-     .ai-gradient/.ai-accent/.ai-surface (those stay exactly as they are
-     everywhere they're already used: sparkle avatars, chat bubbles, panel
-     chrome). This one is reserved for exactly four AI-specific moments
-     that currently borrow general chrome instead of reading as AI at all:
-     the replan/regenerate button, the locked-activity badge, the
-     before/after cost-delta highlight, and the AI concierge send button.
-     --ai-cyan here is the literal existing dark-mode cyan (the same value
-     as --brand-400 above) — the "basis" this whole accent is built from.
-     --ai-violet is a dedicated copy of --violet-500, kept separate from
-     the general violet scale so this accent's identity doesn't shift if
-     that scale ever does. */
-  --ai-cyan: 42 199 205;
-  --ai-violet: 139 92 246;
+  /* ─── AI accent (unified teal) ─────────────────────────────────────────
+     One signature color for every AI/adaptive-related moment — the
+     concierge avatar, its Send/Apply-changes buttons, the locked-activity
+     badge and card border, and the before/after cost-delta highlight —
+     instead of the previous cyan/violet pairing (an inconsistent violet
+     cast on some elements) plus, for the locked-activity card border
+     specifically, a raw --brand-400 reference that destination theming
+     silently recolors per destination (the actual source of the pink
+     border some trips showed — brand-300..600 are load-bearing
+     destination-theme overrides, see src/destinations/tokens/
+     cssVariables.ts). --ai-accent is a dedicated, theme-immune copy of
+     the existing dark-mode teal (same value as --brand-400/--accent-from
+     here) — not a new color, just pulled out from under destination
+     theming's reach. */
+  --ai-accent: 42 199 205;
 }
 
 :root[data-theme='light'] {
@@ -145,15 +155,13 @@
   --violet-900: 46 16 101;
   --violet-950: 30 10 66;
 
-  /* --ai-cyan can't just reuse --brand-400 the way the dark-mode value
+  /* --ai-accent can't just reuse --brand-400 the way the dark-mode value
      does — brand itself is sage green in light mode. Same ~182° hue as
-     the dark cyan, deepened and desaturated until it actually contrasts
+     the dark teal, deepened and desaturated until it actually contrasts
      against the sage page background (a direct lightness-only reuse of
-     the dark value reads illegibly pale here) — "adjusted for contrast
-     against the sage background, not just reused at the same lightness."
-     --ai-violet matches --violet-500 above, same as the dark side. */
-  --ai-cyan: 15 118 122;
-  --ai-violet: 124 58 237;
+     the dark value reads illegibly pale here) — adjusted for contrast
+     against the sage background, not just reused at the same lightness. */
+  --ai-accent: 15 118 122;
 }
 
 @layer base {
@@ -180,12 +188,12 @@
     @apply hover:-translate-y-0.5 hover:shadow-card-hover hover:border-glass/[0.10];
   }
   /* Landing page feature-preview mockups — a solid border in the unified
-     AI accent (rgb(var(--ai-violet)), the same token the locked-activity
+     AI accent (rgb(var(--ai-accent)), the same token the locked-activity
      badge and cost-delta highlight use) is the entire "floating card"
      effect: no shadow, no blur, no glow, unlike .card above. */
   .shot-frame {
     @apply overflow-hidden rounded-[16px];
-    border: 2px solid rgb(var(--ai-violet));
+    border: 2px solid rgb(var(--ai-accent));
   }
   .btn {
     @apply relative inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-control ease-out disabled:opacity-50 disabled:pointer-events-none;
@@ -205,19 +213,16 @@
   .btn-primary:hover {
     background-position: 100% 0%;
   }
-  /* The AI-accent equivalent of .btn-primary — same shape/motion, cyan→
-     violet gradient instead of the general --accent-* one. Reserved for
-     the two buttons that actually trigger/apply an AI action (replan,
-     concierge send); every other primary action keeps .btn-primary. */
+  /* The AI-accent equivalent of .btn-primary — same shape/motion, the
+     signature teal instead of the general --accent-* one. Reserved for
+     buttons that actually trigger/apply an AI action (replan, concierge
+     send); every other primary action keeps .btn-primary. Flat color, not
+     a gradient — "one signature accent," not a second blend to keep
+     consistent. */
   .btn-ai {
     @apply btn text-white shadow-soft hover:-translate-y-0.5 hover:shadow-glow-lg active:translate-y-0;
-    background-image: linear-gradient(100deg, rgb(var(--ai-cyan)) 0%, rgb(var(--ai-violet)) 100%);
-    background-size: 160% 100%;
-    background-position: 0% 0%;
-    transition: background-position 0.5s ease-out, box-shadow 0.25s ease-out, transform 0.2s ease-out;
-  }
-  .btn-ai:hover {
-    background-position: 100% 0%;
+    background-color: rgb(var(--ai-accent));
+    transition: box-shadow 0.25s ease-out, transform 0.2s ease-out;
   }
   .btn-ghost {
     @apply btn text-ink-600 hover:bg-glass/5 hover:text-ink-800;
@@ -270,15 +275,12 @@
 .ai-surface {
   @apply rounded-card border border-violet-400/20 bg-violet-500/[0.05] shadow-card;
 }
-.ai-accent {
-  @apply text-violet-600 dark:text-violet-300;
-}
-/* Was a three-stop cyan->violet->indigo gradient (visually a "neon AI"
-   signal). Now a single-hue violet gradient built from the app's own
-   --violet-* tokens (already theme-aware) instead of hardcoded hex — still
-   reads as "the AI's accent," just restrained. */
+/* The concierge avatar's fill — was a violet gradient, now the same flat
+   signature teal as .btn-ai/the locked-activity badge, so the avatar
+   actually matches every other AI-related moment instead of being the
+   one that's still violet. Solid, not a gradient, to match .btn-ai. */
 .ai-gradient {
-  background-image: linear-gradient(135deg, rgb(var(--violet-500)) 0%, rgb(var(--violet-700)) 100%);
+  background-color: rgb(var(--ai-accent));
 }
 
 /* Dark mode: light lavender sweep. Light mode: deep violet sweep on ivory. */
