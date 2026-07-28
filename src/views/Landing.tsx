@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Sparkles, ChevronDown, ArrowRight, Check, Loader2, Clock, X } from 'lucide-react';
+import { Sparkles, ChevronDown, ArrowRight, Check, Loader2, Clock, X, Compass } from 'lucide-react';
 import type { Screen } from '../types';
 import { templateRepository } from '../data';
 import StatTrio from '../components/StatTrio';
@@ -513,7 +513,7 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
       </section>
 
       {/* ─── Closing CTA ─── */}
-      <section className="pt-0 pb-28">
+      <section className="pt-0 pb-16">
         <motion.div
           {...revealProps}
           variants={revealUp}
@@ -562,6 +562,39 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
           </div>
         </motion.div>
       </section>
+
+      {/* ─── Footer ─── */}
+      <footer className="border-t border-glass/10 pt-8 pb-10">
+        <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:items-start sm:justify-between sm:text-left">
+          <div>
+            <div className="flex items-center justify-center gap-2 sm:justify-start">
+              <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shrink-0">
+                <Compass className="text-white dark:text-black" size={14} strokeWidth={2.5} />
+              </div>
+              <span className="font-display text-base font-800 text-ink-900">Planora</span>
+            </div>
+            <p className="mt-2 max-w-xs text-sm text-ink-500">
+              Itineraries that adapt with you, without starting over.
+            </p>
+          </div>
+
+          <nav className="flex items-center gap-5 text-sm">
+            <button onClick={() => onNavigate({ name: 'trips' })} className="text-ink-600 hover:text-ink-900 transition-colors">
+              My Trips
+            </button>
+            <button onClick={() => onNavigate({ name: 'browse-templates' })} className="text-ink-600 hover:text-ink-900 transition-colors">
+              Suggested Trip Plans
+            </button>
+            <button onClick={() => onNavigate({ name: 'contact' })} className="text-ink-600 hover:text-ink-900 transition-colors">
+              Contact
+            </button>
+          </nav>
+        </div>
+
+        <p className="mt-8 text-center text-xs text-ink-500 sm:text-left">
+          © {new Date().getFullYear()} Planora. All rights reserved.
+        </p>
+      </footer>
     </div>
   );
 }
