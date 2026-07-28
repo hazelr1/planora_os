@@ -54,9 +54,19 @@ export default function DestinationPlanCard({ name, region, description, photoQu
       ) : (
         <div className="skeleton absolute inset-0" />
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+      {/* Multi-stop scrim (same recipe as TripCard's location pill) — a
+          plain from/via/to gradient dropped to near-nothing by the
+          midpoint, which left the region label (the highest of the three
+          text lines, so the shallowest part of the gradient) illegible
+          against bright photos (pale sky, cherry blossoms, sand). This
+          stays solid enough further up the card regardless of the photo's
+          own brightness. */}
+      <div
+        className="absolute inset-0"
+        style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.25) 60%, transparent 80%)' }}
+      />
       <div className="relative flex h-full flex-col justify-end p-4">
-        <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/70">{region}</p>
+        <p className="truncate text-[10px] font-medium uppercase tracking-[0.18em] text-white/70">{region}</p>
         <p className="font-display mt-1 flex items-center gap-1.5 text-xl font-600 text-white">
           <span className="truncate">{name}</span>
           {onClick && (
