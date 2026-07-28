@@ -7,6 +7,7 @@ import StatTrio from '../components/StatTrio';
 import DestinationPlanCard from '../components/DestinationPlanCard';
 import { LockedActivityMock, ConciergeExchangeMock, DemoTripMock } from '../components/LandingMockups';
 import { pickDaily } from '../lib/dailyRotation';
+import { withPhotoVersion } from '../utils/assetVersion';
 
 interface LandingProps {
   onNavigate: (screen: Screen) => void;
@@ -393,7 +394,7 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
                   region={d.region}
                   description={d.essence}
                   photoQuery={`${d.name}, ${d.region}`}
-                  images={d.images}
+                  images={d.images?.map(withPhotoVersion)}
                   onClick={templateId ? () => onNavigate({ name: 'template', templateId }) : undefined}
                 />
               </motion.div>

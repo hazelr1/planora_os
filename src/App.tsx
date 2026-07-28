@@ -14,6 +14,7 @@ import Settings from './views/Settings';
 import ContactUs from './views/ContactUs';
 import { useTrips } from './hooks/useTrips';
 import { useAuth } from './hooks/useAuth';
+import { useTheme } from './hooks/useTheme';
 import type { Screen } from './types';
 import { supabase } from './lib/supabase';
 import { authRepository } from './data';
@@ -33,6 +34,16 @@ export default function App() {
 
   const { user, status, signOut } = useAuth();
   const { trips, isLoading, loadError, retryLoad, updateTripFields, duplicateTrip, deleteTrip } = useTrips(user);
+  const { setMode } = useTheme();
+
+  // Demo accounts can't reach Settings (see DEMO_BLOCKED) — the theme
+  // toggle lives there, so a demo session has no way to override whatever
+  // mode happens to be left in localStorage from a previous session on
+  // this browser. Forcing 'system' here means a fresh demo always follows
+  // the OS preference instead of being stuck on an unrelated stored choice.
+  useEffect(() => {
+    if (user?.isDemo) setMode('system');
+  }, [user?.isDemo, setMode]);
 
   // Sign-up must never auto-navigate the user anywhere. If the Supabase
   // project happens to establish a session as a side effect of sign-up (e.g.

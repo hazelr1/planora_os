@@ -40,6 +40,7 @@
  */
 
 import { supabase } from '../lib/supabase';
+import { withPhotoVersion } from '../utils/assetVersion';
 
 export type DestinationPhotoSource = 'curated' | 'pexels' | 'pixabay';
 
@@ -63,10 +64,10 @@ const FETCH_TIMEOUT_MS = 8_000;
  * bundled yet) — swap `url` below for a real one before presenting.
  */
 const CURATED_PHOTOS: Record<string, { url: string; alt: string }> = {
-  tokyo: { url: '/image/destination-tokyo.jpg', alt: 'Tokyo at dusk, city lights against the skyline' },
-  lisbon: { url: '/image/destination-lisbon.jpg', alt: "Lisbon's tiled hillside streets overlooking the Tagus" },
+  tokyo: { url: withPhotoVersion('/image/destination-tokyo.jpg'), alt: 'Tokyo at dusk, city lights against the skyline' },
+  lisbon: { url: withPhotoVersion('/image/destination-lisbon.jpg'), alt: "Lisbon's tiled hillside streets overlooking the Tagus" },
   // Placeholder — see doc comment above.
-  queenstown: { url: '/image/destination-generic-highlands.jpg', alt: 'Mountain and lake scenery near Queenstown' },
+  queenstown: { url: withPhotoVersion('/image/destination-generic-highlands.jpg'), alt: 'Mountain and lake scenery near Queenstown' },
 };
 
 function normalizeQuery(query: string): string {

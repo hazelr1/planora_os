@@ -1,4 +1,5 @@
 import { Lock, MapPin, Timer, DollarSign, Sparkles, User, Calendar, Users } from 'lucide-react';
+import { withPhotoVersion } from '../utils/assetVersion';
 
 /**
  * Small, purpose-built previews for the landing page's feature sections —
@@ -70,7 +71,7 @@ export function DemoTripMock() {
   return (
     <div className="h-full w-full bg-ink-100 flex flex-col">
       <div className="relative basis-2/5 shrink-0 overflow-hidden">
-        <img src="/image/destination-tokyo.jpg" alt="" className="h-full w-full object-cover" />
+        <img src={withPhotoVersion('/image/destination-tokyo.jpg')} alt="" className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
       </div>
       <div className="flex-1 p-4 flex flex-col justify-center gap-2">
