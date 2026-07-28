@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Loader2, MessageSquarePlus, Send, Sparkles, User, Zap } from 'lucide-react';
 import type { AIRevisionProposal, CopilotMessage, CopilotReply, Trip } from '../types';
 import { supabase } from '../lib/supabase';
+import InlineBoldText from './InlineBoldText';
 
 /** The concierge's authored voice — sent to the server so the AI's actual replies (not just its one-time greeting) answer in this destination's character. See ExperienceCopy in src/destinations/copy.ts. */
 export interface DestinationVoiceBrief {
@@ -256,13 +257,13 @@ export default function AIAssistantPanel({
                     ? 'bg-brand-500/15 text-ink-800'
                     : 'bg-violet-500/10 text-violet-100'
                 }`}>
-                  {m.text}
+                  <InlineBoldText text={m.text} />
                 </div>
               )}
 
               {m.proposal && (
                 <div className="rounded-xl px-3.5 py-3 text-xs bg-violet-500/10 max-w-[85%] space-y-2">
-                  <p className="text-violet-100 leading-relaxed">{m.proposal.summary}</p>
+                  <p className="text-violet-100 leading-relaxed"><InlineBoldText text={m.proposal.summary} /></p>
                   <div className="flex items-center justify-between text-[10px] text-violet-200/80">
                     <span>{m.proposal.changes.length} change{m.proposal.changes.length === 1 ? '' : 's'} proposed</span>
                     <span className={m.proposal.budget_difference > 0 ? 'text-rose-800 dark:text-rose-300' : m.proposal.budget_difference < 0 ? 'text-emerald-800 dark:text-emerald-300' : ''}>

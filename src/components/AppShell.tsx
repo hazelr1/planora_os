@@ -3,6 +3,22 @@ import type { Screen, User as AppUser } from '../types';
 import UserMenu from './UserMenu';
 import DemoModeBadge from './DemoModeBadge';
 
+// Anchor targets for the logged-out landing page nav — ids match the
+// `id` attributes on Landing.tsx's four numbered sections. Only shown to
+// signed-out visitors on the landing route; a signed-in visitor gets the
+// normal in-app nav even on 'landing', since they're not the first-time
+// audience this nav is written for.
+const LANDING_SECTIONS: { id: string; label: string }[] = [
+  { id: 'replanning', label: 'Replanning' },
+  { id: 'suggested-plans', label: 'Suggested Plans' },
+  { id: 'ai-concierge', label: 'AI Concierge' },
+  { id: 'demo-mode', label: 'Demo Mode' },
+];
+
+function scrollToLandingSection(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 interface AppShellProps {
   screen: Screen;
   onNavigate: (screen: Screen) => void;
@@ -65,22 +81,39 @@ export default function AppShell({
           <nav className="flex items-center gap-1 sm:gap-2">
             {user?.isDemo && <DemoModeBadge expiresAt={user.demoExpiresAt} />}
 
-            {isWorkspace ? (
-              <button onClick={() => onNavigate({ name: 'trips' })} className="btn-ghost">
-                <ArrowLeft size={16} />
-                <span className="hidden sm:inline">My Trips</span>
-              </button>
+            {isLanding && !user ? (
+              // First-time visitor on the marketing page — these aren't app
+              // screens they can use yet (no account), so the nav points at
+              // the page's own sections instead of My Trips/Suggested Trip
+              // Plans, which would otherwise present in-app functionality to
+              // someone who hasn't signed up.
+              <div className="hidden md:flex items-center gap-1">
+                {LANDING_SECTIONS.map((s) => (
+                  <button key={s.id} onClick={() => scrollToLandingSection(s.id)} className="btn-ghost text-sm">
+                    {s.label}
+                  </button>
+                ))}
+              </div>
             ) : (
-              <button onClick={() => onNavigate({ name: 'trips' })} className="btn-ghost">
-                <Map size={16} />
-                <span className="hidden sm:inline">My Trips</span>
-              </button>
-            )}
+              <>
+                {isWorkspace ? (
+                  <button onClick={() => onNavigate({ name: 'trips' })} className="btn-ghost">
+                    <ArrowLeft size={16} />
+                    <span className="hidden sm:inline">My Trips</span>
+                  </button>
+                ) : (
+                  <button onClick={() => onNavigate({ name: 'trips' })} className="btn-ghost">
+                    <Map size={16} />
+                    <span className="hidden sm:inline">My Trips</span>
+                  </button>
+                )}
 
-            <button onClick={() => onNavigate({ name: 'browse-templates' })} className="btn-ghost">
-              <Compass size={16} />
-              <span className="hidden sm:inline">Suggested Trip Plans</span>
-            </button>
+                <button onClick={() => onNavigate({ name: 'browse-templates' })} className="btn-ghost">
+                  <Compass size={16} />
+                  <span className="hidden sm:inline">Suggested Trip Plans</span>
+                </button>
+              </>
+            )}
 
             {user ? (
               <UserMenu name={displayName} isDemo={user.isDemo} onNavigate={onNavigate} onSignOut={() => onSignOut?.()} />

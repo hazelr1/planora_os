@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Sparkles, ChevronDown, ArrowRight, Check, Loader2, Clock, X, Compass } from 'lucide-react';
+import { ChevronDown, ArrowRight, Check, Loader2, Clock, X, Compass } from 'lucide-react';
 import type { Screen } from '../types';
 import { templateRepository } from '../data';
 import StatTrio from '../components/StatTrio';
@@ -215,7 +215,7 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
               headline below (not mb-tight-coupled to it) so it reads as a
               label, not a competing line of the hero copy. */}
           <div className="inline-flex items-center gap-1.5 chip bg-white/10 px-2.5 py-1 text-white/90 animate-fade-in backdrop-blur-sm">
-            <Sparkles size={11} className="text-amber-300" />
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-white/70" />
             <span className="text-[10px] font-semibold uppercase tracking-[0.14em]">Not another full regeneration</span>
           </div>
 
@@ -316,7 +316,7 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
           this is the hero's own claim ("one change SHOULDN'T rebuild your
           whole trip"), so it's the first thing a scrolling visitor sees
           backed up in more detail, not a random pick from the feature set. */}
-      <section className="pt-24 pb-20 sm:pt-32 sm:pb-24">
+      <section id="replanning" className="scroll-mt-24 pt-24 pb-20 sm:pt-32 sm:pb-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           <div>
             <div className="section-eyebrow mb-6">01 — Adaptive replanning</div>
@@ -343,11 +343,11 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
           </div>
 
           <motion.div {...revealProps} variants={revealUp} transition={{ delay: 0.1 }}>
-            <div className="card overflow-hidden p-0">
+            <div className="shot-frame">
               <img
                 src="/image/landing-locked-activities.jpg"
-                alt="A locked activity (with an Unlock action) sitting next to an unlocked one in a trip's day view"
-                className="aspect-[4/3] w-full object-cover object-top"
+                alt="A complete locked activity card in a trip's day view, showing its unlock action"
+                className="aspect-[4/3] w-full object-cover"
               />
             </div>
           </motion.div>
@@ -355,7 +355,7 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
       </section>
 
       {/* ─── 02 — Suggested trip plans ─── */}
-      <section className="pt-20 pb-24 sm:pt-24">
+      <section id="suggested-plans" className="scroll-mt-24 pt-20 pb-24 sm:pt-24">
         <div className="section-eyebrow mb-6">02 — Suggested trip plans</div>
         <motion.h2
           {...revealProps}
@@ -406,7 +406,7 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
       </section>
 
       {/* ─── 03 — AI concierge editing ─── */}
-      <section className="pt-20 pb-20 sm:pt-24">
+      <section id="ai-concierge" className="scroll-mt-24 pt-20 pb-20 sm:pt-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           <div className="lg:order-2">
             <div className="section-eyebrow mb-6">03 — AI concierge</div>
@@ -428,7 +428,7 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
           </div>
 
           <motion.div {...revealProps} variants={revealUp} transition={{ delay: 0.1 }} className="lg:order-1">
-            <div className="card overflow-hidden p-0">
+            <div className="shot-frame">
               <img
                 src="/image/landing-ai-concierge.jpg"
                 alt="A real exchange in the Ask Planora concierge panel, asking what scams to avoid in Tokyo and getting a real answer"
@@ -440,7 +440,7 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
       </section>
 
       {/* ─── 04 — Demo mode ─── */}
-      <section className="pt-20 pb-24 sm:pt-24">
+      <section id="demo-mode" className="scroll-mt-24 pt-20 pb-24 sm:pt-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           <div>
             <div className="section-eyebrow mb-6">04 — Demo mode</div>
@@ -479,11 +479,11 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
           </div>
 
           <motion.div {...revealProps} variants={revealUp} transition={{ delay: 0.1 }}>
-            <div className="card overflow-hidden p-0">
+            <div className="shot-frame">
               <img
                 src="/image/landing-demo-trip.jpg"
-                alt="The seeded Tokyo Discovery demo trip, showing its destination hero and day-by-day itinerary tabs"
-                className="aspect-[4/3] w-full object-cover object-top"
+                alt="The seeded Tokyo Discovery demo trip, showing its trip metadata and Demo Data badge below the destination photo"
+                className="aspect-[4/3] w-full object-cover"
               />
             </div>
           </motion.div>
