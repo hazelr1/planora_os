@@ -1,1 +1,1 @@
-
+Planora helps travelers and teams design better trips faster. Use AI to generate itinerary suggestions, organize days and activities, visualize routes on a map, and export or share plans. It supports rich editing, trip templates, and integrates with Supabase for persistence and optional server functions for AI generation.
