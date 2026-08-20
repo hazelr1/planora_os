@@ -188,7 +188,7 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
         <div className="absolute inset-0">
           <img
             src={heroImage}
-            alt=""
+            alt="Scenic travel destination"
             loading="lazy"
             decoding="async"
             className="h-full w-full object-cover"
