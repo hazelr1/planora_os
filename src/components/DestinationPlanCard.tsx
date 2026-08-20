@@ -38,6 +38,7 @@ export default function DestinationPlanCard({ name, region, description, photoQu
   }, [images, photoQuery]);
 
   const src = images && images.length > 0 ? pickDaily(images, name) : dynamicSrc;
+  const fallback = '/image/destination-generic-highlands.jpg';
   const Card = onClick ? 'button' : 'div';
 
   return (
@@ -46,17 +47,14 @@ export default function DestinationPlanCard({ name, region, description, photoQu
       aria-label={`${name}, ${region}`}
       className={`card group relative aspect-[4/5] w-full overflow-hidden p-0 text-left shadow-pop transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-glow-lg${onClick ? ' card-interactive' : ''}`}
     >
-      {src ? (
-        <img
-          src={src}
-          alt={`${name}, ${region}`}
-          loading="lazy"
-          decoding="async"
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-[600ms] ease-out group-hover:scale-[1.06]"
-        />
-      ) : (
-        <div className="skeleton absolute inset-0" />
-      )}
+      <img
+        src={src ?? fallback}
+        alt={`${name}, ${region}`}
+        loading="lazy"
+        decoding="async"
+        onError={(e) => { const t = e.currentTarget; if (t.src !== fallback) t.src = fallback; }}
+        className="absolute inset-0 h-full w-full object-cover transition-transform duration-[600ms] ease-out group-hover:scale-[1.06]"
+      />
       {/* Multi-stop scrim (same recipe as TripCard's location pill) — a
           plain from/via/to gradient dropped to near-nothing by the
           midpoint, which left the region label (the highest of the three

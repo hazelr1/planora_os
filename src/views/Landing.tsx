@@ -241,12 +241,11 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
 
           <div className="flex flex-1 flex-col items-center justify-center">
             <h1
-              className="font-display max-w-5xl text-left leading-tight tracking-tight text-white animate-slide-up sm:text-5xl lg:text-[64px]"
+              className="font-display max-w-5xl text-center leading-tight tracking-tight text-white animate-slide-up sm:text-5xl lg:text-[64px]"
               style={{ textShadow: '0 2px 3px rgba(0,0,0,0.55), 0 16px 50px rgba(0,0,0,0.4)' }}
             >
-              <span className="block text-sm uppercase text-white/80 font-semibold">Not another full regeneration</span>
               <span className="block mt-4 text-3xl sm:text-4xl lg:text-5xl">One change</span>
-              <span className="hero-quote mt-1 mb-1">shouldn't</span>
+              <span className="hero-quote mt-1 mb-1 mx-auto">shouldn't</span>
               <span className="block text-xl sm:text-2xl">rebuild your whole trip.</span>
             </h1>
             <p
