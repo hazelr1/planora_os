@@ -6,8 +6,10 @@ import { templateRepository } from '../data';
 import StatTrio from '../components/StatTrio';
 import DestinationPlanCard from '../components/DestinationPlanCard';
 import { LockedActivityMock, ConciergeExchangeMock, DemoTripMock } from '../components/LandingMockups';
+import OnboardingModal from '../components/OnboardingModal';
 import { pickDaily } from '../lib/dailyRotation';
 import { withPhotoVersion } from '../utils/assetVersion';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 interface LandingProps {
   onNavigate: (screen: Screen) => void;
@@ -107,8 +109,10 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
   const [demoError, setDemoError] = useState<string | null>(null);
   const [showcaseTemplateIds, setShowcaseTemplateIds] = useState<Record<string, string>>({});
   const [showcase] = useState(sampleShowcase);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const prefersReducedMotion = useReducedMotion();
   const heroImage = pickDaily(HERO_IMAGES, 'hero');
+  const analytics = useAnalytics();
 
   // Links a showcase card straight to its matching approved template, when
   // one exists — the "See more" grid below is the primary path regardless.
@@ -127,9 +131,21 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
   }, [showcase]);
 
   const handleTryDemo = async () => {
+    // Show onboarding once per browser to explain the key concepts
+    try {
+      const seen = window.localStorage.getItem('planora_onboarding_seen');
+      if (!seen) {
+        setShowOnboarding(true);
+        return;
+      }
+    } catch (e) {
+      // ignore localStorage errors and continue
+    }
+
     setDemoLoading(true);
     setDemoError(null);
     try {
+      analytics.track('demo_started');
       await onTryDemo();
     } catch (err) {
       setDemoError(err instanceof Error ? err.message : 'Could not start demo. Please try again.');
@@ -173,6 +189,8 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
           <img
             src={heroImage}
             alt=""
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover"
             style={{ filter: 'saturate(2.2) contrast(1.15) brightness(0.82)' }}
           />
@@ -223,36 +241,10 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
 
           <div className="flex flex-1 flex-col items-center justify-center">
             <h1
-              className="font-display max-w-5xl text-3xl leading-[0.98] tracking-tight text-white animate-slide-up sm:text-5xl lg:text-6xl"
+              className="font-display max-w-4xl text-3xl leading-tight tracking-tight text-white animate-slide-up sm:text-4xl lg:text-5xl"
               style={{ textShadow: '0 2px 3px rgba(0,0,0,0.55), 0 16px 50px rgba(0,0,0,0.4)' }}
             >
-              <span className="block font-500 text-white/80">One change</span>
-              {/* `text-hero`'s fixed 3.75rem floor (tuned for "CHANGES") lets
-                  this 2-characters-longer word run past the viewport edge on
-                  narrow phones instead of shrinking further — this inline
-                  override lowers just the floor so the same 13vw fluid
-                  scaling takes over sooner, with no effect at the sm+ widths
-                  where the original clamp already governed. Fraunces italic
-                  at 600 (not the font-hero grotesk) makes this the one
-                  editorial-serif accent word in an otherwise heavy-sans
-                  headline; tracking is loosened from the grotesk original
-                  since a serif italic doesn't want -0.03em. SOFT/WONK pinned
-                  to 0 — Fraunces' default axis position reads as a bouncy,
-                  almost hand-lettered script at this size; 0/0 is the
-                  classical, non-wonky instance actually intended here. */}
-              <span
-                className="font-display italic block w-full text-white"
-                style={{
-                  fontSize: 'clamp(1.75rem, 13vw, 10.5rem)',
-                  lineHeight: 0.95,
-                  letterSpacing: '-0.01em',
-                  fontWeight: 600,
-                  fontVariationSettings: '"SOFT" 0, "WONK" 0',
-                }}
-              >
-                shouldn't
-              </span>
-              <span className="block font-700 text-xl sm:text-3xl lg:text-4xl">rebuild your whole trip.</span>
+              Adaptive itineraries that only change what you want.
             </h1>
             <p
               className="mx-auto mt-6 max-w-xl text-base text-white/90 leading-relaxed animate-slide-up sm:text-lg"
@@ -283,20 +275,17 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
               ) : (
                 <>
                   <button
-                    onClick={() => onNavigate({ name: 'create' })}
-                    className="btn-primary text-base px-6 py-2.5 w-full sm:w-auto"
-                  >
-                    Start Planning <ArrowRight size={16} />
-                  </button>
-                  <button
                     onClick={handleTryDemo}
                     disabled={demoLoading}
+                    className="btn-primary text-base px-6 py-2.5 w-full sm:w-auto"
+                  >
+                    {demoLoading ? <><Loader2 size={15} className="animate-spin" /> Preparing…</> : 'Try Demo — No Signup'}
+                  </button>
+                  <button
+                    onClick={() => onNavigate({ name: 'create' })}
                     className="btn border border-white/25 bg-white/10 text-white hover:bg-white/20 hover:border-white/40 text-base px-6 py-2.5 w-full sm:w-auto min-w-[140px]"
                   >
-                    {demoLoading
-                      ? <><Loader2 size={15} className="animate-spin" /> Preparing…</>
-                      : 'Try Demo'
-                    }
+                    Start Planning <ArrowRight size={16} />
                   </button>
                 </>
               )}
@@ -315,6 +304,21 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
           </div>
           {demoError && (
             <p className="mt-4 text-center text-sm text-rose-300">{demoError}</p>
+          )}
+          {showOnboarding && (
+            <OnboardingModal
+              onClose={() => {
+                try { window.localStorage.setItem('planora_onboarding_seen', '1'); } catch (e) {}
+                setShowOnboarding(false);
+                // proceed to demo immediately after onboarding
+                setDemoLoading(true);
+                setDemoError(null);
+                void onTryDemo().catch((err) => {
+                  setDemoError(err instanceof Error ? err.message : 'Could not start demo. Please try again.');
+                  setDemoLoading(false);
+                });
+              }}
+            />
           )}
           <div className="mt-4 flex justify-center border-t border-white/15 pt-4 sm:justify-start">
             <StatTrio stats={HERO_STATS} onDark />

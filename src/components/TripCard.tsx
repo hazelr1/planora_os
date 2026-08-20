@@ -5,6 +5,7 @@ import { formatDateRange, formatLastUpdated } from '../utils/dates';
 import { formatLocationLabel } from '../utils/text';
 import { useExperienceTokens } from '../destinations';
 import { getDestinationPhoto, type DestinationPhoto } from '../services/destinationImages';
+import { generateTripICS, downloadICS } from '../utils/ics';
 
 interface TripCardProps {
   trip: Trip;
@@ -151,6 +152,20 @@ export default function TripCard({ trip, onOpen, onEdit, onDuplicate, onDelete }
         <div className="mt-4 flex items-center gap-2">
           <button onClick={onOpen} className="btn-primary flex-1 text-sm">
             Open <ArrowRight size={14} />
+          </button>
+          <button
+            onClick={() => {
+              try {
+                const ics = generateTripICS(trip);
+                downloadICS(ics, `${trip.title.replace(/[^a-z0-9]/gi, '_')}.ics`);
+              } catch (e) {
+                console.error('ICS export failed', e);
+              }
+            }}
+            className="btn-outline px-3"
+            aria-label={`Add ${trip.title} to calendar`}
+          >
+            <Calendar size={15} />
           </button>
           <button onClick={onDuplicate} className="btn-outline px-3" aria-label={`Duplicate ${trip.title}`}>
             <Copy size={15} />

@@ -49,6 +49,8 @@ export default function DestinationPlanCard({ name, region, description, photoQu
         <img
           src={src}
           alt={`${name}, ${region}`}
+          loading="lazy"
+          decoding="async"
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-[600ms] ease-out group-hover:scale-[1.06]"
         />
       ) : (
