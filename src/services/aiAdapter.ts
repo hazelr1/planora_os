@@ -7,6 +7,8 @@ type Provider = 'console' | 'huggingface' | 'openai';
 const DEFAULT: Provider = 'console';
 
 function getProvider(): Provider {
+  // Prefer a server-side proxy when enabled
+  if (import.meta.env.VITE_USE_AI_PROXY === 'true') return 'console'; // placeholder: proxy handled below
   if (import.meta.env.VITE_OPENAI_KEY) return 'openai';
   if (import.meta.env.VITE_HF_API_URL) return 'huggingface';
   return DEFAULT;
@@ -39,7 +41,22 @@ export async function askAI(prompt: string, context?: Record<string, any>) {
     response = json?.generated_text ?? JSON.stringify(json);
   } else {
     // Console fallback: echo prompt with brief instructions — useful for offline prototyping
-    response = `AI (console fallback): ${prompt.slice(0, 300)}${prompt.length > 300 ? '…' : ''}`;
+    // If a proxy is enabled, call it instead of the console fallback.
+    if (import.meta.env.VITE_USE_AI_PROXY === 'true') {
+      try {
+        const res = await fetch('/api/proxy-ai', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt, context }) });
+        if (res.ok) {
+          const json = await res.json();
+          response = json.result ?? json;
+        } else {
+          response = `AI proxy error: ${res.status}`;
+        }
+      } catch (e) {
+        response = `AI proxy unreachable: ${String(e)}`;
+      }
+    } else {
+      response = `AI (console fallback): ${prompt.slice(0, 300)}${prompt.length > 300 ? '…' : ''}`;
+    }
   }
 
   try {
