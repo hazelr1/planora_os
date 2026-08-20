@@ -241,10 +241,13 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
 
           <div className="flex flex-1 flex-col items-center justify-center">
             <h1
-              className="font-display max-w-4xl text-3xl leading-tight tracking-tight text-white animate-slide-up sm:text-4xl lg:text-5xl"
+              className="font-display max-w-5xl text-left leading-tight tracking-tight text-white animate-slide-up sm:text-5xl lg:text-[64px]"
               style={{ textShadow: '0 2px 3px rgba(0,0,0,0.55), 0 16px 50px rgba(0,0,0,0.4)' }}
             >
-              Adaptive itineraries that only change what you want.
+              <span className="block text-sm uppercase text-white/80 font-semibold">Not another full regeneration</span>
+              <span className="block mt-4 text-3xl sm:text-4xl lg:text-5xl">One change</span>
+              <span className="hero-quote mt-1 mb-1">shouldn't</span>
+              <span className="block text-xl sm:text-2xl">rebuild your whole trip.</span>
             </h1>
             <p
               className="mx-auto mt-6 max-w-xl text-base text-white/90 leading-relaxed animate-slide-up sm:text-lg"
@@ -262,10 +265,6 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
             <div className="flex flex-col gap-2 sm:flex-row">
               {isDemo ? (
-                // Already in a demo session — "Start Planning" (AI generation) is
-                // blocked for demo accounts, and launching a second demo account
-                // on top of this one would just compound the exact account-bloat
-                // problem the demo lifecycle is designed to avoid.
                 <button
                   onClick={() => onNavigate({ name: 'browse-templates' })}
                   className="btn-primary text-base px-6 py-2.5 w-full sm:w-auto"
@@ -275,17 +274,17 @@ export default function Landing({ onNavigate, onTryDemo, isDemo = false, session
               ) : (
                 <>
                   <button
-                    onClick={handleTryDemo}
-                    disabled={demoLoading}
+                    onClick={() => onNavigate({ name: 'create' })}
                     className="btn-primary text-base px-6 py-2.5 w-full sm:w-auto"
                   >
-                    {demoLoading ? <><Loader2 size={15} className="animate-spin" /> Preparing…</> : 'Try Demo — No Signup'}
+                    Start Planning <ArrowRight size={16} />
                   </button>
                   <button
-                    onClick={() => onNavigate({ name: 'create' })}
-                    className="btn border border-white/25 bg-white/10 text-white hover:bg-white/20 hover:border-white/40 text-base px-6 py-2.5 w-full sm:w-auto min-w-[140px]"
+                    onClick={handleTryDemo}
+                    disabled={demoLoading}
+                    className="btn-ai text-base px-6 py-2.5 w-full sm:w-auto min-w-[140px]"
                   >
-                    Start Planning <ArrowRight size={16} />
+                    {demoLoading ? <><Loader2 size={15} className="animate-spin" /> Preparing…</> : 'Try Demo — No Signup'}
                   </button>
                 </>
               )}

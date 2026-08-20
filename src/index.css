@@ -187,6 +187,26 @@
   .card-interactive {
     @apply hover:-translate-y-0.5 hover:shadow-card-hover hover:border-glass/[0.10];
   }
+
+  /* Large, expressive hero accent word ("shouldn't") */
+   .hero-quote {
+     font-family: 'Fraunces', serif;
+     font-weight: 700;
+     font-style: italic;
+     display: block;
+     color: white;
+     font-size: clamp(40px, 10vw, 140px);
+     line-height: 0.9;
+     letter-spacing: -0.02em;
+     -webkit-font-smoothing: antialiased;
+     text-shadow: 0 6px 20px rgba(0,0,0,0.6);
+   }
+
+  /* Tighten hero heading spacing on small screens to mirror screenshots */
+   @media (max-width: 640px) {
+     .hero-quote { font-size: clamp(32px, 14vw, 80px); }
+     h1.font-display { text-align: center; }
+   }
   /* Landing page feature-preview mockups — a solid border in the unified
      AI accent (rgb(var(--ai-accent)), the same token the locked-activity
      badge and cost-delta highlight use) is the entire "floating card"
