@@ -43,6 +43,7 @@ export default function DestinationPlanCard({ name, region, description, photoQu
   return (
     <Card
       onClick={onClick}
+      aria-label={`${name}, ${region}`}
       className={`card group relative aspect-[4/5] w-full overflow-hidden p-0 text-left shadow-pop transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-glow-lg${onClick ? ' card-interactive' : ''}`}
     >
       {src ? (

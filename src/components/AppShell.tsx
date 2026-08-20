@@ -54,7 +54,7 @@ export default function AppShell({
 
   return (
     <div className={`${fullBleed ? 'h-screen flex flex-col overflow-hidden' : 'min-h-screen'} ${bgClass}`}>
-      <header className="sticky top-0 z-30 backdrop-blur-xl border-b border-glass/10 shrink-0 bg-ink-50/70">
+      <header role="banner" className="sticky top-0 z-30 backdrop-blur-xl border-b border-glass/10 shrink-0 bg-ink-50/70">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
 
           {/* Logo */}
@@ -126,7 +126,7 @@ export default function AppShell({
         </div>
       </header>
 
-      <main className={fullBleed ? 'flex-1 min-h-0 overflow-hidden' : 'max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8'}>
+      <main id="main-content" role="main" className={fullBleed ? 'flex-1 min-h-0 overflow-hidden' : 'max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8'}>
         {children}
       </main>
     </div>

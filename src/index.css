@@ -197,6 +197,8 @@
   }
   .btn {
     @apply relative inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-control ease-out disabled:opacity-50 disabled:pointer-events-none;
+    min-height: 44px; /* larger tap target */
+    min-width: 44px;
   }
   .btn-primary {
     @apply btn text-white shadow-soft hover:-translate-y-0.5 hover:shadow-glow-lg active:translate-y-0;
@@ -264,6 +266,39 @@
     content: '';
     @apply h-px flex-1 bg-ink-400/25;
   }
+}
+
+/* Focus styles for keyboard users */
+.sr-only-focusable {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.sr-only-focusable:focus,
+.sr-only-focusable:active {
+  left: 1rem;
+  top: 1rem;
+  width: auto;
+  height: auto;
+  padding: 0.5rem 0.75rem;
+  background: rgb(var(--ink-100));
+  color: rgb(var(--ink-900));
+  border-radius: 6px;
+  z-index: 1000;
+}
+
+:where(:focus-visible) {
+  outline: 3px solid rgb(var(--brand-400) / 0.9);
+  outline-offset: 3px;
+}
+
+/* Ensure interactive elements have sufficient hit area on small screens */
+@media (max-width: 640px) {
+  .btn { padding-left: 0.75rem; padding-right: 0.75rem; }
+  .btn-primary, .btn-ai { padding-left: 1rem; padding-right: 1rem; }
 }
 
 /* AI surfaces used to pulse (a looping glow-pulse box-shadow animation) —

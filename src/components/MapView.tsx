@@ -99,7 +99,7 @@ export default function MapView({ days, currency, selectedActivityId, onSelectAc
         </p>
         <p className="text-xs text-ink-600">Click a marker to highlight the activity</p>
       </div>
-      <div className="h-[320px] sm:h-[480px] w-full">
+      <div className="h-[28vh] sm:h-[320px] md:h-[420px] lg:h-[480px] w-full">
         <MapContainer center={center} zoom={13} scrollWheelZoom style={{ height: '100%', width: '100%' }}>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
