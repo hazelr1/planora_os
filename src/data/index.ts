@@ -18,7 +18,7 @@ import { profileRepository as inMemoryProfileRepository } from './repositories/p
 import { tripRepository as inMemoryTripRepository } from './repositories/tripRepository';
 import { activityRepository as inMemoryActivityRepository } from './repositories/activityRepository';
 import { revisionRepository as inMemoryRevisionRepository } from './repositories/revisionRepository';
-import { templateRepository as inMemoryTemplateRepository } from './repositories/templateRepository';
+import { templateRepository as inMemoryTemplateRepository } from './repositories/inMemoryTemplateRepository';
 
 const hasSupabase = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
 
