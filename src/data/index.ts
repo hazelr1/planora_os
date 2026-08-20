@@ -6,12 +6,28 @@
  * directly from an individual repository file or from supabase-js.
  */
 
-export { supabaseAuthRepository as authRepository } from './repositories/supabase/supabaseAuthRepository';
-export { supabaseProfileRepository as profileRepository } from './repositories/supabase/supabaseProfileRepository';
-export { supabaseTripRepository as tripRepository } from './repositories/supabase/supabaseTripRepository';
-export { supabaseActivityRepository as activityRepository } from './repositories/supabase/supabaseActivityRepository';
-export { supabaseRevisionRepository as revisionRepository } from './repositories/supabase/supabaseRevisionRepository';
-export { supabaseTemplateRepository as templateRepository } from './repositories/supabase/supabaseTemplateRepository';
+import { supabaseAuthRepository } from './repositories/supabase/supabaseAuthRepository';
+import { supabaseProfileRepository } from './repositories/supabase/supabaseProfileRepository';
+import { supabaseTripRepository } from './repositories/supabase/supabaseTripRepository';
+import { supabaseActivityRepository } from './repositories/supabase/supabaseActivityRepository';
+import { supabaseRevisionRepository } from './repositories/supabase/supabaseRevisionRepository';
+import { supabaseTemplateRepository } from './repositories/supabase/supabaseTemplateRepository';
+
+import { inMemoryAuthRepository } from './repositories/inMemoryAuthRepository';
+import { profileRepository as inMemoryProfileRepository } from './repositories/profileRepository';
+import { tripRepository as inMemoryTripRepository } from './repositories/tripRepository';
+import { activityRepository as inMemoryActivityRepository } from './repositories/activityRepository';
+import { revisionRepository as inMemoryRevisionRepository } from './repositories/revisionRepository';
+import { templateRepository as inMemoryTemplateRepository } from './repositories/templateRepository';
+
+const hasSupabase = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+
+export const authRepository = hasSupabase ? supabaseAuthRepository : inMemoryAuthRepository;
+export const profileRepository = hasSupabase ? supabaseProfileRepository : inMemoryProfileRepository;
+export const tripRepository = hasSupabase ? supabaseTripRepository : inMemoryTripRepository;
+export const activityRepository = hasSupabase ? supabaseActivityRepository : inMemoryActivityRepository;
+export const revisionRepository = hasSupabase ? supabaseRevisionRepository : inMemoryRevisionRepository;
+export const templateRepository = hasSupabase ? supabaseTemplateRepository : inMemoryTemplateRepository;
 
 // Re-export interfaces so callers can type-annotate without reaching into impl files
 export type { IAuthRepository, SignUpInput, SignInInput, AuthStateChangeCallback } from './repositories/authRepository';

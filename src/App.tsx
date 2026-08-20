@@ -17,7 +17,8 @@ import { useAuth } from './hooks/useAuth';
 import { useTheme } from './hooks/useTheme';
 import type { Screen } from './types';
 import { supabase } from './lib/supabase';
-import { authRepository } from './data';
+import { authRepository, tripRepository, profileRepository } from './data';
+import { store, generateId } from './data/memoryStore';
 
 // Screens that require an authenticated session
 const PROTECTED: Screen['name'][] = ['trips', 'create', 'paste-trip', 'workspace', 'settings', 'browse-templates', 'template'];
@@ -190,34 +191,65 @@ export default function App() {
 
   // ── Demo launch ───────────────────────────────────────────────────────────
   const handleTryDemo = useCallback(async () => {
-    const res = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/launch-demo`,
-      {
-        method: 'POST',
-        headers: { 'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY },
-        signal: AbortSignal.timeout(30_000),
-      },
-    );
-    const json = await res.json() as {
-      access_token?: string;
-      refresh_token?: string;
-      trip_id?: string;
-      error?: string;
-    };
+    // If Supabase is configured, use the serverless demo launcher. Otherwise
+    // create a local demo trip in the in-memory store so the app can run
+    // without any external services during prototyping.
+    if (import.meta.env.VITE_SUPABASE_URL) {
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/launch-demo`,
+        {
+          method: 'POST',
+          headers: { 'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY },
+          signal: AbortSignal.timeout(30_000),
+        },
+      );
+      const json = await res.json() as {
+        access_token?: string;
+        refresh_token?: string;
+        trip_id?: string;
+        error?: string;
+      };
 
-    if (!res.ok || !json.trip_id || !json.access_token || !json.refresh_token) {
-      throw new Error(json.error ?? 'Demo launch failed. Please try again.');
+      if (!res.ok || !json.trip_id || !json.access_token || !json.refresh_token) {
+        throw new Error(json.error ?? 'Demo launch failed. Please try again.');
+      }
+
+      // Queue the destination — the route-protection effect will navigate here
+      // as soon as onAuthStateChange fires and status becomes 'authenticated'
+      setPendingScreen({ name: 'workspace', tripId: json.trip_id });
+
+      // Set the demo session — triggers onAuthStateChange → status 'authenticated'
+      await supabase?.auth.setSession({
+        access_token: json.access_token,
+        refresh_token: json.refresh_token,
+      });
+      return;
     }
 
-    // Queue the destination — the route-protection effect will navigate here
-    // as soon as onAuthStateChange fires and status becomes 'authenticated'
-    setPendingScreen({ name: 'workspace', tripId: json.trip_id });
-
-    // Set the demo session — triggers onAuthStateChange → status 'authenticated'
-    await supabase.auth.setSession({
-      access_token: json.access_token,
-      refresh_token: json.refresh_token,
-    });
+    // Local demo fallback (no Supabase)
+    try {
+      // Create a demo profile and set it as the current user
+      const demoUserId = generateId();
+      await profileRepository.createProfile({ userId: demoUserId, name: 'Demo user', email: 'demo@planora.local' });
+      store.currentUserId = demoUserId;
+      // Create a simple seeded trip via the trip repository
+      const demoTripResult = await tripRepository.createTrip({
+        destination: 'Tokyo, Japan',
+        startDate: new Date().toISOString().slice(0,10),
+        endDate: new Date(new Date().setDate(new Date().getDate()+3)).toISOString().slice(0,10),
+        budget: 1200,
+        currency: 'USD',
+        travelers: 1,
+        pace: 'Normal',
+        interests: [],
+        specialRequests: '',
+      });
+      if (!demoTripResult.ok) throw new Error('Could not create demo trip.');
+      setPendingScreen({ name: 'workspace', tripId: demoTripResult.data.id });
+    } catch (e) {
+      console.error('Local demo launch failed', e);
+      throw e;
+    }
   }, []);
 
   // ── Loading gate (session check) ──────────────────────────────────────────
